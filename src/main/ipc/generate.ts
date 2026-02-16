@@ -1,4 +1,10 @@
 import { ipcMain } from 'electron';
+import { readFileSync } from 'fs';
+import { join, extname } from 'path';
+import { getImagesDir } from '../services/paths';
+
+const NANO_BANANA_PRO_MODEL = 'fal-ai/nano-banana-pro';
+const NANO_BANANA_PRO_EDIT_MODEL = 'fal-ai/nano-banana-pro/edit';
 
 interface GenerateImageData {
   prompt: string;
@@ -8,26 +14,52 @@ interface GenerateImageData {
   imageUrls: string[];
 }
 
+const MIME_TYPES: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+};
+
+function resolveImageUrl(url: string): string {
+  if (url.startsWith('data:') || url.startsWith('http')) return url;
+
+  if (url.startsWith('local-file://')) {
+    const pathname = decodeURIComponent(new URL(url).pathname);
+    const filePath = join(getImagesDir(), pathname);
+    const buffer = readFileSync(filePath);
+    const ext = extname(pathname).toLowerCase();
+    const mime = MIME_TYPES[ext] || 'image/png';
+    return `data:${mime};base64,${buffer.toString('base64')}`;
+  }
+
+  return url;
+}
+
 export function registerGenerateHandlers(): void {
   ipcMain.handle('generate:image', async (_event, data: GenerateImageData) => {
-    // Dynamic import to avoid issues with ESM module
     const { fal } = await import('@fal-ai/client');
+
+    const resolvedUrls = (data.imageUrls || [])
+      .map(resolveImageUrl)
+      .filter((u) => u.startsWith('data:') || u.startsWith('http'));
+
+    const hasReferenceImages = resolvedUrls.length > 0;
+    const model = hasReferenceImages ? NANO_BANANA_PRO_EDIT_MODEL : NANO_BANANA_PRO_MODEL;
 
     const input: Record<string, unknown> = {
       prompt: data.prompt,
-      image_size: getImageSize(data.aspectRatio, data.resolution),
+      aspect_ratio: data.aspectRatio || '1:1',
+      resolution: data.resolution || '1K',
       output_format: data.outputFormat || 'png',
       num_images: 1,
-      enable_safety_checker: false,
     };
 
-    if (data.imageUrls && data.imageUrls.length > 0) {
-      input.image_url = data.imageUrls[0];
+    if (hasReferenceImages) {
+      input.image_urls = resolvedUrls;
     }
 
-    const result = await fal.subscribe('fal-ai/flux/dev', {
-      input,
-    });
+    const result = await fal.subscribe(model, { input, logs: true });
 
     const resultData = result.data as {
       images?: Array<{ url: string }>;
@@ -37,26 +69,4 @@ export function registerGenerateHandlers(): void {
 
     return { success: true, resultUrls };
   });
-}
-
-function getImageSize(aspectRatio: string, resolution: string): { width: number; height: number } {
-  const baseSize = resolution === '4K' ? 2048 : resolution === '2K' ? 1536 : 1024;
-
-  const ratioMap: Record<string, [number, number]> = {
-    '1:1': [1, 1],
-    '2:3': [2, 3],
-    '3:2': [3, 2],
-    '3:4': [3, 4],
-    '4:3': [4, 3],
-    '4:5': [4, 5],
-    '5:4': [5, 4],
-    '9:16': [9, 16],
-    '16:9': [16, 9],
-    '21:9': [21, 9],
-  };
-
-  const [w, h] = ratioMap[aspectRatio] ?? [1, 1];
-  if (w === h) return { width: baseSize, height: baseSize };
-  if (w > h) return { width: baseSize, height: Math.round(baseSize * (h / w)) };
-  return { width: Math.round(baseSize * (w / h)), height: baseSize };
 }
