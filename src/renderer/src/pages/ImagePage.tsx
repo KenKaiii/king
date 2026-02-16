@@ -133,9 +133,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
           removeImageGeneration(generationId);
         } catch (err) {
-          toast.error(
-            err instanceof Error ? err.message : 'Something went wrong. Try again.',
-          );
+          toast.error(err instanceof Error ? err.message : 'Something went wrong. Try again.');
           removeImageGeneration(generationId);
         }
       }
@@ -181,11 +179,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
         )}
       </div>
 
-      <ImagePromptForm
-        onSubmit={handleGenerate}
-        recreateData={recreateData}
-        editData={editData}
-      />
+      <ImagePromptForm onSubmit={handleGenerate} recreateData={recreateData} editData={editData} />
 
       {selectedImage && (
         <ImageDetailOverlay

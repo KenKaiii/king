@@ -1,3 +1,4 @@
+import { ipcMain, shell } from 'electron';
 import { registerImageHandlers } from './images';
 import { registerGenerateHandlers } from './generate';
 import { registerFileHandlers } from './files';
@@ -10,4 +11,10 @@ export function registerIpcHandlers(): void {
   registerFileHandlers();
   registerEntityHandlers();
   registerApiKeyHandlers();
+
+  ipcMain.handle('shell:openExternal', (_event, url: string) => {
+    if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
+      return shell.openExternal(url);
+    }
+  });
 }

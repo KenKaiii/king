@@ -2,8 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 const api = {
   images: {
-    list: (cursor?: string, limit?: number) =>
-      ipcRenderer.invoke('images:list', cursor, limit),
+    list: (cursor?: string, limit?: number) => ipcRenderer.invoke('images:list', cursor, limit),
     save: (data: { url: string; prompt: string; aspectRatio: string }) =>
       ipcRenderer.invoke('images:save', data),
     delete: (id: string) => ipcRenderer.invoke('images:delete', id),
@@ -25,6 +24,9 @@ const api = {
     list: () => ipcRenderer.invoke('apiKeys:list'),
     set: (service: string, key: string) => ipcRenderer.invoke('apiKeys:set', service, key),
     delete: (service: string) => ipcRenderer.invoke('apiKeys:delete', service),
+  },
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
   entities: {
     list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),

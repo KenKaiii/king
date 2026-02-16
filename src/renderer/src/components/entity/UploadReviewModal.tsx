@@ -105,9 +105,7 @@ export default function UploadReviewModal({
         });
 
         if (duplicateCount > 0) {
-          toast.error(
-            `${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`,
-          );
+          toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
         }
 
         const newImages: UploadedImage[] = await Promise.all(
@@ -176,9 +174,7 @@ export default function UploadReviewModal({
       });
 
       if (duplicateCount > 0) {
-        toast.error(
-          `${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`,
-        );
+        toast.error(`${duplicateCount} duplicate image${duplicateCount > 1 ? 's' : ''} skipped`);
       }
 
       if (uniqueNewFiles.length > 0) {
@@ -228,9 +224,7 @@ export default function UploadReviewModal({
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
-        isOpen
-          ? 'visible bg-black/80 opacity-100 backdrop-blur-sm'
-          : 'invisible opacity-0'
+        isOpen ? 'visible bg-black/80 opacity-100 backdrop-blur-sm' : 'invisible opacity-0'
       }`}
       onClick={onClose}
     >
@@ -297,9 +291,7 @@ export default function UploadReviewModal({
           <div className="col-span-12 flex items-center lg:col-span-7">
             <div className="w-full items-center rounded-xl border border-white/10 px-3 py-3 md:px-4">
               <div className="grid grid-flow-row-dense auto-rows-min items-center md:grid-cols-[1fr_auto]">
-                <p className="truncate text-xs text-zinc-400 md:order-1 md:text-sm">
-                  Images count
-                </p>
+                <p className="truncate text-xs text-zinc-400 md:order-1 md:text-sm">Images count</p>
                 <div className="grid grid-cols-[auto_1fr] items-center gap-1 md:gap-3">
                   <p
                     className={`truncate text-[10px] font-bold tracking-wide uppercase md:text-xs ${countRating.color}`}

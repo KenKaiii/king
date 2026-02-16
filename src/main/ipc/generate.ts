@@ -33,17 +33,13 @@ export function registerGenerateHandlers(): void {
       images?: Array<{ url: string }>;
     };
 
-    const resultUrls =
-      resultData.images?.map((img: { url: string }) => img.url) ?? [];
+    const resultUrls = resultData.images?.map((img: { url: string }) => img.url) ?? [];
 
     return { success: true, resultUrls };
   });
 }
 
-function getImageSize(
-  aspectRatio: string,
-  resolution: string,
-): { width: number; height: number } {
+function getImageSize(aspectRatio: string, resolution: string): { width: number; height: number } {
   const baseSize = resolution === '4K' ? 2048 : resolution === '2K' ? 1536 : 1024;
 
   const ratioMap: Record<string, [number, number]> = {

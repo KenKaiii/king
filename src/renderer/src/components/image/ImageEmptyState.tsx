@@ -5,9 +5,7 @@ export default function ImageEmptyState() {
         <h2 className="font-heading text-center text-2xl font-bold text-white uppercase">
           Nothing Here Yet
         </h2>
-        <p className="text-center text-sm text-zinc-300">
-          Type something below and hit generate
-        </p>
+        <p className="text-center text-sm text-zinc-300">Type something below and hit generate</p>
       </div>
     </div>
   );

@@ -9,12 +9,7 @@ interface EntityCardProps {
   onDelete: (id: string) => void;
 }
 
-export default memo(function EntityCard({
-  entity,
-  onGenerate,
-  onEdit,
-  onDelete,
-}: EntityCardProps) {
+export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }: EntityCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const handleGenerate = useCallback(() => onGenerate(entity.id), [onGenerate, entity.id]);

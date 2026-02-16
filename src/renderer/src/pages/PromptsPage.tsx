@@ -108,10 +108,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
 
   const filteredPrompts = prompts.filter((prompt) => {
     const q = searchQuery.toLowerCase();
-    return (
-      prompt.title.toLowerCase().includes(q) ||
-      prompt.description.toLowerCase().includes(q)
-    );
+    return prompt.title.toLowerCase().includes(q) || prompt.description.toLowerCase().includes(q);
   });
 
   const handleUsePrompt = useCallback(

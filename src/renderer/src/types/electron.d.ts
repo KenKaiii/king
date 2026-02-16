@@ -53,6 +53,9 @@ export interface ElectronAPI {
       filename: string,
     ) => Promise<{ success: boolean; filePath?: string; cancelled?: boolean }>;
   };
+  shell: {
+    openExternal: (url: string) => Promise<void>;
+  };
   apiKeys: {
     list: () => Promise<Record<string, ApiKeyEntry>>;
     set: (service: string, key: string) => Promise<{ success: boolean }>;

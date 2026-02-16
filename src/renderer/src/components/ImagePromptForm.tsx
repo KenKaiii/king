@@ -118,9 +118,7 @@ export default function ImagePromptForm({
         url: URL.createObjectURL(file),
       }));
 
-      setReferenceImages((prev) =>
-        [...prev, ...pendingImages].slice(0, MAX_REFERENCE_IMAGES),
-      );
+      setReferenceImages((prev) => [...prev, ...pendingImages].slice(0, MAX_REFERENCE_IMAGES));
       e.target.value = '';
     },
     [referenceImages.length],

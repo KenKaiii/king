@@ -53,7 +53,7 @@ export function listImages(
 
   const data = sorted.slice(startIndex, startIndex + limit);
   const hasMore = startIndex + limit < sorted.length;
-  const nextCursor = hasMore ? data[data.length - 1]?.id ?? null : null;
+  const nextCursor = hasMore ? (data[data.length - 1]?.id ?? null) : null;
 
   return { data, nextCursor, hasMore };
 }

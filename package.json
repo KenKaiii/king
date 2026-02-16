@@ -11,6 +11,9 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write \"src/**/*.{js,ts,tsx,html,css}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,tsx,html,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "check": "npm run lint && npm run format:check"
   },
   "keywords": [],
@@ -43,6 +46,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }

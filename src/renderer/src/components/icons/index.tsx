@@ -11,10 +11,7 @@ export const PlusIcon = () => (
 
 export const MinusIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" className="h-5 w-5">
-    <path
-      fill="currentColor"
-      d="M4.16602 9.16602H15.8327V10.8327H4.16602V9.16602Z"
-    />
+    <path fill="currentColor" d="M4.16602 9.16602H15.8327V10.8327H4.16602V9.16602Z" />
   </svg>
 );
 

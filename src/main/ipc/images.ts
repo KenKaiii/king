@@ -4,19 +4,13 @@ import { listImages, addImage, deleteImage, getImage } from '../services/imageSt
 import { downloadAndSaveImage, deleteImageFile } from '../services/fileManager';
 
 export function registerImageHandlers(): void {
-  ipcMain.handle(
-    'images:list',
-    async (_event, cursor?: string, limit?: number) => {
-      return listImages(cursor, limit);
-    },
-  );
+  ipcMain.handle('images:list', async (_event, cursor?: string, limit?: number) => {
+    return listImages(cursor, limit);
+  });
 
   ipcMain.handle(
     'images:save',
-    async (
-      _event,
-      data: { url: string; prompt: string; aspectRatio: string },
-    ) => {
+    async (_event, data: { url: string; prompt: string; aspectRatio: string }) => {
       const { filename, localUrl } = await downloadAndSaveImage(data.url);
       const image = addImage({
         id: randomUUID(),

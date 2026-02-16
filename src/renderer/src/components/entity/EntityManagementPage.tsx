@@ -155,9 +155,7 @@ export default function EntityManagementPage({
                 : 'pointer-events-none opacity-0'
             }`}
           >
-            <p className="text-sm text-zinc-500">
-              No {entityType} yet. Create one to get started.
-            </p>
+            <p className="text-sm text-zinc-500">No {entityType} yet. Create one to get started.</p>
           </div>
         </div>
 

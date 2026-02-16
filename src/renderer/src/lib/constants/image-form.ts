@@ -2,9 +2,7 @@ export const MAX_REFERENCE_IMAGES = 8;
 export const MAX_IMAGE_SIZE_MB = 30;
 export const MAX_IMAGES_PER_GENERATION = 4;
 
-export const modelOptions = [
-  { value: 'nano_banana_2', label: 'Default' },
-];
+export const modelOptions = [{ value: 'nano_banana_2', label: 'Default' }];
 
 export const aspectRatioOptions = [
   { value: 'auto', label: 'Auto' },

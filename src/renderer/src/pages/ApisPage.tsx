@@ -8,6 +8,8 @@ interface ServiceConfig {
   name: string;
   description: string;
   placeholder: string;
+  keyUrl: string;
+  keyUrlLabel: string;
 }
 
 const services: ServiceConfig[] = [
@@ -16,24 +18,32 @@ const services: ServiceConfig[] = [
     name: 'fal.ai',
     description: 'Powers AI image generation',
     placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xxxxxxxx...',
+    keyUrl: 'https://fal.ai/dashboard/keys',
+    keyUrlLabel: 'Get API key',
   },
   {
     id: 'facebook',
     name: 'Facebook Ads',
     description: 'Manage and run Facebook ad campaigns',
     placeholder: 'Enter your Facebook Ads API key...',
+    keyUrl: 'https://developers.facebook.com/apps/',
+    keyUrlLabel: 'Get API key',
   },
   {
     id: 'shopee',
     name: 'Shopee',
     description: 'Pull product data from Shopee stores',
     placeholder: 'Enter your Shopee API key...',
+    keyUrl: 'https://open.shopee.com/',
+    keyUrlLabel: 'Get API key',
   },
   {
     id: 'amazon',
     name: 'Amazon',
     description: 'Pull product data from Amazon listings',
     placeholder: 'Enter your Amazon API key...',
+    keyUrl: 'https://developer-docs.amazon.com/sp-api/',
+    keyUrlLabel: 'Get API key',
   },
 ];
 
@@ -96,13 +106,18 @@ export default function ApisPage() {
             const isSaving = savingService === service.id;
 
             return (
-              <div
-                key={service.id}
-                className="rounded-xl border border-white/10 bg-white/5 p-4"
-              >
+              <div key={service.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-white">{service.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-white">{service.name}</h3>
+                      <button
+                        onClick={() => window.api.shell.openExternal(service.keyUrl)}
+                        className="cursor-pointer text-xs text-pink-400 transition-colors hover:text-pink-300"
+                      >
+                        {service.keyUrlLabel} &rarr;
+                      </button>
+                    </div>
                     <p className="text-xs text-zinc-400">{service.description}</p>
                   </div>
                   {saved && (

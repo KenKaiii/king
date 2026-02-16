@@ -176,11 +176,7 @@ export default function ImageDetailPanel({
       <header className="grid grid-cols-[1fr_auto] px-3 pt-4 pb-6">
         <div className="flex items-center gap-3">
           <div className="relative size-10 overflow-hidden rounded-full bg-white/10">
-            <img
-              src={image.url}
-              alt="thumbnail"
-              className="size-full object-cover"
-            />
+            <img src={image.url} alt="thumbnail" className="size-full object-cover" />
           </div>
           <div>
             <h2 className="text-sm font-medium text-white">Image Details</h2>
