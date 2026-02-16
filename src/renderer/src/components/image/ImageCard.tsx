@@ -125,7 +125,7 @@ const ImageCard = memo(
         <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
             onClick={handleEdit}
-            className="flex size-8 items-center justify-center rounded-lg bg-black/70 text-white/80 transition-colors hover:bg-pink-500/80 hover:text-white"
+            className="flex size-8 items-center justify-center rounded-lg bg-black/70 text-white/80 transition-colors hover:bg-teal-500/80 hover:text-white"
             title="Edit"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

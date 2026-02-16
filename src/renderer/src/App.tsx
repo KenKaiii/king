@@ -5,6 +5,7 @@ import ImagePage from '@/pages/ImagePage';
 import ProductsPage from '@/pages/ProductsPage';
 import CharactersPage from '@/pages/CharactersPage';
 import FacebookAdsPage from '@/pages/FacebookAdsPage';
+import GoogleAdsPage from '@/pages/GoogleAdsPage';
 import StorePage from '@/pages/StorePage';
 import ApisPage from '@/pages/ApisPage';
 import PromptsPage from '@/pages/PromptsPage';
@@ -14,6 +15,7 @@ export type PageType =
   | 'products'
   | 'characters'
   | 'facebook-ads'
+  | 'google-ads'
   | 'store'
   | 'apis'
   | 'prompts';
@@ -39,6 +41,7 @@ function AppContent() {
       {currentPage === 'products' && <ProductsPage onNavigate={setCurrentPage} />}
       {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
       {currentPage === 'facebook-ads' && <FacebookAdsPage />}
+      {currentPage === 'google-ads' && <GoogleAdsPage />}
       {currentPage === 'store' && <StorePage />}
       {currentPage === 'apis' && <ApisPage />}
       {currentPage === 'prompts' && (

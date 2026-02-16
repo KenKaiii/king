@@ -229,7 +229,7 @@ export default function ImagePromptForm({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] border border-white/10 bg-white/5 text-white transition hover:bg-pink-400/10 hover:text-pink-400"
+                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] border border-white/10 bg-white/5 text-white transition hover:bg-teal-400/10 hover:text-teal-400"
                 title="Add reference images (max 8)"
               >
                 <PlusIcon />
@@ -318,7 +318,7 @@ export default function ImagePromptForm({
             type="submit"
             disabled={isImagesLoading}
             tabIndex={-1}
-            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-lg bg-pink-400 px-2.5 text-sm font-semibold text-black shadow-[0_4px_0_0_#be185d] transition-all duration-150 hover:bg-pink-500 hover:shadow-[0_4px_0_0_#9d174d] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_#be185d] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 disabled:shadow-[0_4px_0_0_#3f3f46]"
+            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-lg bg-teal-400 px-2.5 text-sm font-semibold text-black shadow-[0_4px_0_0_#0f766e] transition-all duration-150 hover:bg-teal-500 hover:shadow-[0_4px_0_0_#115e59] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_#0f766e] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 disabled:shadow-[0_4px_0_0_#3f3f46]"
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">

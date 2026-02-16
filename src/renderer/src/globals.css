@@ -71,9 +71,9 @@ select,
   background: linear-gradient(
     90deg,
     #ffffff 0%,
-    #f472b6 25%,
-    #fb7185 50%,
-    #f472b6 75%,
+    #2dd4bf 25%,
+    #34d399 50%,
+    #2dd4bf 75%,
     #ffffff 100%
   );
   background-size: 200% 100%;
@@ -146,23 +146,23 @@ select,
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #f472b6;
+  background-color: #2dd4bf;
   color: black;
   font-weight: 600;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 0 0 #be185d;
+  box-shadow: 0 4px 0 0 #0f766e;
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background-color: #ec4899;
-  box-shadow: 0 4px 0 0 #9d174d;
+  background-color: #14b8a6;
+  box-shadow: 0 4px 0 0 #115e59;
 }
 
 .btn-primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 0 #be185d;
+  box-shadow: 0 2px 0 0 #0f766e;
 }
 
 .btn-primary:disabled {
@@ -176,24 +176,24 @@ select,
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #f472b6;
+  background-color: #2dd4bf;
   color: black;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 0.5rem;
-  box-shadow: 0 3px 0 0 #be185d;
+  box-shadow: 0 3px 0 0 #0f766e;
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary-sm:hover {
-  background-color: #ec4899;
-  box-shadow: 0 3px 0 0 #9d174d;
+  background-color: #14b8a6;
+  box-shadow: 0 3px 0 0 #115e59;
 }
 
 .btn-primary-sm:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 0 #be185d;
+  box-shadow: 0 1px 0 0 #0f766e;
 }
 
 /* macOS traffic light padding */

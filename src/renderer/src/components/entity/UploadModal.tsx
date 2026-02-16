@@ -58,8 +58,8 @@ export default function UploadModal({
       >
         {/* Good guidance */}
         <section className="flex gap-3">
-          <div className="grid h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-pink-400/20 bg-pink-400/10 text-pink-400">
-            <CheckIcon className="h-4 w-4 text-pink-400" />
+          <div className="grid h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-teal-400/20 bg-teal-400/10 text-teal-400">
+            <CheckIcon className="h-4 w-4 text-teal-400" />
           </div>
           <div>
             <p className="text-sm font-bold tracking-wide text-white uppercase">{goodTitle}</p>
@@ -80,7 +80,7 @@ export default function UploadModal({
 
         {/* Upload Button */}
         <div className="flex justify-center">
-          <label className="inline-grid h-12 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-xl bg-pink-400 px-6 font-medium text-black transition-all duration-300 hover:bg-pink-500">
+          <label className="inline-grid h-12 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-xl bg-teal-400 px-6 font-medium text-black transition-all duration-300 hover:bg-teal-500">
             <UploadIcon className="h-4 w-4" />
             Upload images
             <input

@@ -36,7 +36,7 @@ function getCountRating(count: number) {
   } else {
     return {
       label: 'Excellent',
-      color: 'text-pink-400',
+      color: 'text-teal-400',
       gradientFrom: 'rgb(73,194,140)',
       gradientTo: 'rgb(209,254,23)',
     };
@@ -245,7 +245,7 @@ export default function UploadReviewModal({
           />
           <div className="grid justify-center rounded-xl border border-dashed border-transparent p-5">
             <div className="flex items-center justify-center">
-              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-xl border border-pink-400/20 bg-pink-400/10 px-3 text-sm font-medium text-pink-400 backdrop-blur-sm transition hover:bg-pink-400/20">
+              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-xl border border-teal-400/20 bg-teal-400/10 px-3 text-sm font-medium text-teal-400 backdrop-blur-sm transition hover:bg-teal-400/20">
                 <SparkleIcon className="size-5" />
                 Upload images
               </span>
@@ -342,7 +342,7 @@ export default function UploadReviewModal({
                 className={`relative z-10 inline-grid h-full w-full grid-flow-col items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition-all duration-300 ${
                   isLoading
                     ? 'bg-zinc-800 text-white'
-                    : 'border border-pink-400 bg-pink-400 text-black hover:bg-pink-500 disabled:cursor-not-allowed disabled:border-zinc-600 disabled:bg-zinc-700 disabled:text-zinc-400'
+                    : 'border border-teal-400 bg-teal-400 text-black hover:bg-teal-500 disabled:cursor-not-allowed disabled:border-zinc-600 disabled:bg-zinc-700 disabled:text-zinc-400'
                 }`}
               >
                 {isLoading ? (

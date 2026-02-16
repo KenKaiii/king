@@ -113,7 +113,7 @@ export default function ApisPage() {
                       <h3 className="text-sm font-semibold text-white">{service.name}</h3>
                       <button
                         onClick={() => window.api.shell.openExternal(service.keyUrl)}
-                        className="cursor-pointer text-xs text-pink-400 transition-colors hover:text-pink-300"
+                        className="cursor-pointer text-xs text-teal-400 transition-colors hover:text-teal-300"
                       >
                         {service.keyUrlLabel} &rarr;
                       </button>
@@ -144,12 +144,12 @@ export default function ApisPage() {
                         setInputs((prev) => ({ ...prev, [service.id]: e.target.value }))
                       }
                       placeholder={service.placeholder}
-                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:border-pink-400/50 focus:outline-none"
+                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:border-teal-400/50 focus:outline-none"
                     />
                     <button
                       onClick={() => handleSave(service.id)}
                       disabled={!inputs[service.id]?.trim() || isSaving}
-                      className="shrink-0 rounded-lg bg-pink-400 px-4 py-2 text-xs font-medium text-black transition-colors hover:bg-pink-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="shrink-0 rounded-lg bg-teal-400 px-4 py-2 text-xs font-medium text-black transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {isSaving ? '...' : 'Save'}
                     </button>

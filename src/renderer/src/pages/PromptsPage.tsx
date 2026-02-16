@@ -125,7 +125,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
         {/* Header */}
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-            Prompt <span className="text-pink-400">Gallery</span>
+            Prompt <span className="text-teal-400">Gallery</span>
           </h2>
           <p className="text-sm text-zinc-300">
             Pre-made prompts ready to go. Click one and hit generate.

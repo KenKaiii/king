@@ -284,7 +284,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onRecreate(image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl bg-pink-400 text-sm font-semibold text-black transition-colors hover:bg-pink-300"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl bg-teal-400 text-sm font-semibold text-black transition-colors hover:bg-teal-300"
             >
               <RecreateIcon />
               Recreate

@@ -48,7 +48,7 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
         <button
           type="button"
           onClick={handleGenerate}
-          className="absolute top-1/2 left-1/2 inline-grid h-12 -translate-x-1/2 -translate-y-1/2 grid-flow-col items-center justify-center gap-2 rounded-xl border border-pink-400/20 bg-pink-400/10 px-4 text-sm font-medium text-pink-400 opacity-0 backdrop-blur-sm transition-opacity duration-200 ease-out group-hover:opacity-100 hover:bg-pink-400/20"
+          className="absolute top-1/2 left-1/2 inline-grid h-12 -translate-x-1/2 -translate-y-1/2 grid-flow-col items-center justify-center gap-2 rounded-xl border border-teal-400/20 bg-teal-400/10 px-4 text-sm font-medium text-teal-400 opacity-0 backdrop-blur-sm transition-opacity duration-200 ease-out group-hover:opacity-100 hover:bg-teal-400/20"
         >
           <SparkleIcon className="size-5" />
           Generate

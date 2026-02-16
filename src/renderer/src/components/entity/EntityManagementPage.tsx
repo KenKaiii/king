@@ -122,7 +122,7 @@ export default function EntityManagementPage({
         <button
           onClick={() => setIsUploadModalOpen(true)}
           disabled={isCreating}
-          className="mb-4 inline-grid h-12 grid-flow-col items-center justify-center gap-2 rounded-xl bg-pink-400 px-6 font-medium text-black transition-all duration-300 hover:bg-pink-500 disabled:opacity-50"
+          className="mb-4 inline-grid h-12 grid-flow-col items-center justify-center gap-2 rounded-xl bg-teal-400 px-6 font-medium text-black transition-all duration-300 hover:bg-teal-500 disabled:opacity-50"
         >
           <SparkleIcon className="size-5" />
           {isCreating ? 'Creating...' : createLabel}
