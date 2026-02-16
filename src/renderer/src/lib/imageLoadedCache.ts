@@ -1,0 +1,63 @@
+/**
+ * Global cache of loaded image URLs.
+ * Persists across scrolling so images that have already loaded
+ * don't show skeleton again.
+ */
+
+const STORAGE_KEY = 'loaded-images-cache';
+const MAX_CACHE_SIZE = 500;
+
+let loadedImages: Set<string> | null = null;
+
+function getCache(): Set<string> {
+  if (loadedImages !== null) return loadedImages;
+
+  loadedImages = new Set<string>();
+
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const urls = JSON.parse(stored) as string[];
+      urls.forEach((url) => loadedImages!.add(url));
+    }
+  } catch {
+    // Ignore parse errors
+  }
+
+  return loadedImages;
+}
+
+let persistTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function persistCache(): void {
+  if (persistTimeout) clearTimeout(persistTimeout);
+
+  persistTimeout = setTimeout(() => {
+    try {
+      const cache = getCache();
+      const urls = Array.from(cache);
+      const toStore = urls.length > MAX_CACHE_SIZE ? urls.slice(-MAX_CACHE_SIZE) : urls;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+      // Ignore storage errors
+    }
+  }, 100);
+}
+
+export function markImageLoaded(url: string): void {
+  getCache().add(url);
+  persistCache();
+}
+
+export function isImageLoaded(url: string): boolean {
+  // Local protocol URLs are always considered "loaded"
+  if (url.startsWith('local-file://')) {
+    return true;
+  }
+  return getCache().has(url);
+}
+
+export function clearImageCache(): void {
+  getCache().clear();
+  sessionStorage.removeItem(STORAGE_KEY);
+}

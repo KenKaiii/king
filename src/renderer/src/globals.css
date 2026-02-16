@@ -1,0 +1,206 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    'Noto Sans',
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji';
+}
+
+/* Pointer cursor for all clickable elements */
+button,
+a,
+label[for],
+input[type='button'],
+input[type='submit'],
+input[type='reset'],
+input[type='checkbox'],
+input[type='radio'],
+select,
+[role='button'],
+[onclick],
+[tabindex]:not([tabindex='-1']) {
+  cursor: pointer;
+}
+
+/* Heading font */
+.font-heading {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animated gradient text */
+.gradient-shift {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #f472b6 25%,
+    #fb7185 50%,
+    #f472b6 75%,
+    #ffffff 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Skeleton loading component */
+.skeleton-loader {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #27272a 0%, #3f3f46 50%, #27272a 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-loader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Performance: GPU acceleration for grid items */
+.grid-item-perf {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* Primary CTA button with 3D pop effect */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #f472b6;
+  color: black;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 0 0 #be185d;
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #ec4899;
+  box-shadow: 0 4px 0 0 #9d174d;
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 0 #be185d;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary-sm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f472b6;
+  color: black;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  box-shadow: 0 3px 0 0 #be185d;
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn-primary-sm:hover {
+  background-color: #ec4899;
+  box-shadow: 0 3px 0 0 #9d174d;
+}
+
+.btn-primary-sm:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #be185d;
+}
+
+/* macOS traffic light padding */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}

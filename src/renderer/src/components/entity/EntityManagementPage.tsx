@@ -1,0 +1,174 @@
+import { useState } from 'react';
+import UploadModal from './UploadModal';
+import UploadReviewModal from './UploadReviewModal';
+import EntityCard from './EntityCard';
+import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
+import { useEntityManagement } from '@/hooks/useEntityManagement';
+import type { UploadedImage, EntityType } from '@/hooks/useEntityManagement';
+import type { EntityData } from '@/types/electron';
+import { SparkleIcon } from '@/components/icons';
+
+interface EntityManagementPageProps {
+  entityType: EntityType;
+  title: string;
+  subtitle: string;
+  createLabel: string;
+  deleteTitle: string;
+  deleteMessage: string;
+  onNavigate: (page: string) => void;
+}
+
+export default function EntityManagementPage({
+  entityType,
+  title,
+  subtitle,
+  createLabel,
+  deleteTitle,
+  deleteMessage,
+  onNavigate,
+}: EntityManagementPageProps) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  const {
+    entities,
+    isLoading,
+    isCreating,
+    hasFetched,
+    editingEntity,
+    deleteEntityId,
+    handleCreate,
+    handleSaveEdit,
+    handleDelete,
+    confirmDelete,
+    cancelDelete,
+    setEditingEntity,
+  } = useEntityManagement({ entityType });
+
+  const handleFilesSelected = (files: File[]) => {
+    setUploadedFiles(files);
+    setIsUploadModalOpen(false);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSave = async (name: string, images: UploadedImage[]) => {
+    try {
+      await handleCreate(name, images);
+      setIsReviewModalOpen(false);
+      setUploadedFiles([]);
+    } catch {
+      // Error already handled in hook
+    }
+  };
+
+  const handleReviewModalClose = () => {
+    setIsReviewModalOpen(false);
+    setUploadedFiles([]);
+    setEditingEntity(null);
+  };
+
+  const handleEditEntity = (entity: EntityData) => {
+    setEditingEntity(entity);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSaveEditWrapper = async (id: string, name: string, images: UploadedImage[]) => {
+    try {
+      await handleSaveEdit(id, name, images);
+      setIsReviewModalOpen(false);
+    } catch {
+      // Error already handled in hook
+    }
+  };
+
+  const handleGenerateWithEntity = (_entityId: string) => {
+    onNavigate('image');
+  };
+
+  return (
+    <>
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onFilesSelected={handleFilesSelected}
+        entityType={entityType}
+      />
+      <UploadReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={handleReviewModalClose}
+        initialFiles={uploadedFiles}
+        onGenerate={handleSave}
+        editEntity={editingEntity}
+        onSaveEdit={handleSaveEditWrapper}
+        isLoading={isCreating}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!deleteEntityId}
+        title={deleteTitle}
+        message={deleteMessage}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
+
+      <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
+        {/* Title Section */}
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white">{title}</h1>
+          <p className="mt-3 text-sm text-zinc-300">{subtitle}</p>
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={() => setIsUploadModalOpen(true)}
+          disabled={isCreating}
+          className="mb-4 inline-grid h-12 grid-flow-col items-center justify-center gap-2 rounded-xl bg-pink-400 px-6 font-medium text-black transition-all duration-300 hover:bg-pink-500 disabled:opacity-50"
+        >
+          <SparkleIcon className="size-5" />
+          {isCreating ? 'Creating...' : createLabel}
+        </button>
+
+        {/* Content Grid */}
+        <div className="relative grid w-full [&>*]:col-start-1 [&>*]:row-start-1">
+          {/* Saved Entities */}
+          <div
+            className={`flex w-full flex-wrap justify-center gap-4 transition-opacity duration-200 ${
+              entities.length > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            {entities.map((entity) => (
+              <EntityCard
+                key={entity.id}
+                entity={entity}
+                onGenerate={handleGenerateWithEntity}
+                onEdit={handleEditEntity}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+
+          {/* Empty State */}
+          <div
+            className={`flex w-full justify-center transition-opacity duration-200 ${
+              hasFetched && !isLoading && entities.length === 0
+                ? 'opacity-100'
+                : 'pointer-events-none opacity-0'
+            }`}
+          >
+            <p className="text-sm text-zinc-500">
+              No {entityType} yet. Create one to get started.
+            </p>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center gap-3">
+            <div className="size-6 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+            <span className="text-sm text-zinc-400">Loading...</span>
+          </div>
+        )}
+      </main>
+    </>
+  );
+}
