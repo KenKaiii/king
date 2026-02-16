@@ -50,6 +50,8 @@ function setContentSecurityPolicy(): void {
     const scriptSrc = isDev ? "'self' 'unsafe-inline'" : "'self'";
     const connectSrc = isDev ? "'self' http://localhost:* ws://localhost:*" : "'self'";
 
+    const workerSrc = isDev ? "'self' blob:" : "'self'";
+
     callback({
       responseHeaders: {
         ...details.responseHeaders,
@@ -61,6 +63,7 @@ function setContentSecurityPolicy(): void {
             `img-src 'self' data: blob: local-file:`,
             `font-src 'self' data:`,
             `connect-src ${connectSrc}`,
+            `worker-src ${workerSrc}`,
           ].join('; '),
         ],
       },
