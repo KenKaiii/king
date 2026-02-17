@@ -1,11 +1,16 @@
 const js = require('@eslint/js');
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const prettier = require('eslint-config-prettier');
 
 module.exports = [
+  { ignores: ['node_modules/', 'dist/', 'out/'] },
   js.configs.recommended,
   prettier,
   {
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
+      parser: tsParser,
       ecmaVersion: 2022,
       sourceType: 'module',
       globals: {
@@ -32,8 +37,13 @@ module.exports = [
         },
       },
     },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
       'prefer-const': 'error',
       'no-var': 'error',
@@ -41,6 +51,26 @@ module.exports = [
     },
   },
   {
-    ignores: ['node_modules/', 'dist/', 'out/'],
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        exports: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',
+      'prefer-const': 'error',
+      'no-var': 'error',
+      eqeqeq: ['error', 'always'],
+    },
   },
 ];

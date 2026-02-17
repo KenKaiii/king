@@ -134,7 +134,6 @@ export default function UploadReviewModal({
         }
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFiles, isEditMode]);
 
   useEffect(() => {
