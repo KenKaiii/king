@@ -12,8 +12,8 @@ interface ServiceConfig {
   keyUrlLabel: string;
 }
 
+// Ordered for 2-column grid: left = AI/Marketing/Messaging, right = Stores
 const services: ServiceConfig[] = [
-  // AI
   {
     id: 'fal',
     name: 'fal.ai',
@@ -22,24 +22,6 @@ const services: ServiceConfig[] = [
     keyUrl: 'https://fal.ai/dashboard/keys',
     keyUrlLabel: 'Get API key',
   },
-  // Marketing
-  {
-    id: 'google-ads',
-    name: 'Google Ads',
-    description: 'Manage and run Google ad campaigns',
-    placeholder: 'Enter your Google Ads developer token...',
-    keyUrl: 'https://ads.google.com/aw/apicenter',
-    keyUrlLabel: 'Get developer token',
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook Ads',
-    description: 'Manage and run Facebook ad campaigns',
-    placeholder: 'Enter your Facebook Ads API key...',
-    keyUrl: 'https://developers.facebook.com/apps/',
-    keyUrlLabel: 'Get API key',
-  },
-  // Stores
   {
     id: 'shopee',
     name: 'Shopee',
@@ -49,6 +31,14 @@ const services: ServiceConfig[] = [
     keyUrlLabel: 'Get API key',
   },
   {
+    id: 'google-ads',
+    name: 'Google Ads',
+    description: 'Manage and run Google ad campaigns',
+    placeholder: 'Enter your Google Ads developer token...',
+    keyUrl: 'https://ads.google.com/aw/apicenter',
+    keyUrlLabel: 'Get developer token',
+  },
+  {
     id: 'amazon',
     name: 'Amazon',
     description: 'Pull product data from Amazon listings',
@@ -56,7 +46,22 @@ const services: ServiceConfig[] = [
     keyUrl: 'https://developer-docs.amazon.com/sp-api/',
     keyUrlLabel: 'Get API key',
   },
-  // Messaging
+  {
+    id: 'facebook',
+    name: 'Facebook Ads',
+    description: 'Manage and run Facebook ad campaigns',
+    placeholder: 'Enter your Facebook Ads API key...',
+    keyUrl: 'https://developers.facebook.com/apps/',
+    keyUrlLabel: 'Get API key',
+  },
+  {
+    id: 'shopify',
+    name: 'Shopify',
+    description: 'Sync products and orders from Shopify stores',
+    placeholder: 'Enter your Shopify Admin API access token...',
+    keyUrl: 'https://admin.shopify.com/store/',
+    keyUrlLabel: 'Get access token',
+  },
   {
     id: 'telegram',
     name: 'Telegram',
