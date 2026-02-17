@@ -40,8 +40,8 @@ function AppContent() {
       )}
       {currentPage === 'products' && <ProductsPage onNavigate={setCurrentPage} />}
       {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
-      {currentPage === 'facebook-ads' && <FacebookAdsPage />}
-      {currentPage === 'google-ads' && <GoogleAdsPage />}
+      {currentPage === 'facebook-ads' && <FacebookAdsPage onNavigate={setCurrentPage} />}
+      {currentPage === 'google-ads' && <GoogleAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'store' && <StorePage />}
       {currentPage === 'apis' && <ApisPage />}
       {currentPage === 'prompts' && (

@@ -21,11 +21,7 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
       <div className="relative h-72 w-48 overflow-hidden rounded-xl bg-zinc-800">
         {entity.thumbnailUrl ? (
           <>
-            <div
-              className={`absolute inset-0 animate-pulse bg-zinc-700 transition-opacity duration-200 ${
-                isLoaded ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
+            {!isLoaded && <div className="absolute inset-0 bg-zinc-700" />}
             <img
               src={entity.thumbnailUrl}
               alt={entity.name}

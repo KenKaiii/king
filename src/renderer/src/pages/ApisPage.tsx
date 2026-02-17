@@ -13,6 +13,7 @@ interface ServiceConfig {
 }
 
 const services: ServiceConfig[] = [
+  // AI
   {
     id: 'fal',
     name: 'fal.ai',
@@ -20,6 +21,15 @@ const services: ServiceConfig[] = [
     placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xxxxxxxx...',
     keyUrl: 'https://fal.ai/dashboard/keys',
     keyUrlLabel: 'Get API key',
+  },
+  // Marketing
+  {
+    id: 'google-ads',
+    name: 'Google Ads',
+    description: 'Manage and run Google ad campaigns',
+    placeholder: 'Enter your Google Ads developer token...',
+    keyUrl: 'https://ads.google.com/aw/apicenter',
+    keyUrlLabel: 'Get developer token',
   },
   {
     id: 'facebook',
@@ -29,6 +39,7 @@ const services: ServiceConfig[] = [
     keyUrl: 'https://developers.facebook.com/apps/',
     keyUrlLabel: 'Get API key',
   },
+  // Stores
   {
     id: 'shopee',
     name: 'Shopee',
@@ -44,6 +55,15 @@ const services: ServiceConfig[] = [
     placeholder: 'Enter your Amazon API key...',
     keyUrl: 'https://developer-docs.amazon.com/sp-api/',
     keyUrlLabel: 'Get API key',
+  },
+  // Messaging
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Send messages and media via Telegram bot',
+    placeholder: 'Enter your Telegram bot token...',
+    keyUrl: 'https://t.me/BotFather',
+    keyUrlLabel: 'Create bot',
   },
 ];
 
@@ -94,13 +114,13 @@ export default function ApisPage() {
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-4xl">
         <h1 className="text-2xl font-bold text-white">API Keys</h1>
         <p className="mt-1 text-sm text-zinc-400">
           Connect external services by adding your API keys.
         </p>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           {services.map((service) => {
             const saved = savedKeys[service.id];
             const isSaving = savingService === service.id;
