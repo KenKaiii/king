@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { PlusIcon, MinusIcon } from '@/components/icons';
 import {
   mockCampaigns,
+  audienceInsights,
   getHealthColor,
   getStatusStyle,
   getMetricColor,
@@ -218,6 +219,39 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
   );
 }
 
+interface InsightCardProps {
+  title: string;
+  metric: string;
+  segments: { label: string; value: string; share: number }[];
+}
+
+function InsightCard({ title, metric, segments }: InsightCardProps) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <div className="mb-3 flex items-baseline justify-between">
+        <p className="text-[10px] font-medium tracking-wide text-zinc-400 uppercase">{title}</p>
+        <p className="text-[10px] text-zinc-600">by {metric}</p>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {segments.map((seg) => (
+          <div key={seg.label} className="flex items-center gap-2">
+            <span className="w-20 shrink-0 truncate text-xs text-zinc-300">{seg.label}</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-teal-400/60"
+                style={{ width: `${seg.share}%` }}
+              />
+            </div>
+            <span className="w-10 shrink-0 text-right text-xs font-medium text-white">
+              {seg.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface GoogleAdsPageProps {
   onNavigate: (page: PageType) => void;
 }
@@ -340,6 +374,23 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
             trend={{ value: -8, upIsGood: false }}
           />
           <KpiCard label="Active" value={String(activeCampaigns.length)} sub="campaigns" />
+        </section>
+
+        {/* Audience Insights */}
+        <section className="flex flex-col gap-4">
+          <h3 className="text-lg font-bold tracking-wide text-white uppercase">
+            Audience Insights
+          </h3>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {audienceInsights.map((insight) => (
+              <InsightCard
+                key={insight.title}
+                title={insight.title}
+                metric={insight.metric}
+                segments={insight.segments}
+              />
+            ))}
+          </div>
         </section>
 
         {/* Campaign Cards */}

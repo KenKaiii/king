@@ -113,14 +113,20 @@ export default function ApisPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-6">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-2xl font-bold text-white">API Keys</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Connect external services by adding your API keys.
-        </p>
+    <main className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex max-w-4xl flex-col gap-8 px-6 pt-8 pb-8 md:px-10">
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
+              API <span className="text-teal-400">Keys</span>
+            </h2>
+            <p className="mt-1 text-sm text-zinc-300">
+              Connect external services by adding your API keys.
+            </p>
+          </div>
+        </section>
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {services.map((service) => {
             const saved = savedKeys[service.id];
             const isSaving = savingService === service.id;

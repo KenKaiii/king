@@ -177,3 +177,45 @@ export function getMetricColor(
   if (value >= thresholds.warning) return 'text-amber-500';
   return 'text-red-500';
 }
+
+export const audienceInsights = [
+  {
+    title: 'Country',
+    metric: 'conversions',
+    segments: [
+      { label: 'United States', value: '52%', share: 52 },
+      { label: 'United Kingdom', value: '22%', share: 22 },
+      { label: 'Germany', value: '15%', share: 15 },
+      { label: 'Canada', value: '11%', share: 11 },
+    ],
+  },
+  {
+    title: 'Age Group',
+    metric: 'CPA',
+    segments: [
+      { label: '25\u201334', value: '$5.40', share: 35 },
+      { label: '35\u201344', value: '$8.20', share: 30 },
+      { label: '18\u201324', value: '$11.50', share: 18 },
+      { label: '45\u201354', value: '$16.80', share: 17 },
+    ],
+  },
+  {
+    title: 'Device',
+    metric: 'conversions',
+    segments: [
+      { label: 'Mobile', value: '54%', share: 54 },
+      { label: 'Desktop', value: '38%', share: 38 },
+      { label: 'Tablet', value: '8%', share: 8 },
+    ],
+  },
+  {
+    title: 'Network',
+    metric: 'conversions',
+    segments: [
+      { label: 'Search', value: '48%', share: 48 },
+      { label: 'Shopping', value: '27%', share: 27 },
+      { label: 'Display', value: '15%', share: 15 },
+      { label: 'YouTube', value: '10%', share: 10 },
+    ],
+  },
+];

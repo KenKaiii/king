@@ -114,8 +114,10 @@ export default function EntityManagementPage({
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
         {/* Title Section */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white">{title}</h1>
-          <p className="mt-3 text-sm text-zinc-300">{subtitle}</p>
+          <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
+            {title}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-300">{subtitle}</p>
         </div>
 
         {/* CTA Button */}
