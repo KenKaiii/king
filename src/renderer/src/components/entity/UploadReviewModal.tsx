@@ -22,23 +22,23 @@ function getCountRating(count: number) {
   if (count < 4) {
     return {
       label: 'Too Few',
-      color: 'text-red-500',
-      gradientFrom: 'rgb(194,146,73)',
-      gradientTo: 'rgb(236,118,55)',
+      color: 'text-[var(--base-color-brand--dark-red)]',
+      gradientFrom: '#b82a57',
+      gradientTo: '#d93a63',
     };
   } else if (count < 6) {
     return {
       label: 'Good',
-      color: 'text-yellow-500',
-      gradientFrom: 'rgb(194,194,73)',
-      gradientTo: 'rgb(236,200,55)',
+      color: 'text-[var(--base-color-brand--umber)]',
+      gradientFrom: '#ffcbd6',
+      gradientTo: '#ffee8c',
     };
   } else {
     return {
       label: 'Excellent',
-      color: 'text-teal-400',
-      gradientFrom: 'rgb(73,194,140)',
-      gradientTo: 'rgb(209,254,23)',
+      color: 'text-[var(--base-color-brand--cinamon)]',
+      gradientFrom: '#ff94ac',
+      gradientTo: '#d93a63',
     };
   }
 }
@@ -223,18 +223,20 @@ export default function UploadReviewModal({
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
-        isOpen ? 'visible bg-black/80 opacity-100 backdrop-blur-sm' : 'invisible opacity-0'
+        isOpen
+          ? 'visible bg-[var(--base-color-brand--bean)]/70 opacity-100 backdrop-blur-sm'
+          : 'invisible opacity-0'
       }`}
       onClick={onClose}
     >
       <div
-        className={`mx-4 grid h-[90vh] max-h-[700px] w-full max-w-[68rem] grid-rows-[auto_1fr_auto] gap-4 rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl transition-all duration-300 ${
+        className={`mx-4 grid h-[90vh] max-h-[700px] w-full max-w-[68rem] grid-rows-[auto_1fr_auto] gap-4 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] shadow-2xl transition-all duration-300 ${
           isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Upload More Button */}
-        <label className="grid w-full cursor-pointer rounded-t-3xl bg-white/5 p-3 text-center text-zinc-400 transition hover:bg-white/10">
+        <label className="grid w-full cursor-pointer rounded-t-3xl bg-[var(--base-color-brand--champagne)] p-3 text-center text-[var(--base-color-brand--umber)] transition hover:bg-[var(--base-color-brand--cream)]">
           <input
             multiple
             className="sr-only"
@@ -244,7 +246,7 @@ export default function UploadReviewModal({
           />
           <div className="grid justify-center rounded-xl border border-dashed border-transparent p-5">
             <div className="flex items-center justify-center">
-              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-xl border border-teal-400/20 bg-teal-400/10 px-3 text-sm font-medium text-teal-400 backdrop-blur-sm transition hover:bg-teal-400/20">
+              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]">
                 <SparkleIcon className="size-5" />
                 Upload images
               </span>
@@ -260,7 +262,7 @@ export default function UploadReviewModal({
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(img.id)}
-                  className="absolute -top-1 -right-1 z-10 grid h-6 w-6 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white transition hover:bg-white/20 lg:opacity-0 lg:group-hover:opacity-100"
+                  className="absolute -top-1 -right-1 z-10 grid h-6 w-6 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] lg:opacity-0 lg:group-hover:opacity-100"
                 >
                   <CloseIcon />
                 </button>
@@ -284,27 +286,29 @@ export default function UploadReviewModal({
         {/* Bottom Form */}
         <form
           onSubmit={handleSubmit}
-          className="sticky bottom-4 z-10 grid grid-cols-12 grid-rows-[auto_4rem] gap-2 rounded-2xl border border-white/10 bg-black/80 p-3 backdrop-blur-xl md:bottom-8 lg:grid-rows-1"
+          className="sticky bottom-4 z-10 grid grid-cols-12 grid-rows-[auto_4rem] gap-2 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-3 md:bottom-8 lg:grid-rows-1"
         >
           {/* Stats Section */}
           <div className="col-span-12 flex items-center lg:col-span-7">
-            <div className="w-full items-center rounded-xl border border-white/10 px-3 py-3 md:px-4">
+            <div className="w-full items-center rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 py-3 md:px-4">
               <div className="grid grid-flow-row-dense auto-rows-min items-center md:grid-cols-[1fr_auto]">
-                <p className="truncate text-xs text-zinc-400 md:order-1 md:text-sm">Images count</p>
+                <p className="truncate text-xs text-[var(--base-color-brand--umber)] md:order-1 md:text-sm">
+                  Images count
+                </p>
                 <div className="grid grid-cols-[auto_1fr] items-center gap-1 md:gap-3">
                   <p
                     className={`truncate text-[10px] font-bold tracking-wide uppercase md:text-xs ${countRating.color}`}
                   >
                     {countRating.label}
                   </p>
-                  <p className="truncate text-xs text-zinc-400 md:text-sm">
+                  <p className="truncate text-xs text-[var(--base-color-brand--umber)] md:text-sm">
                     {imageCount} of {MAX_IMAGES}
                   </p>
                 </div>
               </div>
               <div
                 role="progressbar"
-                className="relative mt-1 w-full rounded-full bg-zinc-700 p-px md:p-1"
+                className="relative mt-1 w-full rounded-full bg-[var(--base-color-brand--cream)] p-px md:p-1"
               >
                 <div
                   className="h-1.5 rounded-full transition-all duration-300 md:h-3"
@@ -319,13 +323,15 @@ export default function UploadReviewModal({
 
           {/* Name Input and Save Button */}
           <div className="col-span-12 grid grid-cols-12 gap-2 lg:col-span-5">
-            <label className="col-span-6 flex flex-col justify-center gap-1 rounded-xl border border-white/10 px-3 lg:col-span-7">
-              <span className="h-4 text-xs text-zinc-400 md:text-sm">Enter name</span>
+            <label className="col-span-6 flex flex-col justify-center gap-1 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 lg:col-span-7">
+              <span className="h-4 text-xs text-[var(--base-color-brand--umber)] md:text-sm">
+                Enter name
+              </span>
               <input
                 required
                 maxLength={30}
                 placeholder="Type here..."
-                className="h-5 w-full bg-transparent text-xs font-bold text-white outline-none placeholder:text-zinc-500 md:text-sm"
+                className="h-5 w-full bg-transparent text-xs font-bold text-[var(--base-color-brand--bean)] outline-none placeholder:text-[var(--base-color-brand--umber)]/60 md:text-sm"
                 type="text"
                 value={entityName}
                 onChange={(e) => setEntityName(e.target.value)}
@@ -338,11 +344,12 @@ export default function UploadReviewModal({
               <button
                 type="submit"
                 disabled={images.length === 0 || !entityName.trim() || isLoading}
-                className={`relative z-10 inline-grid h-full w-full grid-flow-col items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition-all duration-300 ${
+                className={`relative z-10 inline-grid h-full w-full grid-flow-col items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold uppercase tracking-wide transition-all duration-300 ${
                   isLoading
-                    ? 'bg-zinc-800 text-white'
-                    : 'border border-teal-400 bg-teal-400 text-black hover:bg-teal-500 disabled:cursor-not-allowed disabled:border-zinc-600 disabled:bg-zinc-700 disabled:text-zinc-400'
+                    ? 'bg-[var(--base-color-brand--umber)] text-[var(--base-color-brand--shell)]'
+                    : 'border-none bg-[var(--base-color-brand--cinamon)] text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_3px_0_0_var(--base-color-brand--bean)]'
                 }`}
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
                 {isLoading ? (
                   <>

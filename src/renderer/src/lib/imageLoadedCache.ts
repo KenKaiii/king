@@ -50,10 +50,6 @@ export function markImageLoaded(url: string): void {
 }
 
 export function isImageLoaded(url: string): boolean {
-  // Local protocol URLs are always considered "loaded"
-  if (url.startsWith('local-file://')) {
-    return true;
-  }
   return getCache().has(url);
 }
 

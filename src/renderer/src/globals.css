@@ -1,14 +1,6 @@
 @import 'tailwindcss';
-
-:root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
+@import './styles/tokens.css';
+@import './styles/ui.css';
 
 html,
 body {
@@ -16,22 +8,9 @@ body {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    Ubuntu,
-    Cantarell,
-    'Noto Sans',
-    sans-serif,
-    'Apple Color Emoji',
-    'Segoe UI Emoji',
-    'Segoe UI Symbol',
-    'Noto Color Emoji';
+  background: var(--background-color--background-primary);
+  color: var(--text-color--text-primary);
+  font-family: var(--text-color--font-family--body);
 }
 
 /* Pointer cursor for all clickable elements */
@@ -50,10 +29,15 @@ select,
   cursor: pointer;
 }
 
-/* Heading font */
+/* Heading font helper */
 .font-heading {
+  font-family: var(--text-color--font-family--heading);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+}
+
+.font-display {
+  font-family: var(--text-color--font-family--display);
 }
 
 /* Hide scrollbar utility */
@@ -66,34 +50,17 @@ select,
   display: none;
 }
 
-/* Animated gradient text */
+/* Legacy gradient wordmark — kept as no-op utility in case it is still referenced.
+   In Clensae the wordmark is plain bean ink Genty, so this class is now a simple
+   display-font color helper. */
 .gradient-shift {
-  background: linear-gradient(
-    90deg,
-    #ffffff 0%,
-    #2dd4bf 25%,
-    #34d399 50%,
-    #2dd4bf 75%,
-    #ffffff 100%
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientShift 4s ease-in-out infinite;
+  font-family: var(--text-color--font-family--display);
+  color: var(--base-color-brand--bean);
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
-@keyframes gradientShift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Skeleton shimmer animation */
+/* Skeleton shimmer animation (warm-pastel variant) */
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
@@ -112,11 +79,10 @@ select,
   }
 }
 
-/* Skeleton loading component */
 .skeleton-loader {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(90deg, #27272a 0%, #3f3f46 50%, #27272a 100%);
+  background: linear-gradient(90deg, #ffe9bf 0%, #fff8e0 50%, #ffe9bf 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -128,7 +94,7 @@ select,
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.45) 50%,
     transparent 100%
   );
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -140,29 +106,32 @@ select,
   will-change: transform;
 }
 
-/* Primary CTA button with 3D pop effect */
+/* Primary CTA button (legacy .btn-primary) — now mapped to cinamon pill for
+   backwards compatibility with any remaining callsites. */
 .btn-primary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #2dd4bf;
-  color: black;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 0 0 #0f766e;
+  background-color: var(--base-color-brand--cinamon);
+  color: var(--text-color--text-tertiary);
+  font-family: var(--text-color--font-family--heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 100vw;
+  box-shadow: 0 4px 0 0 var(--base-color-brand--dark-red);
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background-color: #14b8a6;
-  box-shadow: 0 4px 0 0 #115e59;
+  background-color: var(--base-color-brand--red);
 }
 
 .btn-primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 0 #0f766e;
+  box-shadow: 0 2px 0 0 var(--base-color-brand--dark-red);
 }
 
 .btn-primary:disabled {
@@ -172,28 +141,30 @@ select,
 }
 
 .btn-primary-sm {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #2dd4bf;
-  color: black;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  box-shadow: 0 3px 0 0 #0f766e;
+  background-color: var(--base-color-brand--cinamon);
+  color: var(--text-color--text-tertiary);
+  font-family: var(--text-color--font-family--heading);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 100vw;
+  box-shadow: 0 3px 0 0 var(--base-color-brand--dark-red);
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary-sm:hover {
-  background-color: #14b8a6;
-  box-shadow: 0 3px 0 0 #115e59;
+  background-color: var(--base-color-brand--red);
 }
 
 .btn-primary-sm:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 0 #0f766e;
+  box-shadow: 0 1px 0 0 var(--base-color-brand--dark-red);
 }
 
 /* macOS traffic light padding */

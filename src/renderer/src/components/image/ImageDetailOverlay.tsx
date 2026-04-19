@@ -66,7 +66,7 @@ export default function ImageDetailOverlay({
 
   return (
     <div
-      className={`fixed inset-0 z-50 grid bg-black/80 transition-all duration-200 ease-out ${
+      className={`fixed inset-0 z-50 grid bg-[var(--base-color-brand--bean)]/80 backdrop-blur-sm transition-all duration-200 ease-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{

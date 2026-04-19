@@ -1,0 +1,137 @@
+/* Design tokens: colors, sizes, radii, brand fonts.
+   Ported from the Clensae design system, with fonts bundled locally
+   (no external CDNs — Electron CSP forbids external font-src). */
+
+/* ----- Display font: Genty -----
+   Hand-drawn single-weight face for big brand moments (wordmark). */
+@font-face {
+  font-family: Genty;
+  src:
+    url('../assets/fonts/genty/GentyDemo-Regular.woff2') format('woff2'),
+    url('../assets/fonts/genty/GentyDemo-Regular.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----- Heading font: Rocaone ----- */
+@font-face {
+  font-family: Rocaone;
+  src: url('../assets/fonts/rocaone/RocaOne-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Rocaone;
+  src: url('../assets/fonts/rocaone/RocaOne-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Rocaone;
+  src: url('../assets/fonts/rocaone/RocaOne-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Rocaone;
+  src: url('../assets/fonts/rocaone/RocaOne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----- Body font: Helveticaneue ----- */
+@font-face {
+  font-family: Helveticaneue;
+  src: url('../assets/fonts/helveticaneue/HelveticaNeueCyr-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: Helveticaneue;
+  src: url('../assets/fonts/helveticaneue/HelveticaNeueCyr-Roman.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Brand palette ---------- */
+
+  /* Pastel brand surfaces */
+  --base-color-brand--cream: #ffee8c;
+  --base-color-brand--blush: #ffcbd6;
+
+  /* Body / page surfaces */
+  --base-color-brand--shell: #fff8e0;
+  --base-color-brand--champagne: #fff1b8;
+  --base-color-brand--light-pink: #ffdde3;
+  --base-color-brand--dark-pink: #ff94ac;
+  --base-color-brand--safron: #ffee8c;
+
+  /* Darks: warm cocoa tones */
+  --base-color-brand--bean: #33201a;
+  --base-color-brand--umber: #7a4432;
+  --base-color-brand--text-darker: #2a1912;
+
+  /* Accents (CTAs) */
+  --base-color-brand--cinamon: #d93a63;
+  --base-color-brand--red: #b82a57;
+  --base-color-brand--dark-red: #821a3c;
+
+  /* Status colors — warm-harmonized for ad dashboards */
+  --status--success: #5a7f3a;
+  --status--warning: #c9821f;
+  --status--error: #821a3c;
+  --status--muted: #7a4432;
+
+  --base-color-brand--transparent: #fff0;
+  --base-color-neutral--white: #fff;
+  --base-color-neutral--black: #000;
+
+  /* Semantic */
+  --text-color--text-primary: var(--base-color-brand--text-darker);
+  --text-color--text-secondary: var(--base-color-brand--bean);
+  --text-color--text-tertiary: var(--base-color-brand--shell);
+  --text-color--text-success: var(--base-color-brand--shell);
+  --text-color--text-error: var(--base-color-brand--shell);
+  --background-color--background-primary: var(--base-color-brand--shell);
+  --background-color--background-secondary: var(--base-color-brand--champagne);
+  --background-color--background-tertiary: var(--base-color-brand--bean);
+  --background-color--background-success: var(--base-color-brand--dark-pink);
+  --background-color--background-error: var(--base-color-brand--dark-red);
+  --border-color--border-primary: var(--base-color-brand--umber);
+  --border-color--border-secondary: var(--base-color-brand--shell);
+
+  /* Fonts */
+  --text-color--font-family--heading: Rocaone, 'Arial Rounded MT Bold', Arial, sans-serif;
+  --text-color--font-family--display: Genty, Rocaone, 'Arial Rounded MT Bold', Arial, sans-serif;
+  --text-color--font-family--body: Helveticaneue, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Sizes */
+  --size--875rem: 0.875em;
+  --size--1rem: 1rem;
+  --size--1-125rem: 1.125em;
+  --size--1-25rem: 1.25em;
+  --size--1-5rem: 1.5em;
+  --size--1-75rem: 1.75em;
+  --size--2rem: 2rem;
+  --size--2-25rem: 2.25rem;
+  --size--2-5rem: 2.5rem;
+  --size--3rem: 3rem;
+  --size--3-5rem: 3.5em;
+  --size--4rem: 4em;
+  --size--4-5rem: 4.5em;
+  --size--5rem: 5em;
+  --size--5-5rem: 5.5em;
+
+  /* Radius */
+  --radius--round: 100vw;
+  --radius--1-5rem: var(--size--1-5rem);
+  --radius--2rem: var(--size--2rem);
+}

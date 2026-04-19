@@ -37,9 +37,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8">
-          <div className="rounded-full bg-red-500/10 p-4">
+          <div className="rounded-full bg-[var(--base-color-brand--light-pink)] p-4">
             <svg
-              className="h-8 w-8 text-red-500"
+              className="h-8 w-8 text-[var(--base-color-brand--dark-red)]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -53,22 +53,21 @@ export class ErrorBoundary extends Component<Props, State> {
             </svg>
           </div>
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-zinc-100">Something went wrong</h2>
-            <p className="mt-1 text-sm text-zinc-400">
+            <h2
+              className="text-lg font-semibold text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Something went wrong
+            </h2>
+            <p className="mt-1 text-sm text-[var(--base-color-brand--umber)]">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={this.handleReset}
-              className="rounded-lg bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-600"
-            >
+            <button onClick={this.handleReset} className="btn-cinamon btn-sm">
               Try Again
             </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700"
-            >
+            <button onClick={() => window.location.reload()} className="btn-shell btn-sm">
               Reload Page
             </button>
           </div>

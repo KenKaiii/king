@@ -13,7 +13,6 @@ import {
   ImageAddIcon,
 } from '@/components/icons';
 import {
-  modelOptions,
   aspectRatioOptions,
   resolutionOptions,
   outputFormatOptions,
@@ -21,6 +20,7 @@ import {
   MAX_IMAGE_SIZE_MB,
   MAX_IMAGES_PER_GENERATION,
 } from '@/lib/constants/image-form';
+import type { EntityData } from '@/types/electron';
 
 interface ReferenceImage {
   id: string;
@@ -52,15 +52,81 @@ export default function ImagePromptForm({
   editData,
 }: ImagePromptFormProps) {
   const [prompt, setPrompt] = useState(initialPrompt);
-  const [model, setModel] = useState('nano_banana_2');
+  const [selectedEntity, setSelectedEntity] = useState('none');
   const [imageCount, setImageCount] = useState(1);
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [resolution, setResolution] = useState('1K');
   const [outputFormat, setOutputFormat] = useState('png');
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
+  const [products, setProducts] = useState<EntityData[]>([]);
+  const [characters, setCharacters] = useState<EntityData[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxImages = MAX_IMAGES_PER_GENERATION;
+
+  // Fetch products and characters for the entity selector
+  useEffect(() => {
+    const fetchEntities = async () => {
+      try {
+        const [p, c] = await Promise.all([
+          window.api.entities.list('products'),
+          window.api.entities.list('characters'),
+        ]);
+        setProducts(p);
+        setCharacters(c);
+      } catch {
+        // Silently fail
+      }
+    };
+    fetchEntities();
+  }, []);
+
+  // Build entity selector options
+  const entityOptions = [
+    { value: 'none', label: 'Default' },
+    ...(products.length > 0
+      ? [
+          { value: '_product_header', label: 'Products', disabled: true },
+          ...products.map((p) => ({ value: `product:${p.id}`, label: p.name })),
+        ]
+      : []),
+    ...(characters.length > 0
+      ? [
+          { value: '_character_header', label: 'Characters', disabled: true },
+          ...characters.map((c) => ({ value: `character:${c.id}`, label: c.name })),
+        ]
+      : []),
+  ];
+
+  // When an entity is selected, load its reference images
+  const handleEntityChange = useCallback(
+    (value: string) => {
+      setSelectedEntity(value);
+
+      if (value === 'none') {
+        setReferenceImages([]);
+        return;
+      }
+
+      const [type, id] = value.split(':');
+      const entities = type === 'product' ? products : characters;
+      const entity = entities.find((e) => e.id === id);
+
+      if (!entity) return;
+
+      const entityImages: ReferenceImage[] = entity.referenceImages
+        .slice(0, MAX_REFERENCE_IMAGES)
+        .map((url) => ({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          preview: url,
+          url,
+          isLoading: false,
+        }));
+
+      setReferenceImages(entityImages);
+    },
+    [products, characters],
+  );
 
   const autoResizeTextarea = useCallback(() => {
     const textarea = textareaRef.current;
@@ -114,12 +180,25 @@ export default function ImagePromptForm({
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         file,
         preview: URL.createObjectURL(file),
-        isLoading: false, // No upload needed in Electron - we use local file paths
-        url: URL.createObjectURL(file),
+        isLoading: true,
       }));
 
       setReferenceImages((prev) => [...prev, ...pendingImages].slice(0, MAX_REFERENCE_IMAGES));
       e.target.value = '';
+
+      // Convert files to base64 data URLs so they're accessible from the main process
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        const id = pendingImages[i].id;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          setReferenceImages((prev) =>
+            prev.map((img) => (img.id === id ? { ...img, url: dataUrl, isLoading: false } : img)),
+          );
+        };
+        reader.readAsDataURL(file);
+      }
     },
     [referenceImages.length],
   );
@@ -149,7 +228,7 @@ export default function ImagePromptForm({
 
     onSubmit?.({
       prompt,
-      model,
+      model: 'nano_banana_2',
       count: imageCount,
       aspectRatio,
       resolution,
@@ -169,7 +248,7 @@ export default function ImagePromptForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="fixed inset-x-1/2 bottom-4 z-20 hidden w-full -translate-x-1/2 rounded-[2rem] border border-white/10 bg-black/60 p-[22px] backdrop-blur-xl md:block lg:max-w-[65rem] lg:min-w-[1000px]"
+      className="fixed inset-x-1/2 bottom-4 z-20 hidden w-full -translate-x-1/2 rounded-[2rem] border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-[22px] shadow-[0_12px_40px_-12px_rgba(51,32,26,0.25)] md:block lg:max-w-[65rem] lg:min-w-[1000px]"
     >
       <fieldset className="relative z-20 flex gap-3">
         {/* Left section */}
@@ -179,9 +258,9 @@ export default function ImagePromptForm({
             <div className="flex flex-wrap items-center gap-2">
               {referenceImages.map((img) => (
                 <div key={img.id} className="group relative shrink-0">
-                  <div className="relative size-14 rounded-xl bg-white/10">
+                  <div className="relative size-14 rounded-xl bg-[var(--base-color-brand--shell)]">
                     {img.isLoading ? (
-                      <div className="size-full animate-[shimmer_1.5s_infinite] animate-pulse rounded-xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 bg-[length:200%_100%]" />
+                      <div className="skeleton-loader size-full rounded-xl" />
                     ) : (
                       <>
                         <img
@@ -192,7 +271,7 @@ export default function ImagePromptForm({
                         <button
                           type="button"
                           onClick={() => removeReferenceImage(img.id)}
-                          className="absolute -top-3 -right-3 z-10 grid h-6 w-6 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-white transition hover:bg-white/20 xl:opacity-0 xl:group-hover:opacity-100"
+                          className="absolute -top-3 -right-3 z-10 grid h-6 w-6 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] xl:opacity-0 xl:group-hover:opacity-100"
                         >
                           <CloseIcon />
                         </button>
@@ -202,11 +281,11 @@ export default function ImagePromptForm({
                 </div>
               ))}
               {referenceImages.length < MAX_REFERENCE_IMAGES && (
-                <div className="relative size-14 shrink-0 rounded-xl bg-white/10">
+                <div className="relative size-14 shrink-0 rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)]">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="grid size-full cursor-pointer items-center justify-center text-white transition active:opacity-60"
+                    className="grid size-full cursor-pointer items-center justify-center text-[var(--base-color-brand--umber)] transition hover:text-[var(--base-color-brand--bean)] active:opacity-60"
                   >
                     <ImageAddIcon />
                   </button>
@@ -229,7 +308,7 @@ export default function ImagePromptForm({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] border border-white/10 bg-white/5 text-white transition hover:bg-teal-400/10 hover:text-teal-400"
+                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:border-[var(--base-color-brand--cinamon)] hover:text-[var(--base-color-brand--cinamon)]"
                 title="Add reference images (max 8)"
               >
                 <PlusIcon />
@@ -252,37 +331,37 @@ export default function ImagePromptForm({
                   }
                 }
               }}
-              className="hide-scrollbar max-h-[120px] min-h-[40px] w-full resize-none rounded-none border-none bg-transparent p-0 text-[15px] text-white placeholder:text-zinc-400 focus:outline-none"
+              className="hide-scrollbar max-h-[120px] min-h-[40px] w-full resize-none rounded-none border-none bg-transparent p-0 text-[15px] text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/70 focus:outline-none"
             />
           </div>
 
           {/* Controls row */}
           <div className="flex h-9 items-center gap-2">
             <SelectDropdown
-              options={modelOptions}
-              value={model}
-              onChange={(value) => setModel(value)}
+              options={entityOptions}
+              value={selectedEntity}
+              onChange={handleEntityChange}
             />
 
             {/* Image count selector */}
-            <div className="flex h-10 items-center gap-1 rounded-xl border border-zinc-700/50 bg-zinc-800/50 px-3">
+            <div className="flex h-10 items-center gap-1 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3">
               <button
                 type="button"
                 onClick={decrementCount}
                 disabled={imageCount <= 1}
-                className="text-zinc-300 transition-colors hover:text-white disabled:opacity-40 disabled:hover:text-zinc-300"
+                className="text-[var(--base-color-brand--bean)] transition-colors hover:text-[var(--base-color-brand--cinamon)] disabled:opacity-40 disabled:hover:text-[var(--base-color-brand--bean)]"
               >
                 <MinusIcon />
               </button>
-              <span className="w-8 text-center text-sm font-semibold text-white">
+              <span className="w-8 text-center text-sm font-semibold text-[var(--base-color-brand--bean)]">
                 {imageCount}
-                <span className="text-zinc-400">/{maxImages}</span>
+                <span className="text-[var(--base-color-brand--umber)]">/{maxImages}</span>
               </span>
               <button
                 type="button"
                 onClick={incrementCount}
                 disabled={imageCount >= maxImages}
-                className="text-zinc-300 transition-colors hover:text-white disabled:opacity-40 disabled:hover:text-zinc-300"
+                className="text-[var(--base-color-brand--bean)] transition-colors hover:text-[var(--base-color-brand--cinamon)] disabled:opacity-40 disabled:hover:text-[var(--base-color-brand--bean)]"
               >
                 <PlusIcon />
               </button>
@@ -318,7 +397,8 @@ export default function ImagePromptForm({
             type="submit"
             disabled={isImagesLoading}
             tabIndex={-1}
-            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-lg bg-teal-400 px-2.5 text-sm font-semibold text-black shadow-[0_4px_0_0_#0f766e] transition-all duration-150 hover:bg-teal-500 hover:shadow-[0_4px_0_0_#115e59] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_#0f766e] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 disabled:shadow-[0_4px_0_0_#3f3f46]"
+            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-2.5 text-sm font-semibold text-[var(--base-color-brand--shell)] uppercase tracking-wide shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">

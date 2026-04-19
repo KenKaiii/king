@@ -30,24 +30,30 @@ interface KpiCardProps {
 function KpiCard({ label, value, sub, colorClass, trend }: KpiCardProps) {
   const trendColor = trend
     ? trend.upIsGood === undefined
-      ? 'text-zinc-400'
+      ? 'text-[var(--base-color-brand--umber)]'
       : (trend.upIsGood ? trend.value >= 0 : trend.value < 0)
-        ? 'text-teal-400'
-        : 'text-red-400'
+        ? 'text-[var(--status--success)]'
+        : 'text-[var(--status--error)]'
     : '';
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-      <p className="text-xs font-medium tracking-wide text-zinc-400 uppercase">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${colorClass ?? 'text-white'}`}>{value}</p>
+    <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
+      <p className="text-xs font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+        {label}
+      </p>
+      <p
+        className={`mt-1 text-2xl font-bold ${colorClass ?? 'text-[var(--base-color-brand--bean)]'}`}
+      >
+        {value}
+      </p>
       <div className="mt-0.5 flex items-center gap-2">
-        {sub && <span className="text-xs text-zinc-500">{sub}</span>}
+        {sub && <span className="text-xs text-[var(--base-color-brand--umber)]">{sub}</span>}
         {trend && (
           <span
             className={`inline-flex items-center gap-0.5 text-[10px] font-medium ${trendColor}`}
           >
             {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
-            <span className="font-normal text-zinc-600">vs yday</span>
+            <span className="font-normal text-[var(--base-color-brand--umber)]/70">vs yday</span>
           </span>
         )}
       </div>
@@ -86,18 +92,22 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
   };
 
   return (
-    <div className={`rounded-xl border border-white/10 border-l-4 bg-white/5 p-5 ${health.accent}`}>
+    <div
+      className={`rounded-xl border border-[var(--base-color-brand--umber)]/30 border-l-4 bg-[var(--base-color-brand--champagne)] p-5 ${health.accent}`}
+    >
       {/* Top row */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-white">{campaign.name}</h3>
+            <h3 className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+              {campaign.name}
+            </h3>
             <span
               className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${statusStyle}`}
             >
               {campaign.status}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-zinc-400 uppercase">
+            <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)] uppercase">
               {campaign.type}
             </span>
           </div>
@@ -107,35 +117,35 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setBudgetValue((v) => Math.max(1, v - 5))}
-                  className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+                  className="grid h-7 w-7 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
                 >
                   <MinusIcon />
                 </button>
-                <div className="flex items-center rounded-lg border border-white/10 bg-white/5 px-2">
-                  <span className="text-xs text-zinc-500">$</span>
+                <div className="flex items-center rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-3">
+                  <span className="text-xs text-[var(--base-color-brand--umber)]">$</span>
                   <input
                     type="number"
                     value={budgetValue}
                     onChange={(e) => setBudgetValue(Math.max(1, Number(e.target.value)))}
-                    className="w-16 bg-transparent py-1.5 text-center text-xs text-white outline-none"
+                    className="w-16 bg-transparent py-1.5 text-center text-xs text-[var(--base-color-brand--bean)] outline-none"
                     min={1}
                   />
                 </div>
                 <button
                   onClick={() => setBudgetValue((v) => v + 5)}
-                  className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+                  className="grid h-7 w-7 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
                 >
                   <PlusIcon />
                 </button>
                 <button
                   onClick={handleBudgetSave}
-                  className="ml-1 rounded-lg bg-teal-400 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-teal-500"
+                  className="ml-1 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--red)]"
                 >
                   Save
                 </button>
                 <button
                   onClick={handleBudgetCancel}
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/30 px-3 py-1.5 text-xs text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
                 >
                   Cancel
                 </button>
@@ -146,26 +156,28 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
                   setBudgetValue(campaign.dailyBudget);
                   setEditingBudget(true);
                 }}
-                className="text-xs text-zinc-400 transition-colors hover:text-white"
+                className="text-xs text-[var(--base-color-brand--umber)] transition-colors hover:text-[var(--base-color-brand--bean)]"
               >
                 ${campaign.dailyBudget}/day
               </button>
             )}
             {!editingBudget && campaign.status === 'active' && campaign.spent > 0 && (
               <div className="flex items-center gap-2">
-                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
+                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--base-color-brand--shell)]">
                   <div
                     className={`h-full rounded-full ${
                       budgetPct >= 90
-                        ? 'bg-red-500'
+                        ? 'bg-[var(--status--error)]'
                         : budgetPct >= 75
-                          ? 'bg-amber-500'
-                          : 'bg-teal-400'
+                          ? 'bg-[var(--status--warning)]'
+                          : 'bg-[var(--status--success)]'
                     }`}
                     style={{ width: `${Math.min(100, budgetPct)}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-zinc-500">{budgetPct}%</span>
+                <span className="text-[10px] text-[var(--base-color-brand--umber)]">
+                  {budgetPct}%
+                </span>
               </div>
             )}
           </div>
@@ -174,10 +186,10 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
         {/* Action button */}
         <button
           onClick={() => onToggleStatus(campaign.id)}
-          className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
             campaign.status === 'active'
-              ? 'border-zinc-600 text-zinc-300 hover:bg-white/10'
-              : 'border-teal-400/30 text-teal-400 hover:bg-teal-400/10'
+              ? 'border-[var(--base-color-brand--umber)]/50 text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--shell)]'
+              : 'border-[var(--status--success)]/40 text-[var(--status--success)] hover:bg-[var(--status--success)]/10'
           }`}
         >
           {campaign.status === 'active' ? 'Pause' : 'Resume'}
@@ -185,31 +197,45 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
       </div>
 
       {/* Metrics row */}
-      <div className="mt-4 grid grid-cols-6 gap-4 border-t border-white/5 pt-4">
+      <div className="mt-4 grid grid-cols-6 gap-4 border-t border-[var(--base-color-brand--umber)]/20 pt-4">
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">Spent</p>
-          <p className="text-sm font-semibold text-white">${campaign.spent.toFixed(2)}</p>
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+            Spent
+          </p>
+          <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+            ${campaign.spent.toFixed(2)}
+          </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">CTR</p>
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+            CTR
+          </p>
           <p className={`text-sm font-semibold ${ctrColor}`}>{campaign.ctr}%</p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">CPC</p>
-          <p className="text-sm font-semibold text-white">${campaign.cpc.toFixed(2)}</p>
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+            CPC
+          </p>
+          <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+            ${campaign.cpc.toFixed(2)}
+          </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
             Conv. Rate
           </p>
           <p className={`text-sm font-semibold ${convRateColor}`}>{campaign.convRate}%</p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">CPA</p>
-          <p className="text-sm font-semibold text-white">${campaign.cpa.toFixed(2)}</p>
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+            CPA
+          </p>
+          <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+            ${campaign.cpa.toFixed(2)}
+          </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
             Impr. Share
           </p>
           <p className={`text-sm font-semibold ${imprShareColor}`}>{campaign.impressionShare}%</p>
@@ -227,22 +253,26 @@ interface InsightCardProps {
 
 function InsightCard({ title, metric, segments }: InsightCardProps) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[10px] font-medium tracking-wide text-zinc-400 uppercase">{title}</p>
-        <p className="text-[10px] text-zinc-600">by {metric}</p>
+        <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          {title}
+        </p>
+        <p className="text-[10px] text-[var(--base-color-brand--umber)]/70">by {metric}</p>
       </div>
       <div className="flex flex-col gap-2.5">
         {segments.map((seg) => (
           <div key={seg.label} className="flex items-center gap-2">
-            <span className="w-20 shrink-0 truncate text-xs text-zinc-300">{seg.label}</span>
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+            <span className="w-20 shrink-0 truncate text-xs text-[var(--base-color-brand--umber)]">
+              {seg.label}
+            </span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--base-color-brand--shell)]">
               <div
-                className="h-full rounded-full bg-teal-400/60"
+                className="h-full rounded-full bg-[var(--status--success)]/60"
                 style={{ width: `${seg.share}%` }}
               />
             </div>
-            <span className="w-10 shrink-0 text-right text-xs font-medium text-white">
+            <span className="w-10 shrink-0 text-right text-xs font-medium text-[var(--base-color-brand--bean)]">
               {seg.value}
             </span>
           </div>
@@ -291,15 +321,14 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   if (!connected) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
-        <div className="flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-          <h2 className="text-lg font-bold text-white">Connect Google Ads</h2>
-          <p className="text-sm text-zinc-400">
+        <div className="flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-8 text-center">
+          <h2 className="text-lg font-bold text-[var(--base-color-brand--bean)]">
+            Connect Google Ads
+          </h2>
+          <p className="text-sm text-[var(--base-color-brand--umber)]">
             Add your Google Ads API key to view campaign performance and manage ads.
           </p>
-          <button
-            onClick={() => onNavigate('apis')}
-            className="rounded-lg bg-teal-400 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-teal-500"
-          >
+          <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
             Go to API Keys
           </button>
         </div>
@@ -325,20 +354,23 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
         <section className="flex flex-col gap-3">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-                Google <span className="text-teal-400">Ads</span>
+              <h2
+                className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                Google <span className="text-[var(--base-color-brand--cinamon)]">Ads</span>
               </h2>
-              <p className="mt-1 text-sm text-zinc-300">
+              <p className="mt-1 text-sm text-[var(--base-color-brand--umber)]">
                 Campaign performance overview and quick actions.
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-[var(--base-color-brand--umber)]">
                 Synced {lastSynced.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
               <button
                 onClick={handleRefresh}
-                className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+                className="grid h-8 w-8 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
                 title="Refresh data"
               >
                 <RefreshIcon />
@@ -378,7 +410,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
 
         {/* Audience Insights */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-white uppercase">
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
             Audience Insights
           </h3>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -395,7 +427,9 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
 
         {/* Campaign Cards */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-white uppercase">Campaigns</h3>
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
+            Campaigns
+          </h3>
           <div className="flex flex-col gap-3">
             {campaigns.map((campaign) => (
               <CampaignCard

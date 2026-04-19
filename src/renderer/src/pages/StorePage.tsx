@@ -19,10 +19,13 @@ export default function StorePage() {
       <div className="mx-auto flex max-w-[1280px] flex-col gap-8 px-6 pt-8 pb-8 md:px-10">
         <section className="flex flex-col gap-3">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              Store <span className="text-teal-400">Connections</span>
+            <h2
+              className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Store <span className="text-[var(--base-color-brand--cinamon)]">Connections</span>
             </h2>
-            <p className="mt-1 text-sm text-zinc-300">
+            <p className="mt-2 text-sm text-[var(--base-color-brand--umber)]">
               Connect your e-commerce stores to sync products and orders.
             </p>
           </div>
@@ -32,13 +35,16 @@ export default function StorePage() {
           {stores.map((store) => (
             <div
               key={store.name}
-              className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-8 text-center"
+              className="flex flex-col items-center gap-3 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-8 text-center"
             >
-              <h3 className="text-lg font-bold tracking-wide text-white uppercase">
-                {store.name} <span className="text-teal-400">Store</span>
+              <h3
+                className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                {store.name} <span className="text-[var(--base-color-brand--cinamon)]">Store</span>
               </h3>
-              <p className="text-sm text-zinc-300">{store.description}</p>
-              <span className="mt-1 rounded-full border border-zinc-500/20 bg-zinc-500/10 px-3 py-1 text-xs font-medium text-zinc-400">
+              <p className="text-sm text-[var(--base-color-brand--umber)]">{store.description}</p>
+              <span className="mt-1 rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
                 Coming soon
               </span>
             </div>

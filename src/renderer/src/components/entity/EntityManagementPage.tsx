@@ -114,17 +114,20 @@ export default function EntityManagementPage({
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
         {/* Title Section */}
         <div className="text-center">
-          <h1 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
+          <h1
+            className="text-3xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-4xl"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
             {title}
           </h1>
-          <p className="mt-2 text-sm text-zinc-300">{subtitle}</p>
+          <p className="mt-2 text-sm text-[var(--base-color-brand--umber)]">{subtitle}</p>
         </div>
 
         {/* CTA Button */}
         <button
           onClick={() => setIsUploadModalOpen(true)}
           disabled={isCreating}
-          className="mb-4 inline-grid h-12 grid-flow-col items-center justify-center gap-2 rounded-xl bg-teal-400 px-6 font-medium text-black transition-all duration-300 hover:bg-teal-500 disabled:opacity-50"
+          className="btn-cinamon mb-4"
         >
           <SparkleIcon className="size-5" />
           {isCreating ? 'Creating...' : createLabel}
@@ -157,15 +160,17 @@ export default function EntityManagementPage({
                 : 'pointer-events-none opacity-0'
             }`}
           >
-            <p className="text-sm text-zinc-500">No {entityType} yet. Create one to get started.</p>
+            <p className="text-sm text-[var(--base-color-brand--umber)]">
+              No {entityType} yet. Create one to get started.
+            </p>
           </div>
         </div>
 
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center gap-3">
-            <div className="size-6 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
-            <span className="text-sm text-zinc-400">Loading...</span>
+            <div className="size-6 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
+            <span className="text-sm text-[var(--base-color-brand--umber)]">Loading...</span>
           </div>
         )}
       </main>

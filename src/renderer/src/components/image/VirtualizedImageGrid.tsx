@@ -1,8 +1,46 @@
-import { memo, useCallback, useMemo, useRef, forwardRef, useEffect } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
 import type { GridComponents, GridItemContent, ListRange } from 'react-virtuoso';
 import { VirtuosoGrid } from 'react-virtuoso';
 import type { GeneratedImage } from './types';
-import { isImageLoaded, markImageLoaded } from '@/lib/imageLoadedCache';
+
+/**
+ * Smooth-load hook — always starts `isReady=false` on mount and pre-decodes
+ * the image off-screen before flipping to `true`. This forces a real fade-in
+ * every time the grid (re)mounts, even for URLs the browser has cached, since
+ * a cached response still needs a fresh decode on the render thread.
+ */
+function useDecodedImage(src: string): boolean {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsReady(false);
+
+    const loader = new Image();
+    loader.src = src;
+    const decodePromise = typeof loader.decode === 'function' ? loader.decode() : Promise.resolve();
+
+    decodePromise
+      .catch(() => {
+        /* decode can fail — fall through to reveal anyway */
+      })
+      .finally(() => {
+        if (cancelled) return;
+        // Two rAFs: first commits the opacity:0 paint, second triggers the transition.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (!cancelled) setIsReady(true);
+          });
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return isReady;
+}
 
 const GridImageItem = memo(function GridImageItem({
   image,
@@ -22,15 +60,7 @@ const GridImageItem = memo(function GridImageItem({
   onEdit: (imageUrl: string) => void;
 }) {
   const displayUrl = image.thumbnailUrl || image.url;
-  const wasCached = isImageLoaded(displayUrl);
-
-  const handleLoad = useCallback(
-    (e: React.SyntheticEvent<HTMLImageElement>) => {
-      markImageLoaded(displayUrl);
-      e.currentTarget.style.opacity = '1';
-    },
-    [displayUrl],
-  );
+  const isReady = useDecodedImage(displayUrl);
 
   const handleClick = useCallback(() => onClick(image), [onClick, image]);
   const handleSelect = useCallback(
@@ -64,28 +94,36 @@ const GridImageItem = memo(function GridImageItem({
 
   return (
     <div
-      className="group relative aspect-square cursor-pointer overflow-hidden border border-white/10 bg-zinc-800"
+      className="group relative aspect-square cursor-pointer overflow-hidden border border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)]"
       style={{ contain: 'layout style paint' }}
       onClick={handleClick}
     >
-      {!wasCached && (
-        <div className="absolute inset-0 z-0">
-          <div className="skeleton-loader size-full" />
-        </div>
-      )}
+      <div
+        aria-hidden
+        className="skeleton-loader absolute inset-0 z-0"
+        style={{
+          opacity: isReady ? 0 : 1,
+          transition: 'opacity 600ms cubic-bezier(0.4, 0, 0.2, 1)',
+          willChange: 'opacity',
+        }}
+      />
 
       <img
         src={displayUrl}
         alt={image.prompt}
         loading="lazy"
         decoding="async"
-        style={{ opacity: wasCached ? 1 : 0 }}
-        className="absolute inset-0 size-full object-cover transition-opacity duration-150"
-        onLoad={handleLoad}
-        onError={handleLoad}
+        style={{
+          opacity: isReady ? 1 : 0,
+          transform: isReady ? 'scale(1)' : 'scale(1.015)',
+          transition:
+            'opacity 600ms cubic-bezier(0.4, 0, 0.2, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1)',
+          willChange: 'opacity, transform',
+        }}
+        className="absolute inset-0 size-full object-cover"
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--base-color-brand--bean)]/70 via-transparent to-transparent opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
 
       <div className="absolute top-2 left-2 z-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
         <button
@@ -95,8 +133,8 @@ const GridImageItem = memo(function GridImageItem({
           onClick={handleSelect}
           className={`flex size-5 items-center justify-center rounded border-2 transition-colors ${
             isSelected
-              ? 'border-white bg-white text-black'
-              : 'border-white/70 bg-black/30 hover:border-white hover:bg-black/50'
+              ? 'border-[var(--base-color-brand--shell)] bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+              : 'border-[var(--base-color-brand--shell)]/80 bg-[var(--base-color-brand--bean)]/40 hover:border-[var(--base-color-brand--shell)] hover:bg-[var(--base-color-brand--bean)]/60'
           }`}
         >
           {isSelected && (
@@ -116,7 +154,7 @@ const GridImageItem = memo(function GridImageItem({
       <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
         <button
           onClick={handleEdit}
-          className="flex size-8 items-center justify-center rounded-lg bg-black/70 text-white/80 transition-colors hover:bg-teal-500/80 hover:text-white"
+          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--cinamon)]"
           title="Edit"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -138,7 +176,7 @@ const GridImageItem = memo(function GridImageItem({
         </button>
         <button
           onClick={handleDownload}
-          className="flex size-8 items-center justify-center rounded-lg bg-black/70 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
+          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--bean)]"
           title="Download"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -167,7 +205,7 @@ const GridImageItem = memo(function GridImageItem({
         </button>
         <button
           onClick={handleDelete}
-          className="flex size-8 items-center justify-center rounded-lg bg-black/70 text-white/80 transition-colors hover:bg-red-500/80 hover:text-white"
+          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--dark-red)]"
           title="Delete"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -190,7 +228,9 @@ const GridImageItem = memo(function GridImageItem({
       </div>
 
       <div className="pointer-events-none absolute right-0 bottom-0 left-0 p-3 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-        <p className="line-clamp-2 text-xs text-white/80">{image.prompt}</p>
+        <p className="line-clamp-2 text-xs text-[var(--base-color-brand--shell)]/90">
+          {image.prompt}
+        </p>
       </div>
     </div>
   );
@@ -260,12 +300,7 @@ export default function VirtualizedImageGrid({
 }: VirtualizedImageGridProps) {
   const rangeRef = useRef<ListRange>({ startIndex: 0, endIndex: 0 });
 
-  const selectedImagesRef = useRef(selectedImages);
-  useEffect(() => {
-    selectedImagesRef.current = selectedImages;
-  }, [selectedImages]);
-
-  const isSelected = useCallback((id: string) => selectedImagesRef.current.has(id), []);
+  const isSelected = useCallback((id: string) => selectedImages.has(id), [selectedImages]);
 
   const handleRangeChanged = useCallback(
     (range: ListRange) => {
@@ -298,7 +333,7 @@ export default function VirtualizedImageGrid({
     (_index: number, item: GridItemType) => {
       if (item.isPending) {
         return (
-          <div className="size-full overflow-hidden border border-white/10 bg-zinc-800">
+          <div className="size-full overflow-hidden border border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)]">
             <div className="skeleton-loader size-full" />
           </div>
         );
@@ -333,7 +368,7 @@ export default function VirtualizedImageGrid({
       </div>
       {isLoadingMore && (
         <div className="flex justify-center py-4">
-          <div className="size-6 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+          <div className="size-6 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
         </div>
       )}
     </div>

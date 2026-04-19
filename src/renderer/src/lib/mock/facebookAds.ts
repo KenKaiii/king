@@ -103,24 +103,24 @@ export function getHealthColor(health: CampaignHealth) {
   switch (health) {
     case 'good':
       return {
-        border: 'border-teal-400/20',
-        bg: 'bg-teal-400/10',
-        text: 'text-teal-400',
-        accent: 'border-l-teal-400',
+        border: 'border-[var(--status--success)]/30',
+        bg: 'bg-[var(--status--success)]/10',
+        text: 'text-[var(--status--success)]',
+        accent: 'border-l-[var(--status--success)]',
       };
     case 'warning':
       return {
-        border: 'border-amber-500/20',
-        bg: 'bg-amber-500/10',
-        text: 'text-amber-500',
-        accent: 'border-l-amber-500',
+        border: 'border-[var(--status--warning)]/30',
+        bg: 'bg-[var(--status--warning)]/10',
+        text: 'text-[var(--status--warning)]',
+        accent: 'border-l-[var(--status--warning)]',
       };
     case 'poor':
       return {
-        border: 'border-red-500/20',
-        bg: 'bg-red-500/10',
-        text: 'text-red-500',
-        accent: 'border-l-red-500',
+        border: 'border-[var(--status--error)]/30',
+        bg: 'bg-[var(--status--error)]/10',
+        text: 'text-[var(--status--error)]',
+        accent: 'border-l-[var(--status--error)]',
       };
   }
 }
@@ -128,18 +128,18 @@ export function getHealthColor(health: CampaignHealth) {
 export function getStatusStyle(status: CampaignStatus) {
   switch (status) {
     case 'active':
-      return 'border-teal-400/20 bg-teal-400/10 text-teal-400';
+      return 'border-[var(--status--success)]/30 bg-[var(--status--success)]/10 text-[var(--status--success)]';
     case 'paused':
-      return 'border-zinc-500/20 bg-zinc-500/10 text-zinc-400';
+      return 'border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--umber)]/10 text-[var(--base-color-brand--umber)]';
     case 'error':
-      return 'border-red-500/20 bg-red-500/10 text-red-500';
+      return 'border-[var(--status--error)]/30 bg-[var(--status--error)]/10 text-[var(--status--error)]';
   }
 }
 
 export function getMetricColor(value: number, thresholds: { good: number; warning: number }) {
-  if (value >= thresholds.good) return 'text-teal-400';
-  if (value >= thresholds.warning) return 'text-amber-500';
-  return 'text-red-500';
+  if (value >= thresholds.good) return 'text-[var(--status--success)]';
+  if (value >= thresholds.warning) return 'text-[var(--status--warning)]';
+  return 'text-[var(--status--error)]';
 }
 
 export const audienceInsights = [

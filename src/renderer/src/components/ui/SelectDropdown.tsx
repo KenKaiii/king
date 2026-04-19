@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { ChevronDownIcon, CheckIcon, aspectRatioIcons } from '@/components/icons';
 
 interface SelectDropdownProps {
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; disabled?: boolean }[];
   value: string;
   onChange: (value: string) => void;
   icon?: React.ReactNode;
@@ -49,7 +49,7 @@ export default memo(function SelectDropdown({
       <button
         type="button"
         onClick={handleToggle}
-        className="flex h-10 items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white transition hover:bg-white/10"
+        className="flex h-10 items-center justify-between gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm text-[var(--text-color--text-primary)] transition hover:border-[var(--base-color-brand--bean)]"
       >
         <div className="flex items-center gap-2">
           {icon}
@@ -58,8 +58,19 @@ export default memo(function SelectDropdown({
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="hide-scrollbar absolute bottom-full left-0 z-50 mb-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-xl border border-white/10 bg-black/80 px-1 pt-2 pb-2 shadow-lg backdrop-blur-xl">
+        <div className="hide-scrollbar absolute bottom-full left-0 z-50 mb-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg">
           {options.map((option) => {
+            if (option.disabled) {
+              return (
+                <div
+                  key={option.value}
+                  className="px-3 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-[var(--base-color-brand--umber)] uppercase"
+                >
+                  {option.label}
+                </div>
+              );
+            }
+
             const isSelected = option.value === value;
             const optionIcon = showIcons ? aspectRatioIcons[option.value] : null;
 
@@ -74,15 +85,17 @@ export default memo(function SelectDropdown({
                 <div className="group flex w-full items-center gap-1">
                   {showIcons && (
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1 text-white/25 transition group-hover:bg-white/10 ${isSelected ? 'bg-white/10' : 'bg-transparent'}`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1 text-[var(--base-color-brand--umber)]/60 transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : 'bg-transparent'}`}
                     >
                       {optionIcon}
                     </div>
                   )}
                   <div
-                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 transition group-hover:bg-white/10 ${isSelected ? 'bg-white/10' : ''}`}
+                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : ''}`}
                   >
-                    <span className="text-sm text-white">{option.label}</span>
+                    <span className="text-sm text-[var(--text-color--text-primary)]">
+                      {option.label}
+                    </span>
                     {isSelected && <CheckIcon />}
                   </div>
                 </div>

@@ -4,7 +4,12 @@ import type { PageType } from '@/App';
 
 function SearchIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" className="size-5 shrink-0 text-zinc-400">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      className="size-5 shrink-0 text-[var(--base-color-brand--umber)]"
+    >
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -64,8 +69,8 @@ const PromptCard = memo(function PromptCard({
   }, [onUsePrompt, prompt.prompt]);
 
   return (
-    <div className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/50">
-      <div className="relative aspect-square overflow-hidden bg-zinc-800">
+    <div className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] transition-all duration-200 hover:border-[var(--base-color-brand--umber)] hover:shadow-lg">
+      <div className="relative aspect-square overflow-hidden bg-[var(--base-color-brand--shell)]">
         <img
           src={prompt.image}
           alt={prompt.title}
@@ -75,19 +80,27 @@ const PromptCard = memo(function PromptCard({
       </div>
       <div className="flex flex-1 flex-col justify-between gap-4 p-4">
         <div className="flex flex-col gap-1">
-          <h3 className="text-base font-semibold text-white">{prompt.title}</h3>
-          <p className="line-clamp-2 text-sm text-zinc-300">{prompt.description}</p>
+          <h3
+            className="text-base font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            {prompt.title}
+          </h3>
+          <p className="line-clamp-2 text-sm text-[var(--base-color-brand--umber)]">
+            {prompt.description}
+          </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleUse}
-            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-white font-medium text-black shadow-[0_4px_0_0_#a1a1aa] transition-all duration-150 hover:bg-zinc-100 hover:shadow-[0_4px_0_0_#8b8b94] active:translate-y-0.5 active:shadow-[0_2px_0_0_#a1a1aa]"
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             <span className="text-sm">Use Prompt</span>
           </button>
           <button
             onClick={handleCopy}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-black shadow-[0_4px_0_0_#a1a1aa] transition-all duration-150 hover:bg-zinc-100 hover:shadow-[0_4px_0_0_#8b8b94] active:translate-y-0.5 active:shadow-[0_2px_0_0_#a1a1aa]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition-all duration-150 hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
             title="Copy prompt"
           >
             {copied ? <CopiedIcon /> : <CopyIcon />}
@@ -124,24 +137,27 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
       <div className="mx-auto flex max-w-[1280px] flex-col gap-8 px-6 pt-8 pb-8 md:px-10">
         {/* Header */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-            Prompt <span className="text-teal-400">Gallery</span>
+          <h2
+            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Prompt <span className="text-[var(--base-color-brand--cinamon)]">Gallery</span>
           </h2>
-          <p className="text-sm text-zinc-300">
+          <p className="text-sm text-[var(--base-color-brand--umber)]">
             Pre-made prompts ready to go. Click one and hit generate.
           </p>
         </section>
 
         {/* Search */}
         <section>
-          <label className="relative flex h-11 w-full items-center gap-2 rounded-xl border border-transparent bg-white/[0.04] px-3 py-3 transition-colors focus-within:border-white/20 focus-within:bg-white/10 sm:max-w-[320px]">
+          <label className="relative flex h-11 w-full items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-3 transition-colors focus-within:border-[var(--base-color-brand--bean)] sm:max-w-[320px]">
             <SearchIcon />
             <input
               type="text"
               placeholder="Search prompts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
+              className="w-full bg-transparent text-sm text-[var(--text-color--text-primary)] outline-none placeholder:text-[var(--base-color-brand--umber)]/70"
             />
           </label>
         </section>
@@ -149,10 +165,13 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
         {/* Grid */}
         <section className="space-y-4">
           <div className="space-y-1">
-            <h2 className="text-lg font-bold tracking-wide text-white uppercase">
+            <h2
+              className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
               Product Prompts
             </h2>
-            <p className="text-sm text-zinc-300">
+            <p className="text-sm text-[var(--base-color-brand--umber)]">
               {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? 's' : ''}
             </p>
           </div>

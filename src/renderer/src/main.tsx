@@ -9,13 +9,15 @@ createRoot(document.getElementById('root')!).render(
     <App />
     <Toaster
       position="top-right"
-      theme="dark"
+      theme="light"
       toastOptions={{
         style: {
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(12px)',
-          color: '#fff',
+          background: '#fff8e0',
+          border: '1px solid rgba(122, 68, 50, 0.35)',
+          color: '#2a1912',
+          fontFamily: 'Helveticaneue, "Helvetica Neue", Helvetica, Arial, sans-serif',
+          borderRadius: '9999px',
+          boxShadow: '0 8px 24px -8px rgba(51, 32, 26, 0.25)',
         },
       }}
     />

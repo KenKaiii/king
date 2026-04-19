@@ -156,8 +156,10 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <div className="size-8 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
-              <span className="text-sm text-zinc-400">Loading images...</span>
+              <div className="size-8 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
+              <span className="text-sm text-[var(--base-color-brand--umber)]">
+                Loading images...
+              </span>
             </div>
           </div>
         ) : generatedImages.length > 0 || pendingCount > 0 ? (

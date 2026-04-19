@@ -3,8 +3,8 @@ import { readFileSync } from 'fs';
 import { join, extname } from 'path';
 import { getImagesDir } from '../services/paths';
 
-const NANO_BANANA_PRO_MODEL = 'fal-ai/nano-banana-pro';
-const NANO_BANANA_PRO_EDIT_MODEL = 'fal-ai/nano-banana-pro/edit';
+const NANO_BANANA_PRO_MODEL = 'fal-ai/nano-banana-2';
+const NANO_BANANA_PRO_EDIT_MODEL = 'fal-ai/nano-banana-2/edit';
 
 interface GenerateImageData {
   prompt: string;
@@ -59,14 +59,38 @@ export function registerGenerateHandlers(): void {
       input.image_urls = resolvedUrls;
     }
 
-    const result = await fal.subscribe(model, { input, logs: true });
+    try {
+      const result = await fal.subscribe(model, { input, logs: true });
 
-    const resultData = result.data as {
-      images?: Array<{ url: string }>;
-    };
+      const resultData = result.data as {
+        images?: Array<{ url: string }>;
+      };
 
-    const resultUrls = resultData.images?.map((img: { url: string }) => img.url) ?? [];
+      const resultUrls = resultData.images?.map((img: { url: string }) => img.url) ?? [];
 
-    return { success: true, resultUrls };
+      return { success: true, resultUrls };
+    } catch (err) {
+      const e = err as { status?: number; body?: unknown };
+      if (e?.status === 422) {
+        console.error(
+          '[generate:image] 422 ValidationError — fal detail:',
+          JSON.stringify(e.body, null, 2),
+          '\nmodel:',
+          model,
+          '\ninput keys:',
+          Object.keys(input),
+          '\nimage_urls count:',
+          hasReferenceImages ? resolvedUrls.length : 0,
+        );
+        const details =
+          (e.body as { detail?: Array<{ loc?: unknown[]; msg?: string; type?: string }> })
+            ?.detail ?? [];
+        const msg = details
+          .map((d) => `${(d.loc ?? []).join('.')}: ${d.msg ?? d.type ?? 'invalid'}`)
+          .join('; ');
+        throw new Error(msg ? `Validation failed — ${msg}` : 'Validation failed');
+      }
+      throw err;
+    }
   });
 }

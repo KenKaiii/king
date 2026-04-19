@@ -1,6 +1,7 @@
 import { ipcMain, dialog, BrowserWindow, app } from 'electron';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { getImagesDir } from '../services/paths';
 
 export function registerFileHandlers(): void {
   ipcMain.handle('files:download', async (_event, url: string, filename: string) => {
@@ -14,12 +15,20 @@ export function registerFileHandlers(): void {
 
     if (!filePath) return { success: false, cancelled: true };
 
-    // Download the file
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to download');
+    let buffer: Buffer;
+
+    if (url.startsWith('local-file://')) {
+      const pathname = decodeURIComponent(new URL(url).pathname);
+      const localPath = join(getImagesDir(), pathname);
+      buffer = readFileSync(localPath);
+    } else {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to download');
+      }
+      buffer = Buffer.from(await response.arrayBuffer());
     }
-    const buffer = Buffer.from(await response.arrayBuffer());
+
     writeFileSync(filePath, buffer);
 
     return { success: true, filePath };

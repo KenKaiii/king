@@ -8,7 +8,7 @@ import {
   getStatusStyle,
   getMetricColor,
   type Campaign,
-} from '@/lib/mock/facebookAds';
+} from '@/lib/mock/shopeeAds';
 import type { PageType } from '@/App';
 
 function RefreshIcon() {
@@ -73,7 +73,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
 
   const health = getHealthColor(campaign.health);
   const statusStyle = getStatusStyle(campaign.status);
-  const ctrColor = getMetricColor(campaign.ctr, { good: 2, warning: 1 });
+  const ctrColor = getMetricColor(campaign.ctr, { good: 3, warning: 1.5 });
   const roasColor = getMetricColor(campaign.roas, { good: 3, warning: 1.5 });
   const budgetPct =
     campaign.dailyBudget > 0 ? Math.round((campaign.spent / campaign.dailyBudget) * 100) : 0;
@@ -89,6 +89,8 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
     setBudgetValue(campaign.dailyBudget);
     setEditingBudget(false);
   };
+
+  const isEnded = campaign.status === 'ended';
 
   return (
     <div
@@ -107,7 +109,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
               {campaign.status}
             </span>
             <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)] uppercase">
-              {campaign.objective}
+              {campaign.type}
             </span>
           </div>
           {/* Budget */}
@@ -152,10 +154,12 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
             ) : (
               <button
                 onClick={() => {
-                  setBudgetValue(campaign.dailyBudget);
-                  setEditingBudget(true);
+                  if (!isEnded) {
+                    setBudgetValue(campaign.dailyBudget);
+                    setEditingBudget(true);
+                  }
                 }}
-                className="text-xs text-[var(--base-color-brand--umber)] transition-colors hover:text-[var(--base-color-brand--bean)]"
+                className={`text-xs text-[var(--base-color-brand--umber)] transition-colors ${!isEnded ? 'hover:text-[var(--base-color-brand--bean)]' : ''}`}
               >
                 ${campaign.dailyBudget}/day
               </button>
@@ -183,16 +187,18 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
         </div>
 
         {/* Action button */}
-        <button
-          onClick={() => onToggleStatus(campaign.id)}
-          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-            campaign.status === 'active'
-              ? 'border-[var(--base-color-brand--umber)]/50 text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--shell)]'
-              : 'border-[var(--status--success)]/40 text-[var(--status--success)] hover:bg-[var(--status--success)]/10'
-          }`}
-        >
-          {campaign.status === 'active' ? 'Pause' : 'Resume'}
-        </button>
+        {!isEnded && (
+          <button
+            onClick={() => onToggleStatus(campaign.id)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
+              campaign.status === 'active'
+                ? 'border-[var(--base-color-brand--umber)]/50 text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--shell)]'
+                : 'border-[var(--status--success)]/40 text-[var(--status--success)] hover:bg-[var(--status--success)]/10'
+            }`}
+          >
+            {campaign.status === 'active' ? 'Pause' : 'Resume'}
+          </button>
+        )}
       </div>
 
       {/* Metrics row */}
@@ -221,10 +227,10 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
         </div>
         <div>
           <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
-            Conv.
+            Orders
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
-            {campaign.conversions}
+            {campaign.orders}
           </p>
         </div>
         <div>
@@ -275,20 +281,19 @@ function InsightCard({ title, metric, segments }: InsightCardProps) {
   );
 }
 
-interface FacebookAdsPageProps {
+interface ShopeeAdsPageProps {
   onNavigate: (page: PageType) => void;
 }
 
-export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
+export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  // TODO: Re-enable API key check when real API is wired up
   const [connected] = useState<boolean>(true);
   const [lastSynced] = useState(() => new Date());
 
   const handleToggleStatus = useCallback((id: string) => {
     setCampaigns((prev) =>
       prev.map((c) => {
-        if (c.id !== id) return c;
+        if (c.id !== id || c.status === 'ended') return c;
         const next = c.status === 'active' ? 'paused' : 'active';
         toast.success(`${c.name} ${next === 'active' ? 'resumed' : 'paused'}`);
         return { ...c, status: next };
@@ -310,16 +315,15 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     toast.success('Data refreshed');
   };
 
-  // Disconnected
   if (!connected) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
         <div className="flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-8 text-center">
           <h2 className="text-lg font-bold text-[var(--base-color-brand--bean)]">
-            Connect Facebook Ads
+            Connect Shopee Ads
           </h2>
           <p className="text-sm text-[var(--base-color-brand--umber)]">
-            Add your Facebook API key to view campaign performance and manage ads.
+            Add your Shopee API key to view campaign performance and manage ads.
           </p>
           <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
             Go to API Keys
@@ -329,9 +333,9 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     );
   }
 
-  // Compute KPIs
   const activeCampaigns = campaigns.filter((c) => c.status === 'active');
   const totalSpend = activeCampaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalOrders = activeCampaigns.reduce((sum, c) => sum + c.orders, 0);
   const avgCtr =
     activeCampaigns.length > 0
       ? activeCampaigns.reduce((sum, c) => sum + c.ctr, 0) / activeCampaigns.length
@@ -340,7 +344,6 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     activeCampaigns.length > 0
       ? activeCampaigns.reduce((sum, c) => sum + c.roas, 0) / activeCampaigns.length
       : 0;
-  const totalConversions = activeCampaigns.reduce((sum, c) => sum + c.conversions, 0);
   const totalBudget = activeCampaigns.reduce((sum, c) => sum + c.dailyBudget, 0);
 
   return (
@@ -354,7 +357,7 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
                 className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
-                Facebook <span className="text-[var(--base-color-brand--cinamon)]">Ads</span>
+                Shopee <span className="text-[var(--base-color-brand--cinamon)]">Ads</span>
               </h2>
               <p className="mt-1 text-sm text-[var(--base-color-brand--umber)]">
                 Campaign performance overview and quick actions.
@@ -381,25 +384,25 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
             label="Total Spend"
             value={`$${totalSpend.toFixed(2)}`}
             sub={`of $${totalBudget} budget`}
-            trend={{ value: 12 }}
+            trend={{ value: 6 }}
           />
           <KpiCard
             label="Avg CTR"
             value={`${avgCtr.toFixed(1)}%`}
-            colorClass={getMetricColor(avgCtr, { good: 2, warning: 1 })}
-            trend={{ value: 8, upIsGood: true }}
+            colorClass={getMetricColor(avgCtr, { good: 3, warning: 1.5 })}
+            trend={{ value: 14, upIsGood: true }}
+          />
+          <KpiCard
+            label="Orders"
+            value={String(totalOrders)}
+            sub="today"
+            trend={{ value: 19, upIsGood: true }}
           />
           <KpiCard
             label="Avg ROAS"
             value={`${avgRoas.toFixed(1)}x`}
             colorClass={getMetricColor(avgRoas, { good: 3, warning: 1.5 })}
-            trend={{ value: -5, upIsGood: true }}
-          />
-          <KpiCard
-            label="Conversions"
-            value={String(totalConversions)}
-            sub="today"
-            trend={{ value: 15, upIsGood: true }}
+            trend={{ value: 3, upIsGood: true }}
           />
           <KpiCard label="Active" value={String(activeCampaigns.length)} sub="campaigns" />
         </section>

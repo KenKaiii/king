@@ -172,21 +172,28 @@ export default function ImageDetailPanel({
   };
 
   return (
-    <section className="grid h-full min-h-0 grid-rows-[auto_1fr] border-l border-white/10 bg-black/60 backdrop-blur-xl">
+    <section className="grid h-full min-h-0 grid-rows-[auto_1fr] border-l border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]">
       <header className="grid grid-cols-[1fr_auto] px-3 pt-4 pb-6">
         <div className="flex items-center gap-3">
-          <div className="relative size-10 overflow-hidden rounded-full bg-white/10">
+          <div className="relative size-10 overflow-hidden rounded-full bg-[var(--base-color-brand--shell)]">
             <img src={image.url} alt="thumbnail" className="size-full object-cover" />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-white">Image Details</h2>
-            <p className="text-xs text-zinc-300">{image.aspectRatio} aspect ratio</p>
+            <h2
+              className="text-sm font-semibold text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Image Details
+            </h2>
+            <p className="text-xs text-[var(--base-color-brand--umber)]">
+              {image.aspectRatio} aspect ratio
+            </p>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-lg text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+          className="flex size-10 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
         >
           <CloseIcon />
         </button>
@@ -196,58 +203,68 @@ export default function ImageDetailPanel({
         <div className="hide-scrollbar overflow-y-auto">
           <div className="flex flex-col gap-4 px-3 py-4">
             {/* Prompt Section */}
-            <section className="rounded-xl border border-white/10 bg-white/5">
+            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-300">
+                  <span className="text-[var(--base-color-brand--umber)]">
                     <PromptIcon />
                   </span>
-                  <p className="text-xs font-semibold text-zinc-300 uppercase">Prompt</p>
+                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                    Prompt
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={copyPrompt}
-                  className="rounded-md border border-white/10 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/10"
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--bean)] uppercase tracking-wide transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
                 >
                   Copy
                 </button>
               </div>
               <div className="px-4 pb-4">
-                <p className="text-sm break-words text-zinc-300">{image.prompt}</p>
+                <p className="text-sm break-words text-[var(--text-color--text-primary)]">
+                  {image.prompt}
+                </p>
               </div>
             </section>
 
             {/* Information Section */}
-            <section className="rounded-xl border border-white/10 bg-white/5">
+            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
               <div className="flex items-center gap-2 px-4 py-3">
-                <span className="text-zinc-300">
+                <span className="text-[var(--base-color-brand--umber)]">
                   <InfoIcon />
                 </span>
-                <p className="text-xs font-semibold text-zinc-300 uppercase">Information</p>
+                <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                  Information
+                </p>
               </div>
-              <div className="border-t border-white/10">
+              <div className="border-t border-[var(--base-color-brand--umber)]/20">
                 <div className="grid grid-cols-[1fr_auto] px-4 py-3.5">
-                  <p className="text-sm text-zinc-300">Model</p>
-                  <p className="text-sm font-medium text-white">Nano Banana Pro</p>
+                  <p className="text-sm text-[var(--base-color-brand--umber)]">Model</p>
+                  <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+                    Nano Banana Pro
+                  </p>
                 </div>
               </div>
             </section>
 
             {/* Additional Section (Collapsible) */}
-            <section className="rounded-xl border border-white/10 bg-white/5">
+            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
               <button
                 type="button"
                 onClick={() => setIsAdditionalOpen(!isAdditionalOpen)}
                 className="flex w-full items-center justify-between px-4 py-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-300">
+                  <span className="text-[var(--base-color-brand--umber)]">
                     <SettingsIcon />
                   </span>
-                  <p className="text-xs font-semibold text-zinc-300 uppercase">Additional</p>
+                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                    Additional
+                  </p>
                 </div>
                 <span
-                  className={`text-zinc-300 transition-transform ${isAdditionalOpen ? 'rotate-180' : ''}`}
+                  className={`text-[var(--base-color-brand--umber)] transition-transform ${isAdditionalOpen ? 'rotate-180' : ''}`}
                 >
                   <ChevronDownIcon />
                 </span>
@@ -256,18 +273,22 @@ export default function ImageDetailPanel({
                 className={`grid overflow-hidden transition-all duration-200 ${isAdditionalOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
               >
                 <div className="min-h-0 overflow-hidden">
-                  <div className="border-t border-white/10">
-                    <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3.5 last:border-0">
-                      <p className="text-sm text-zinc-300">Quality</p>
-                      <p className="text-sm font-medium text-white">1K</p>
+                  <div className="border-t border-[var(--base-color-brand--umber)]/20">
+                    <div className="grid grid-cols-[1fr_auto] border-b border-[var(--base-color-brand--umber)]/20 px-4 py-3.5 last:border-0">
+                      <p className="text-sm text-[var(--base-color-brand--umber)]">Quality</p>
+                      <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+                        1K
+                      </p>
                     </div>
-                    <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3.5 last:border-0">
-                      <p className="text-sm text-zinc-300">Size</p>
-                      <p className="text-sm font-medium text-white">{getDimensions()}</p>
+                    <div className="grid grid-cols-[1fr_auto] border-b border-[var(--base-color-brand--umber)]/20 px-4 py-3.5 last:border-0">
+                      <p className="text-sm text-[var(--base-color-brand--umber)]">Size</p>
+                      <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+                        {getDimensions()}
+                      </p>
                     </div>
                     <div className="grid grid-cols-[1fr_auto] px-4 py-3.5">
-                      <p className="text-sm text-zinc-300">Created</p>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm text-[var(--base-color-brand--umber)]">Created</p>
+                      <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
                         {formatDate(image.createdAt)}
                       </p>
                     </div>
@@ -284,7 +305,8 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onRecreate(image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl bg-teal-400 text-sm font-semibold text-black transition-colors hover:bg-teal-300"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <RecreateIcon />
               Recreate
@@ -293,7 +315,8 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDownload(image.url, image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DownloadIcon />
               Download
@@ -302,7 +325,8 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDelete(image.id)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 text-sm font-medium text-white transition-colors hover:border-red-500/50 hover:bg-red-500/20 hover:text-red-400"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DeleteIcon />
               Delete

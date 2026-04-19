@@ -121,14 +121,16 @@ export default function ApisPage() {
     <main className="flex-1 overflow-y-auto">
       <div className="mx-auto flex max-w-4xl flex-col gap-8 px-6 pt-8 pb-8 md:px-10">
         <section className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-white uppercase sm:text-2xl">
-              API <span className="text-teal-400">Keys</span>
-            </h2>
-            <p className="mt-1 text-sm text-zinc-300">
-              Connect external services by adding your API keys.
-            </p>
-          </div>
+          <span className="eyebrow self-start">Settings</span>
+          <h2
+            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            API <span className="text-[var(--base-color-brand--cinamon)]">Keys</span>
+          </h2>
+          <p className="text-sm text-[var(--base-color-brand--umber)]">
+            Connect external services by adding your API keys.
+          </p>
         </section>
 
         <div className="grid grid-cols-2 gap-4">
@@ -137,24 +139,34 @@ export default function ApisPage() {
             const isSaving = savingService === service.id;
 
             return (
-              <div key={service.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div
+                key={service.id}
+                className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-white">{service.name}</h3>
+                      <h3
+                        className="text-sm font-semibold text-[var(--base-color-brand--bean)]"
+                        style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                      >
+                        {service.name}
+                      </h3>
                       <button
                         onClick={() => window.api.shell.openExternal(service.keyUrl)}
-                        className="cursor-pointer text-xs text-teal-400 transition-colors hover:text-teal-300"
+                        className="cursor-pointer text-xs font-semibold text-[var(--base-color-brand--cinamon)] transition-colors hover:text-[var(--base-color-brand--red)]"
                       >
                         {service.keyUrlLabel} &rarr;
                       </button>
                     </div>
-                    <p className="text-xs text-zinc-400">{service.description}</p>
+                    <p className="text-xs text-[var(--base-color-brand--umber)]">
+                      {service.description}
+                    </p>
                   </div>
                   {saved && (
                     <button
                       onClick={() => handleDelete(service.id)}
-                      className="grid h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/10 hover:text-red-500"
+                      className="grid h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
                       title="Remove key"
                     >
                       <DeleteIcon className="h-3.5 w-3.5" />
@@ -163,8 +175,10 @@ export default function ApisPage() {
                 </div>
 
                 {saved ? (
-                  <div className="mt-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2">
-                    <code className="text-xs text-zinc-400">{saved.maskedKey}</code>
+                  <div className="mt-3 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4 py-2">
+                    <code className="text-xs text-[var(--base-color-brand--umber)]">
+                      {saved.maskedKey}
+                    </code>
                   </div>
                 ) : (
                   <div className="mt-3 flex gap-2">
@@ -175,12 +189,13 @@ export default function ApisPage() {
                         setInputs((prev) => ({ ...prev, [service.id]: e.target.value }))
                       }
                       placeholder={service.placeholder}
-                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:border-teal-400/50 focus:outline-none"
+                      className="min-w-0 flex-1 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
                     />
                     <button
                       onClick={() => handleSave(service.id)}
                       disabled={!inputs[service.id]?.trim() || isSaving}
-                      className="shrink-0 rounded-lg bg-teal-400 px-4 py-2 text-xs font-medium text-black transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="shrink-0 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
                     >
                       {isSaving ? '...' : 'Save'}
                     </button>

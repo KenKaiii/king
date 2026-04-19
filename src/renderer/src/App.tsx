@@ -6,6 +6,8 @@ import ProductsPage from '@/pages/ProductsPage';
 import CharactersPage from '@/pages/CharactersPage';
 import FacebookAdsPage from '@/pages/FacebookAdsPage';
 import GoogleAdsPage from '@/pages/GoogleAdsPage';
+import TiktokShopPage from '@/pages/TiktokShopPage';
+import ShopeeAdsPage from '@/pages/ShopeeAdsPage';
 import StorePage from '@/pages/StorePage';
 import ApisPage from '@/pages/ApisPage';
 import PromptsPage from '@/pages/PromptsPage';
@@ -16,6 +18,8 @@ export type PageType =
   | 'characters'
   | 'facebook-ads'
   | 'google-ads'
+  | 'tiktok-shop'
+  | 'shopee-ads'
   | 'store'
   | 'apis'
   | 'prompts';
@@ -42,6 +46,8 @@ function AppContent() {
       {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
       {currentPage === 'facebook-ads' && <FacebookAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'google-ads' && <GoogleAdsPage onNavigate={setCurrentPage} />}
+      {currentPage === 'tiktok-shop' && <TiktokShopPage onNavigate={setCurrentPage} />}
+      {currentPage === 'shopee-ads' && <ShopeeAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'store' && <StorePage />}
       {currentPage === 'apis' && <ApisPage />}
       {currentPage === 'prompts' && (
