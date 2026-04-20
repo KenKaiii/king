@@ -35,6 +35,9 @@ Thumbs.db
 # Generated assets
 src/renderer/src/assets/prompts/generation-log.json
 
+# Local dev scripts that hit paid APIs
+scripts/generate-prompt-thumbnails.js
+
 # macOS code signing materials — never commit certs
 *.p12
 *.pfx
