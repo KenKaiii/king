@@ -1,5 +1,8 @@
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useMemo } from 'react';
 import { prompts, promptCategories, type Prompt, type PromptCategory } from '@/lib/prompts';
+import { usePromptUsageStore } from '@/stores/promptUsageStore';
+
+type CategoryFilter = PromptCategory | 'all' | 'mostUsed';
 
 function categoryLabel(id: PromptCategory): string {
   return promptCategories.find((c) => c.id === id)?.label ?? id;
@@ -61,16 +64,19 @@ const PromptCard = memo(function PromptCard({
   onUsePrompt: (promptText: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const incrementUsage = usePromptUsageStore((s) => s.incrementUsage);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(prompt.prompt);
+    incrementUsage(prompt.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [prompt.prompt]);
+  }, [prompt.prompt, prompt.id, incrementUsage]);
 
   const handleUse = useCallback(() => {
+    incrementUsage(prompt.id);
     onUsePrompt(prompt.prompt);
-  }, [onUsePrompt, prompt.prompt]);
+  }, [onUsePrompt, prompt.prompt, prompt.id, incrementUsage]);
 
   return (
     <div className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] transition-all duration-200 hover:border-[var(--base-color-brand--umber)] hover:shadow-lg">
@@ -146,15 +152,36 @@ interface PromptsPageProps {
 
 export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<PromptCategory | 'all'>('all');
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+  const usageCounts = usePromptUsageStore((s) => s.counts);
 
-  const filteredPrompts = prompts.filter((prompt) => {
+  const categoryTabs = useMemo(
+    () => [
+      { id: 'all' as CategoryFilter, label: 'All' },
+      { id: 'mostUsed' as CategoryFilter, label: 'Most Used' },
+      ...promptCategories
+        .filter((c) => c.id !== 'all')
+        .map((c) => ({ id: c.id as CategoryFilter, label: c.label })),
+    ],
+    [],
+  );
+
+  const filteredPrompts = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      prompt.title.toLowerCase().includes(q) || prompt.description.toLowerCase().includes(q);
-    const matchesCategory = activeCategory === 'all' || prompt.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
+    const bySearch = prompts.filter(
+      (prompt) =>
+        prompt.title.toLowerCase().includes(q) || prompt.description.toLowerCase().includes(q),
+    );
+
+    if (activeCategory === 'mostUsed') {
+      return bySearch
+        .filter((p) => (usageCounts[p.id] ?? 0) > 0)
+        .sort((a, b) => (usageCounts[b.id] ?? 0) - (usageCounts[a.id] ?? 0));
+    }
+
+    if (activeCategory === 'all') return bySearch;
+    return bySearch.filter((p) => p.category === activeCategory);
+  }, [searchQuery, activeCategory, usageCounts]);
 
   const handleUsePrompt = useCallback(
     (promptText: string) => {
@@ -212,7 +239,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
             role="tablist"
             aria-label="Prompt categories"
           >
-            {promptCategories.map((cat) => {
+            {categoryTabs.map((cat) => {
               const isActive = activeCategory === cat.id;
               return (
                 <button
@@ -244,7 +271,9 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
           </div>
           {filteredPrompts.length === 0 && (
             <p className="py-12 text-center text-sm text-[var(--base-color-brand--umber)]">
-              No prompts match your filters.
+              {activeCategory === 'mostUsed'
+                ? 'No prompts used yet. Use or copy a prompt to start tracking.'
+                : 'No prompts match your filters.'}
             </p>
           )}
         </section>
