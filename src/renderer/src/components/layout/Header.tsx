@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PageType } from '@/App';
-import { ChevronDownIcon } from '@/components/icons';
+import { ChevronDownIcon, SettingsIcon } from '@/components/icons';
+import SettingsModal from '@/components/ui/SettingsModal';
+
+// Baked in at build time from package.json via electron.vite.config.ts.
+const APP_VERSION = __APP_VERSION__;
 
 interface HeaderProps {
   currentPage: PageType;
@@ -25,6 +29,7 @@ const trailingItems: { page: PageType; label: string }[] = [{ page: 'store', lab
 
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [adsOpen, setAdsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const adsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,9 +59,21 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
       {/* Actual header content below the title bar */}
       <header className="flex h-14 shrink-0 items-center border-b border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4">
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-2xl leading-none tracking-tight text-[var(--base-color-brand--bean)]">
+          <h1
+            className="text-2xl leading-none font-black tracking-tight text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
             King
           </h1>
+          {/* Version badge next to the wordmark. Version is baked in at build
+              time so it renders immediately, with no IPC dependency. */}
+          <span
+            className="inline-flex items-center rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-bold tracking-wider text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            title={`King v${APP_VERSION}`}
+          >
+            v{APP_VERSION}
+          </span>
         </div>
         <nav className="ml-6 flex items-center gap-2">
           {navItems.map(({ page, label }) => {
@@ -128,10 +145,20 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             );
           })}
         </nav>
-        <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm no-drag ml-auto">
-          APIs
-        </button>
+        <div className="no-drag ml-auto flex items-center gap-2">
+          <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
+            APIs
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+            className="flex items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] p-2 text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+          >
+            <SettingsIcon className="h-4 w-4" />
+          </button>
+        </div>
       </header>
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   );
 }

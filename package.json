@@ -1,8 +1,12 @@
 {
-  "name": "ecomm-king",
+  "name": "king",
   "version": "1.0.0",
-  "description": "Ecomm King Electron App",
+  "description": "King Electron App",
   "main": "./out/main/index.js",
+  "author": {
+    "name": "Ken Kai"
+  },
+  "homepage": "https://github.com/UnstableMind/king",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -15,14 +19,21 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "check": "npm run lint && npm run format:check",
-    "generate:prompts": "node scripts/generate-prompt-thumbnails.js"
+    "generate:prompts": "node scripts/generate-prompt-thumbnails.js",
+    "generate:icons": "bash scripts/generate-icons.sh",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "release": "npm run build && electron-builder --publish always"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@fal-ai/client": "^1.9.1",
-    "electron": "^40.4.1",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.8.3",
     "motion": "^12.38.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -38,6 +49,8 @@
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "electron": "^40.4.1",
+    "electron-builder": "^26.8.1",
     "electron-vite": "^5.0.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -50,5 +63,90 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "build": {
+    "appId": "com.unstablemind.king",
+    "productName": "King",
+    "copyright": "Copyright © 2026 Ken Kai",
+    "directories": {
+      "buildResources": "build",
+      "output": "release/${version}"
+    },
+    "files": [
+      "out/**/*",
+      "package.json",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitattributes,.gitignore,.gitkeep}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "King"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "draft"
+    }
   }
 }

@@ -1,4 +1,4 @@
-# Ecomm King
+# King
 
 Electron desktop app for e-commerce content creation — AI image generation, product/character management, prompt templates, and API integrations.
 
@@ -43,7 +43,7 @@ src/
 
 ## Data Layer
 
-- JSON file stores at `~/Library/Application Support/ecomm-king/data/`
+- JSON file stores at `~/Library/Application Support/king/data/`
 - Images served via custom `local-file://` protocol
 - All renderer ↔ main communication through typed IPC (`window.api.*`)
 

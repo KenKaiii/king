@@ -4,6 +4,7 @@ import { pathToFileURL } from 'url';
 import { registerIpcHandlers } from './ipc';
 import { getImagesDir } from './services/paths';
 import { loadApiKeysIntoEnv } from './services/apiKeyStore';
+import { initUpdater, checkForUpdates } from './services/updater';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -76,7 +77,14 @@ app.whenReady().then(() => {
   setContentSecurityPolicy();
   registerLocalFileProtocol();
   registerIpcHandlers();
+  initUpdater();
   createWindow();
+
+  // Silent background check shortly after launch — the UI only surfaces a
+  // notice if an update is actually available.
+  setTimeout(() => {
+    void checkForUpdates();
+  }, 3000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { IpcRendererEvent } from 'electron';
 
 const api = {
   images: {
@@ -27,6 +28,24 @@ const api = {
   },
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  },
+  update: {
+    getVersion: (): Promise<string> => ipcRenderer.invoke('updater:getVersion'),
+    getStatus: () => ipcRenderer.invoke('updater:getStatus'),
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    /**
+     * Subscribe to status broadcasts from the main process. Returns an
+     * unsubscribe function.
+     */
+    onStatus: (callback: (status: unknown) => void): (() => void) => {
+      const listener = (_event: IpcRendererEvent, status: unknown) => callback(status);
+      ipcRenderer.on('updater:status', listener);
+      return () => {
+        ipcRenderer.removeListener('updater:status', listener);
+      };
+    },
   },
   entities: {
     list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),

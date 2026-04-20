@@ -22,6 +22,25 @@ export interface ApiKeyEntry {
   savedAt: string;
 }
 
+export type UpdaterStage =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'downloaded'
+  | 'error';
+
+export interface UpdaterStatus {
+  stage: UpdaterStage;
+  currentVersion: string;
+  updateVersion?: string;
+  releaseNotes?: string;
+  progress?: number;
+  bytesPerSecond?: number;
+  error?: string;
+}
+
 export interface ElectronAPI {
   images: {
     list: (
@@ -57,6 +76,14 @@ export interface ElectronAPI {
   shell: {
     openExternal: (url: string) => Promise<void>;
   };
+  update: {
+    getVersion: () => Promise<string>;
+    getStatus: () => Promise<UpdaterStatus>;
+    check: () => Promise<UpdaterStatus>;
+    download: () => Promise<void>;
+    install: () => Promise<void>;
+    onStatus: (callback: (status: UpdaterStatus) => void) => () => void;
+  };
   apiKeys: {
     list: () => Promise<Record<string, ApiKeyEntry>>;
     set: (service: string, key: string) => Promise<{ success: boolean }>;
@@ -90,4 +117,6 @@ declare global {
   interface Window {
     api: ElectronAPI;
   }
+  /** App version string, injected at build time from package.json. */
+  const __APP_VERSION__: string;
 }
