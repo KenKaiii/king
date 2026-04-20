@@ -25,8 +25,13 @@ interface UseEntityManagementReturn {
   editingEntity: EntityData | null;
   deleteEntityId: string | null;
   fetchEntities: () => Promise<void>;
-  handleCreate: (name: string, images: UploadedImage[]) => Promise<void>;
-  handleSaveEdit: (id: string, name: string, images: UploadedImage[]) => Promise<void>;
+  handleCreate: (name: string, images: UploadedImage[], productType?: string) => Promise<void>;
+  handleSaveEdit: (
+    id: string,
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+  ) => Promise<void>;
   handleDelete: (id: string) => void;
   confirmDelete: () => Promise<void>;
   cancelDelete: () => void;
@@ -60,7 +65,15 @@ export function useEntityManagement({
   }, [fetchEntities]);
 
   const handleCreate = useCallback(
-    async (name: string, images: UploadedImage[]) => {
+    async (name: string, images: UploadedImage[], productType?: string) => {
+      const trimmed = name.trim().toLowerCase();
+      const isDuplicate = entities.some((e) => e.name.trim().toLowerCase() === trimmed);
+      if (isDuplicate) {
+        const label = entityType === 'products' ? 'product' : 'character';
+        toast.error(`A ${label} named "${name.trim()}" already exists`);
+        throw new Error('Duplicate name');
+      }
+
       setIsCreating(true);
       try {
         const files = await Promise.all(
@@ -72,7 +85,7 @@ export function useEntityManagement({
             })),
         );
 
-        await window.api.entities.create(entityType, { name, files });
+        await window.api.entities.create(entityType, { name, files, productType });
         await fetchEntities();
       } catch {
         toast.error(`Failed to create ${entityType.slice(0, -1)}. Please try again.`);
@@ -81,11 +94,21 @@ export function useEntityManagement({
         setIsCreating(false);
       }
     },
-    [entityType, fetchEntities],
+    [entityType, fetchEntities, entities],
   );
 
   const handleSaveEdit = useCallback(
-    async (id: string, name: string, images: UploadedImage[]) => {
+    async (id: string, name: string, images: UploadedImage[], productType?: string) => {
+      const trimmed = name.trim().toLowerCase();
+      const isDuplicate = entities.some(
+        (e) => e.id !== id && e.name.trim().toLowerCase() === trimmed,
+      );
+      if (isDuplicate) {
+        const label = entityType === 'products' ? 'product' : 'character';
+        toast.error(`A ${label} named "${name.trim()}" already exists`);
+        throw new Error('Duplicate name');
+      }
+
       setIsCreating(true);
       try {
         const existingImages = images.filter((img) => img.isExisting).map((img) => img.preview);
@@ -102,6 +125,7 @@ export function useEntityManagement({
           name,
           existingImages,
           newFiles: newFileBuffers,
+          productType,
         });
 
         await fetchEntities();
@@ -113,7 +137,7 @@ export function useEntityManagement({
         setIsCreating(false);
       }
     },
-    [entityType, fetchEntities],
+    [entityType, fetchEntities, entities],
   );
 
   const handleDelete = useCallback((id: string) => {

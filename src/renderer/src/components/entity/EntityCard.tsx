@@ -1,6 +1,12 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { SparkleIcon, EditIcon, DeleteIcon } from '@/components/icons';
+import Badge from '@/components/ui/Badge';
+import { productTypes } from '@/lib/productTypes';
 import type { EntityData } from '@/types/electron';
+
+const productTypeLabels: Record<string, string> = Object.fromEntries(
+  productTypes.map((pt) => [pt.id, pt.label]),
+);
 
 interface EntityCardProps {
   entity: EntityData;
@@ -15,6 +21,11 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
   const handleGenerate = useCallback(() => onGenerate(entity.id), [onGenerate, entity.id]);
   const handleEdit = useCallback(() => onEdit(entity), [onEdit, entity]);
   const handleDelete = useCallback(() => onDelete(entity.id), [onDelete, entity.id]);
+
+  const productTypeLabel = useMemo(
+    () => (entity.productType ? (productTypeLabels[entity.productType] ?? null) : null),
+    [entity.productType],
+  );
 
   return (
     <div className="group relative flex-shrink-0" style={{ contain: 'layout style' }}>
@@ -50,6 +61,13 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
           <SparkleIcon className="size-5" />
           Generate
         </button>
+
+        {/* Top-left product type badge */}
+        {productTypeLabel && (
+          <div className="absolute top-2 left-2 z-20">
+            <Badge>{productTypeLabel}</Badge>
+          </div>
+        )}
 
         {/* Top-right action buttons */}
         <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">

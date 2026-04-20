@@ -8,6 +8,8 @@ interface SelectDropdownProps {
   icon?: React.ReactNode;
   showIcons?: boolean;
   placeholder?: string;
+  fullWidth?: boolean;
+  size?: 'md' | 'sm';
 }
 
 export default memo(function SelectDropdown({
@@ -17,6 +19,8 @@ export default memo(function SelectDropdown({
   icon,
   showIcons = false,
   placeholder = 'Select',
+  fullWidth = false,
+  size = 'md',
 }: SelectDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,11 +49,11 @@ export default memo(function SelectDropdown({
   );
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className={`relative ${fullWidth ? 'w-full' : ''}`}>
       <button
         type="button"
         onClick={handleToggle}
-        className="flex h-10 items-center justify-between gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm text-[var(--text-color--text-primary)] transition hover:border-[var(--base-color-brand--bean)]"
+        className={`flex items-center justify-between gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--text-color--text-primary)] transition hover:border-[var(--base-color-brand--bean)] ${size === 'sm' ? 'h-6 px-3 text-xs' : 'h-10 px-4 text-sm'} ${fullWidth ? 'w-full' : ''}`}
       >
         <div className="flex items-center gap-2">
           {icon}

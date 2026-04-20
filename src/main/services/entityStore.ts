@@ -9,6 +9,7 @@ export interface StoredEntity {
   referenceImages: string[];
   thumbnailUrl: string | null;
   createdAt: string;
+  productType?: string;
 }
 
 interface EntityStore {
@@ -67,6 +68,7 @@ export function addEntity(
   entityType: string,
   name: string,
   referenceImages: string[],
+  productType?: string,
 ): StoredEntity {
   const store = readStore(entityType);
   const entity: StoredEntity = {
@@ -75,6 +77,7 @@ export function addEntity(
     referenceImages,
     thumbnailUrl: referenceImages[0] ?? null,
     createdAt: new Date().toISOString(),
+    ...(productType ? { productType } : {}),
   };
   store.entities.push(entity);
   writeStore(entityType, store);
@@ -86,6 +89,7 @@ export function updateEntity(
   id: string,
   name: string,
   referenceImages: string[],
+  productType?: string,
 ): StoredEntity | null {
   const store = readStore(entityType);
   const index = store.entities.findIndex((e) => e.id === id);
@@ -96,6 +100,7 @@ export function updateEntity(
     name,
     referenceImages,
     thumbnailUrl: referenceImages[0] ?? null,
+    ...(productType !== undefined ? { productType } : {}),
   };
   writeStore(entityType, store);
   return store.entities[index];

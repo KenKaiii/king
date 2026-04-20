@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { SparkleIcon, CloseIcon } from '@/components/icons';
-import type { UploadedImage } from '@/hooks/useEntityManagement';
+import SelectDropdown from '@/components/ui/SelectDropdown';
+import type { UploadedImage, EntityType } from '@/hooks/useEntityManagement';
 import type { EntityData } from '@/types/electron';
+import { productTypes } from '@/lib/productTypes';
 
 interface UploadReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialFiles: File[];
-  onGenerate: (name: string, images: UploadedImage[]) => void;
+  entityType: EntityType;
+  onGenerate: (name: string, images: UploadedImage[], productType?: string) => void;
   editEntity?: EntityData | null;
-  onSaveEdit?: (id: string, name: string, images: UploadedImage[]) => void;
+  onSaveEdit?: (id: string, name: string, images: UploadedImage[], productType?: string) => void;
   isLoading?: boolean;
 }
+
+const DEFAULT_PRODUCT_TYPE = 'beauty';
+
+const productTypeOptions = productTypes.map((pt) => ({ value: pt.id, label: pt.label }));
 
 const MAX_IMAGES = 14;
 
@@ -56,6 +63,7 @@ export default function UploadReviewModal({
   isOpen,
   onClose,
   initialFiles,
+  entityType,
   onGenerate,
   editEntity,
   onSaveEdit,
@@ -63,12 +71,15 @@ export default function UploadReviewModal({
 }: UploadReviewModalProps) {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [entityName, setEntityName] = useState('');
+  const [productType, setProductType] = useState<string>(DEFAULT_PRODUCT_TYPE);
   const isEditMode = !!editEntity;
+  const showProductType = entityType === 'products';
 
   // Load existing entity data in edit mode
   useEffect(() => {
     if (editEntity) {
       setEntityName(editEntity.name);
+      setProductType(editEntity.productType ?? DEFAULT_PRODUCT_TYPE);
       const loadExistingImages = async () => {
         const existingImages: UploadedImage[] = await Promise.all(
           editEntity.referenceImages.map(async (url, index) => {
@@ -136,6 +147,15 @@ export default function UploadReviewModal({
     };
   }, [initialFiles, isEditMode]);
 
+  // Reset to defaults when opening fresh (new create, not edit).
+  useEffect(() => {
+    if (isOpen && !editEntity && initialFiles.length === 0) {
+      setEntityName('');
+      setImages([]);
+      setProductType(DEFAULT_PRODUCT_TYPE);
+    }
+  }, [isOpen, editEntity, initialFiles.length]);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -143,15 +163,12 @@ export default function UploadReviewModal({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-    } else if (!editEntity) {
-      setEntityName('');
-      setImages([]);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onClose, editEntity]);
+  }, [isOpen, onClose]);
 
   const handleAddMoreImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -209,10 +226,11 @@ export default function UploadReviewModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (images.length === 0 || !entityName.trim() || isLoading) return;
+    const typeArg = showProductType ? productType : undefined;
     if (isEditMode && editEntity && onSaveEdit) {
-      onSaveEdit(editEntity.id, entityName, images);
+      onSaveEdit(editEntity.id, entityName, images, typeArg);
     } else {
-      onGenerate(entityName, images);
+      onGenerate(entityName, images, typeArg);
     }
   };
 
@@ -230,11 +248,21 @@ export default function UploadReviewModal({
       onClick={onClose}
     >
       <div
-        className={`mx-4 grid h-[90vh] max-h-[700px] w-full max-w-[68rem] grid-rows-[auto_1fr_auto] gap-4 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] shadow-2xl transition-all duration-300 ${
+        className={`relative mx-4 grid h-[90vh] max-h-[700px] w-full max-w-[68rem] grid-rows-[auto_1fr_auto] gap-4 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] shadow-2xl transition-all duration-300 ${
           isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 z-20 grid h-9 w-9 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+        >
+          <CloseIcon />
+        </button>
+
         {/* Upload More Button */}
         <label className="grid w-full cursor-pointer rounded-t-3xl bg-[var(--base-color-brand--champagne)] p-3 text-center text-[var(--base-color-brand--umber)] transition hover:bg-[var(--base-color-brand--cream)]">
           <input
@@ -289,40 +317,58 @@ export default function UploadReviewModal({
           className="sticky bottom-4 z-10 grid grid-cols-12 grid-rows-[auto_4rem] gap-2 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-3 md:bottom-8 lg:grid-rows-1"
         >
           {/* Stats Section */}
-          <div className="col-span-12 flex items-center lg:col-span-7">
-            <div className="w-full items-center rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 py-3 md:px-4">
-              <div className="grid grid-flow-row-dense auto-rows-min items-center md:grid-cols-[1fr_auto]">
-                <p className="truncate text-xs text-[var(--base-color-brand--umber)] md:order-1 md:text-sm">
-                  Images count
+          <div
+            className={`col-span-12 flex flex-col justify-center gap-1 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 ${showProductType ? 'lg:col-span-3' : 'lg:col-span-4'}`}
+          >
+            <div className="grid grid-flow-row-dense auto-rows-min items-center md:grid-cols-[1fr_auto]">
+              <p className="text-xs text-[var(--base-color-brand--umber)] md:order-1 md:text-sm">
+                Images
+              </p>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-1 md:gap-2">
+                <p
+                  className={`truncate text-[10px] font-bold tracking-wide uppercase ${countRating.color}`}
+                >
+                  {countRating.label}
                 </p>
-                <div className="grid grid-cols-[auto_1fr] items-center gap-1 md:gap-3">
-                  <p
-                    className={`truncate text-[10px] font-bold tracking-wide uppercase md:text-xs ${countRating.color}`}
-                  >
-                    {countRating.label}
-                  </p>
-                  <p className="truncate text-xs text-[var(--base-color-brand--umber)] md:text-sm">
-                    {imageCount} of {MAX_IMAGES}
-                  </p>
-                </div>
+                <p className="truncate text-xs text-[var(--base-color-brand--umber)]">
+                  {imageCount}/{MAX_IMAGES}
+                </p>
               </div>
+            </div>
+            <div
+              role="progressbar"
+              className="relative w-full rounded-full bg-[var(--base-color-brand--cream)] p-px"
+            >
               <div
-                role="progressbar"
-                className="relative mt-1 w-full rounded-full bg-[var(--base-color-brand--cream)] p-px md:p-1"
-              >
-                <div
-                  className="h-1.5 rounded-full transition-all duration-300 md:h-3"
-                  style={{
-                    width: `${countPercentage}%`,
-                    background: `linear-gradient(to right, ${countRating.gradientFrom}, ${countRating.gradientTo})`,
-                  }}
-                />
-              </div>
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  width: `${countPercentage}%`,
+                  background: `linear-gradient(to right, ${countRating.gradientFrom}, ${countRating.gradientTo})`,
+                }}
+              />
             </div>
           </div>
 
+          {/* Product Type Dropdown */}
+          {showProductType && (
+            <div className="col-span-12 flex flex-col justify-center gap-1 px-1 lg:col-span-3">
+              <span className="text-xs text-[var(--base-color-brand--umber)] md:text-sm">
+                Product type
+              </span>
+              <SelectDropdown
+                options={productTypeOptions}
+                value={productType}
+                onChange={setProductType}
+                fullWidth
+                size="sm"
+              />
+            </div>
+          )}
+
           {/* Name Input and Save Button */}
-          <div className="col-span-12 grid grid-cols-12 gap-2 lg:col-span-5">
+          <div
+            className={`col-span-12 grid grid-cols-12 gap-2 ${showProductType ? 'lg:col-span-6' : 'lg:col-span-8'}`}
+          >
             <label className="col-span-6 flex flex-col justify-center gap-1 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 lg:col-span-7">
               <span className="h-4 text-xs text-[var(--base-color-brand--umber)] md:text-sm">
                 Enter name

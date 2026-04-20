@@ -14,6 +14,7 @@ export interface EntityData {
   referenceImages: string[];
   thumbnailUrl: string | null;
   createdAt: string;
+  productType?: string;
 }
 
 export interface ApiKeyEntry {
@@ -65,7 +66,11 @@ export interface ElectronAPI {
     list: (entityType: string) => Promise<EntityData[]>;
     create: (
       entityType: string,
-      data: { name: string; files: { name: string; buffer: ArrayBuffer }[] },
+      data: {
+        name: string;
+        files: { name: string; buffer: ArrayBuffer }[];
+        productType?: string;
+      },
     ) => Promise<EntityData>;
     update: (
       entityType: string,
@@ -74,6 +79,7 @@ export interface ElectronAPI {
         name: string;
         existingImages: string[];
         newFiles: { name: string; buffer: ArrayBuffer }[];
+        productType?: string;
       },
     ) => Promise<EntityData>;
     delete: (entityType: string, id: string) => Promise<{ success: boolean }>;

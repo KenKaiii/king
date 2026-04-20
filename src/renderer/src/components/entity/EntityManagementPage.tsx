@@ -52,9 +52,9 @@ export default function EntityManagementPage({
     setIsReviewModalOpen(true);
   };
 
-  const handleSave = async (name: string, images: UploadedImage[]) => {
+  const handleSave = async (name: string, images: UploadedImage[], productType?: string) => {
     try {
-      await handleCreate(name, images);
+      await handleCreate(name, images, productType);
       setIsReviewModalOpen(false);
       setUploadedFiles([]);
     } catch {
@@ -73,9 +73,14 @@ export default function EntityManagementPage({
     setIsReviewModalOpen(true);
   };
 
-  const handleSaveEditWrapper = async (id: string, name: string, images: UploadedImage[]) => {
+  const handleSaveEditWrapper = async (
+    id: string,
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+  ) => {
     try {
-      await handleSaveEdit(id, name, images);
+      await handleSaveEdit(id, name, images, productType);
       setIsReviewModalOpen(false);
     } catch {
       // Error already handled in hook
@@ -98,6 +103,7 @@ export default function EntityManagementPage({
         isOpen={isReviewModalOpen}
         onClose={handleReviewModalClose}
         initialFiles={uploadedFiles}
+        entityType={entityType}
         onGenerate={handleSave}
         editEntity={editingEntity}
         onSaveEdit={handleSaveEditWrapper}

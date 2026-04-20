@@ -32,7 +32,11 @@ const api = {
     list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),
     create: (
       entityType: string,
-      data: { name: string; files: { name: string; buffer: ArrayBuffer }[] },
+      data: {
+        name: string;
+        files: { name: string; buffer: ArrayBuffer }[];
+        productType?: string;
+      },
     ) => ipcRenderer.invoke('entities:create', entityType, data),
     update: (
       entityType: string,
@@ -41,6 +45,7 @@ const api = {
         name: string;
         existingImages: string[];
         newFiles: { name: string; buffer: ArrayBuffer }[];
+        productType?: string;
       },
     ) => ipcRenderer.invoke('entities:update', entityType, id, data),
     delete: (entityType: string, id: string) =>

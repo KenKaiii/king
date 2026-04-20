@@ -20,6 +20,7 @@ import {
   MAX_IMAGE_SIZE_MB,
   MAX_IMAGES_PER_GENERATION,
 } from '@/lib/constants/image-form';
+import { renderPrompt } from '@/lib/productTypes';
 import type { EntityData } from '@/types/electron';
 
 interface ReferenceImage {
@@ -226,8 +227,15 @@ export default function ImagePromptForm({
       .filter((img) => img.url)
       .map((img) => img.url as string);
 
+    let selectedProductType: string | undefined;
+    if (selectedEntity.startsWith('product:')) {
+      const id = selectedEntity.slice('product:'.length);
+      selectedProductType = products.find((p) => p.id === id)?.productType;
+    }
+    const resolvedPrompt = renderPrompt(prompt, selectedProductType);
+
     onSubmit?.({
-      prompt,
+      prompt: resolvedPrompt,
       model: 'nano_banana_2',
       count: imageCount,
       aspectRatio,
