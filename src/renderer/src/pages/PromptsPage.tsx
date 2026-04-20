@@ -1,5 +1,9 @@
 import { useState, memo, useCallback } from 'react';
-import { prompts, type Prompt } from '@/lib/prompts';
+import { prompts, promptCategories, type Prompt, type PromptCategory } from '@/lib/prompts';
+
+function categoryLabel(id: PromptCategory): string {
+  return promptCategories.find((c) => c.id === id)?.label ?? id;
+}
 import type { PageType } from '@/App';
 
 function SearchIcon() {
@@ -71,12 +75,36 @@ const PromptCard = memo(function PromptCard({
   return (
     <div className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] transition-all duration-200 hover:border-[var(--base-color-brand--umber)] hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden bg-[var(--base-color-brand--shell)]">
-        <img
-          src={prompt.image}
-          alt={prompt.title}
-          className="h-full w-full object-cover"
-          loading={priority ? 'eager' : 'lazy'}
-        />
+        {prompt.image ? (
+          <img
+            src={prompt.image}
+            alt={prompt.title}
+            className="h-full w-full object-cover"
+            loading={priority ? 'eager' : 'lazy'}
+          />
+        ) : (
+          <div
+            className="flex h-full w-full flex-col items-center justify-center gap-3 p-5 text-center"
+            style={{
+              background:
+                'linear-gradient(135deg, var(--base-color-brand--champagne) 0%, var(--base-color-brand--shell) 100%)',
+            }}
+          >
+            <span
+              className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--base-color-brand--umber)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {categoryLabel(prompt.category)}
+            </span>
+            <h4
+              className="text-xl leading-tight font-bold text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {prompt.title}
+            </h4>
+            <span className="block h-[3px] w-10 rounded-full bg-[var(--base-color-brand--cinamon)]" />
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col justify-between gap-4 p-4">
         <div className="flex flex-col gap-1">
@@ -118,10 +146,14 @@ interface PromptsPageProps {
 
 export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<PromptCategory | 'all'>('all');
 
   const filteredPrompts = prompts.filter((prompt) => {
     const q = searchQuery.toLowerCase();
-    return prompt.title.toLowerCase().includes(q) || prompt.description.toLowerCase().includes(q);
+    const matchesSearch =
+      prompt.title.toLowerCase().includes(q) || prompt.description.toLowerCase().includes(q);
+    const matchesCategory = activeCategory === 'all' || prompt.category === activeCategory;
+    return matchesSearch && matchesCategory;
   });
 
   const handleUsePrompt = useCallback(
@@ -164,16 +196,41 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
 
         {/* Grid */}
         <section className="space-y-4">
-          <div className="space-y-1">
+          <div className="flex items-baseline justify-between gap-4">
             <h2
               className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               Product Prompts
             </h2>
-            <p className="text-sm text-[var(--base-color-brand--umber)]">
+            <p className="text-sm whitespace-nowrap text-[var(--base-color-brand--umber)]">
               {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? 's' : ''}
             </p>
+          </div>
+          <div
+            className="-mx-1 flex gap-1 overflow-x-auto rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            role="tablist"
+            aria-label="Prompt categories"
+          >
+            {promptCategories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide whitespace-nowrap uppercase transition-colors duration-150 ${
+                    isActive
+                      ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                      : 'text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--champagne)] hover:text-[var(--base-color-brand--bean)]'
+                  }`}
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {filteredPrompts.map((prompt, index) => (
@@ -185,6 +242,11 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
               />
             ))}
           </div>
+          {filteredPrompts.length === 0 && (
+            <p className="py-12 text-center text-sm text-[var(--base-color-brand--umber)]">
+              No prompts match your filters.
+            </p>
+          )}
         </section>
       </div>
     </main>
