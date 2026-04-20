@@ -11,7 +11,7 @@
  *   node scripts/generate-prompt-thumbnails.js --only id1,id2
  *
  * Env:
- *   KIE_API_KEY   Override the kie.ai API key (defaults to project key).
+ *   KIE_API_KEY   Required. kie.ai API key.
  */
 
 const fs = require('fs');
@@ -20,7 +20,12 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(REPO_ROOT, 'src/renderer/src/assets/prompts');
 
-const API_KEY = process.env.KIE_API_KEY || 'REMOVED';
+const API_KEY = process.env.KIE_API_KEY;
+if (!API_KEY) {
+  console.error('Error: KIE_API_KEY environment variable is required.');
+  console.error('Run with: KIE_API_KEY=your_key node scripts/generate-prompt-thumbnails.js');
+  process.exit(1);
+}
 const BASE_URL = 'https://api.kie.ai';
 const MODEL = 'seedream/4.5-text-to-image';
 const ASPECT_RATIO = '1:1';
