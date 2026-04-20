@@ -29,7 +29,10 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        # npm install (not ci) because electron-builder has platform-specific
+        # optional deps (electron-winstaller, @electron/windows-sign, etc.) that
+        # aren't written to the lockfile when it's generated on a single OS.
+        run: npm install --no-audit --no-fund
 
       - name: Build renderer + main
         run: npm run build
