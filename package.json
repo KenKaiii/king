@@ -6,7 +6,11 @@
   "author": {
     "name": "Ken Kai"
   },
-  "homepage": "https://github.com/UnstableMind/king",
+  "homepage": "https://github.com/KenKaiii/king",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KenKaiii/king.git"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
