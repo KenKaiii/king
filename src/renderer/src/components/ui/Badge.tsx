@@ -18,7 +18,7 @@ export default memo(function Badge({ children, variant = 'default', className = 
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-sm ${variantClasses} ${className}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wider backdrop-blur-sm ${variantClasses} ${className}`}
       style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
     >
       {children}

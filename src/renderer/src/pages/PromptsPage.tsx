@@ -97,7 +97,7 @@ const PromptCard = memo(function PromptCard({
             }}
           >
             <span
-              className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--base-color-brand--umber)]"
+              className="text-[10px] font-semibold tracking-[0.18em] text-[var(--base-color-brand--umber)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               {categoryLabel(prompt.category)}
@@ -127,7 +127,7 @@ const PromptCard = memo(function PromptCard({
         <div className="flex gap-2">
           <button
             onClick={handleUse}
-            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             <span className="text-sm">Use Prompt</span>
@@ -197,7 +197,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
         {/* Header */}
         <section className="flex flex-col gap-3">
           <h2
-            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-5xl"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             Prompt <span className="text-[var(--base-color-brand--cinamon)]">Gallery</span>
@@ -207,32 +207,30 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
           </p>
         </section>
 
-        {/* Search */}
-        <section>
-          <label className="relative flex h-11 w-full items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-3 transition-colors focus-within:border-[var(--base-color-brand--bean)] sm:max-w-[320px]">
-            <SearchIcon />
-            <input
-              type="text"
-              placeholder="Search prompts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-sm text-[var(--text-color--text-primary)] outline-none placeholder:text-[var(--base-color-brand--umber)]/70"
-            />
-          </label>
-        </section>
-
         {/* Grid */}
         <section className="space-y-4">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2
-              className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+              className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               Product Prompts
             </h2>
-            <p className="text-sm whitespace-nowrap text-[var(--base-color-brand--umber)]">
-              {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? 's' : ''}
-            </p>
+            <div className="flex items-center gap-3">
+              <label className="relative flex h-8 w-56 items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 transition-colors focus-within:border-[var(--base-color-brand--bean)]">
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Search prompts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent text-xs text-[var(--text-color--text-primary)] outline-none placeholder:text-[var(--base-color-brand--umber)]/70"
+                />
+              </label>
+              <p className="text-sm whitespace-nowrap text-[var(--base-color-brand--umber)]">
+                {filteredPrompts.length} prompt{filteredPrompts.length !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
           <div
             className="-mx-1 flex gap-1 overflow-x-auto rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -247,7 +245,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide whitespace-nowrap uppercase transition-colors duration-150 ${
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide whitespace-nowrap transition-colors duration-150 ${
                     isActive
                       ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
                       : 'text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--champagne)] hover:text-[var(--base-color-brand--bean)]'

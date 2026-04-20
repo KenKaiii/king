@@ -63,7 +63,7 @@ export default function UploadModal({
           </div>
           <div>
             <p
-              className="text-sm font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+              className="text-sm font-bold tracking-wide text-[var(--base-color-brand--bean)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               {goodTitle}
@@ -79,7 +79,7 @@ export default function UploadModal({
           </div>
           <div>
             <p
-              className="text-sm font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+              className="text-sm font-bold tracking-wide text-[var(--base-color-brand--bean)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               {badTitle}

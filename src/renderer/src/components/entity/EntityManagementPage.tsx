@@ -121,7 +121,7 @@ export default function EntityManagementPage({
         {/* Title Section */}
         <div className="text-center">
           <h1
-            className="text-3xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-4xl"
+            className="text-3xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-4xl"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             {title}

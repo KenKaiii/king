@@ -20,7 +20,7 @@ export default function StorePage() {
         <section className="flex flex-col gap-3">
           <div>
             <h2
-              className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+              className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-5xl"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               Store <span className="text-[var(--base-color-brand--cinamon)]">Connections</span>
@@ -38,13 +38,13 @@ export default function StorePage() {
               className="flex flex-col items-center gap-3 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-8 text-center"
             >
               <h3
-                className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase"
+                className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
                 {store.name} <span className="text-[var(--base-color-brand--cinamon)]">Store</span>
               </h3>
               <p className="text-sm text-[var(--base-color-brand--umber)]">{store.description}</p>
-              <span className="mt-1 rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+              <span className="mt-1 rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold tracking-wide text-[var(--base-color-brand--umber)]">
                 Coming soon
               </span>
             </div>

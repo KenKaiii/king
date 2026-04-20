@@ -38,7 +38,7 @@ h6 {
 }
 
 .text-style-allcaps {
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 /* ---------- Color modifiers ---------- */
@@ -78,7 +78,7 @@ h6 {
   font-family: var(--text-color--font-family--heading);
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.08em;
 }
 
@@ -95,7 +95,7 @@ h6 {
   font-family: var(--text-color--font-family--heading);
   font-size: 0.875rem;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.04em;
   border-radius: 100vw;
   transition:
@@ -124,7 +124,7 @@ h6 {
   font-family: var(--text-color--font-family--heading);
   font-size: 0.875rem;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.04em;
   border-radius: 100vw;
   box-shadow: 0 4px 0 0 var(--base-color-brand--dark-red);

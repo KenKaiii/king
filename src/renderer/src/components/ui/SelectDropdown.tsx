@@ -68,7 +68,7 @@ export default memo(function SelectDropdown({
               return (
                 <div
                   key={option.value}
-                  className="px-3 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-[var(--base-color-brand--umber)] uppercase"
+                  className="px-3 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-[var(--base-color-brand--umber)]"
                 >
                   {option.label}
                 </div>

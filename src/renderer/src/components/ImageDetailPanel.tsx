@@ -209,14 +209,14 @@ export default function ImageDetailPanel({
                   <span className="text-[var(--base-color-brand--umber)]">
                     <PromptIcon />
                   </span>
-                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
                     Prompt
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={copyPrompt}
-                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--bean)] uppercase tracking-wide transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--bean)] tracking-wide transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
                 >
                   Copy
                 </button>
@@ -234,7 +234,7 @@ export default function ImageDetailPanel({
                 <span className="text-[var(--base-color-brand--umber)]">
                   <InfoIcon />
                 </span>
-                <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
                   Information
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function ImageDetailPanel({
                   <span className="text-[var(--base-color-brand--umber)]">
                     <SettingsIcon />
                   </span>
-                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
                     Additional
                   </p>
                 </div>
@@ -305,7 +305,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onRecreate(image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <RecreateIcon />
@@ -315,7 +315,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDownload(image.url, image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DownloadIcon />
@@ -325,7 +325,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDelete(image.id)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DeleteIcon />

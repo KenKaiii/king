@@ -37,7 +37,7 @@ function KpiCard({ label, value, sub, colorClass, trend }: KpiCardProps) {
 
   return (
     <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
-      <p className="text-xs font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+      <p className="text-xs font-medium tracking-wide text-[var(--base-color-brand--umber)]">
         {label}
       </p>
       <p
@@ -82,11 +82,11 @@ function ProductCard({ product }: ProductCardProps) {
               {product.name}
             </h3>
             <span
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${statusStyle}`}
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyle}`}
             >
               {product.status}
             </span>
-            <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)] uppercase">
+            <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)]">
               {product.category}
             </span>
           </div>
@@ -99,7 +99,7 @@ function ProductCard({ product }: ProductCardProps) {
       {/* Metrics row */}
       <div className="mt-4 grid grid-cols-5 gap-4 border-t border-[var(--base-color-brand--umber)]/20 pt-4">
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Orders
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -107,7 +107,7 @@ function ProductCard({ product }: ProductCardProps) {
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Revenue
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -115,7 +115,7 @@ function ProductCard({ product }: ProductCardProps) {
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Views
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -123,13 +123,13 @@ function ProductCard({ product }: ProductCardProps) {
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Conv.
           </p>
           <p className={`text-sm font-semibold ${convColor}`}>{product.convRate}%</p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Rating
           </p>
           <p className={`text-sm font-semibold ${ratingColor}`}>
@@ -151,7 +151,7 @@ function InsightCard({ title, metric, segments }: InsightCardProps) {
   return (
     <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+        <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
           {title}
         </p>
         <p className="text-[10px] text-[var(--base-color-brand--umber)]/70">by {metric}</p>
@@ -226,7 +226,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
           <div className="flex items-start justify-between">
             <div>
               <h2
-                className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+                className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-5xl"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
                 TikTok <span className="text-[var(--base-color-brand--cinamon)]">Shop</span>
@@ -276,7 +276,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
 
         {/* Shop Insights */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Shop Insights
           </h3>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -293,7 +293,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
 
         {/* Product Cards */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Products
           </h3>
           <div className="flex flex-col gap-3">

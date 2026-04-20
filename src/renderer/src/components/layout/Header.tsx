@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import type { PageType } from '@/App';
+import { ChevronDownIcon } from '@/components/icons';
 
 interface HeaderProps {
   currentPage: PageType;
@@ -7,17 +9,44 @@ interface HeaderProps {
 
 const navItems: { page: PageType; label: string }[] = [
   { page: 'image', label: 'Image' },
+  { page: 'prompts', label: 'Prompts' },
   { page: 'products', label: 'Products' },
   { page: 'characters', label: 'Characters' },
-  { page: 'prompts', label: 'Prompts' },
+];
+
+const adsItems: { page: PageType; label: string }[] = [
   { page: 'facebook-ads', label: 'Facebook Ads' },
   { page: 'google-ads', label: 'Google Ads' },
   { page: 'tiktok-shop', label: 'TikTok Shop' },
   { page: 'shopee-ads', label: 'Shopee Ads' },
-  { page: 'store', label: 'Your Store' },
 ];
 
+const trailingItems: { page: PageType; label: string }[] = [{ page: 'store', label: 'Your Store' }];
+
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
+  const [adsOpen, setAdsOpen] = useState(false);
+  const adsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (adsRef.current && !adsRef.current.contains(event.target as Node)) {
+        setAdsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const adsActive = adsItems.some((item) => item.page === currentPage);
+  const activeAdsLabel = adsItems.find((item) => item.page === currentPage)?.label;
+
+  const navButtonClass = (active: boolean) =>
+    `rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+      active
+        ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+        : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]'
+    }`;
+
   return (
     <>
       {/* Draggable title bar area — sits behind the native traffic light buttons */}
@@ -36,11 +65,62 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               <button
                 key={page}
                 onClick={() => onNavigate(page)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide uppercase transition-colors ${
-                  active
-                    ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-                    : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]'
-                }`}
+                className={navButtonClass(active)}
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                {label}
+              </button>
+            );
+          })}
+
+          <div ref={adsRef} className="relative">
+            <button
+              onClick={() => setAdsOpen((prev) => !prev)}
+              className={`${navButtonClass(adsActive)} flex items-center gap-1.5`}
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              aria-haspopup="menu"
+              aria-expanded={adsOpen}
+            >
+              <span>{activeAdsLabel ?? 'Ads'}</span>
+              <ChevronDownIcon />
+            </button>
+            {adsOpen && (
+              <div
+                role="menu"
+                className="absolute top-full left-0 z-50 mt-2 flex min-w-[180px] flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-1 shadow-lg"
+              >
+                {adsItems.map(({ page, label }) => {
+                  const active = currentPage === page;
+                  return (
+                    <button
+                      key={page}
+                      role="menuitem"
+                      onClick={() => {
+                        onNavigate(page);
+                        setAdsOpen(false);
+                      }}
+                      className={`rounded-xl px-3 py-2 text-left text-xs font-semibold tracking-wide transition-colors ${
+                        active
+                          ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                          : 'text-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--shell)]'
+                      }`}
+                      style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {trailingItems.map(({ page, label }) => {
+            const active = currentPage === page;
+            return (
+              <button
+                key={page}
+                onClick={() => onNavigate(page)}
+                className={navButtonClass(active)}
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
                 {label}

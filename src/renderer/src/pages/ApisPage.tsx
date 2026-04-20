@@ -123,7 +123,7 @@ export default function ApisPage() {
         <section className="flex flex-col gap-3">
           <span className="eyebrow self-start">Settings</span>
           <h2
-            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+            className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-5xl"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             API <span className="text-[var(--base-color-brand--cinamon)]">Keys</span>
@@ -194,7 +194,7 @@ export default function ApisPage() {
                     <button
                       onClick={() => handleSave(service.id)}
                       disabled={!inputs[service.id]?.trim() || isSaving}
-                      className="shrink-0 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                      className="shrink-0 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
                       style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
                     >
                       {isSaving ? '...' : 'Save'}

@@ -55,7 +55,7 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
         <button
           type="button"
           onClick={handleGenerate}
-          className="absolute top-1/2 left-1/2 inline-grid h-12 -translate-x-1/2 -translate-y-1/2 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-5 text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] opacity-0 shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-opacity duration-200 ease-out group-hover:opacity-100 hover:bg-[var(--base-color-brand--red)]"
+          className="absolute top-1/2 left-1/2 inline-grid h-12 -translate-x-1/2 -translate-y-1/2 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-5 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] opacity-0 shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-opacity duration-200 ease-out group-hover:opacity-100 hover:bg-[var(--base-color-brand--red)]"
           style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
         >
           <SparkleIcon className="size-5" />
@@ -90,7 +90,7 @@ export default memo(function EntityCard({ entity, onGenerate, onEdit, onDelete }
         {/* Bottom info gradient */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[var(--base-color-brand--bean)]/90 to-transparent p-3">
           <p
-            className="truncate text-xs font-bold tracking-wide text-[var(--base-color-brand--shell)] uppercase"
+            className="truncate text-xs font-bold tracking-wide text-[var(--base-color-brand--shell)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             {entity.name}

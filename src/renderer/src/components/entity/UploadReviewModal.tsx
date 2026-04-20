@@ -25,31 +25,6 @@ const MAX_IMAGES = 14;
 
 const getFileKey = (file: File): string => `${file.name}-${file.size}`;
 
-function getCountRating(count: number) {
-  if (count < 4) {
-    return {
-      label: 'Too Few',
-      color: 'text-[var(--base-color-brand--dark-red)]',
-      gradientFrom: '#b82a57',
-      gradientTo: '#d93a63',
-    };
-  } else if (count < 6) {
-    return {
-      label: 'Good',
-      color: 'text-[var(--base-color-brand--umber)]',
-      gradientFrom: '#ffcbd6',
-      gradientTo: '#ffee8c',
-    };
-  } else {
-    return {
-      label: 'Excellent',
-      color: 'text-[var(--base-color-brand--cinamon)]',
-      gradientFrom: '#ff94ac',
-      gradientTo: '#d93a63',
-    };
-  }
-}
-
 function getImageAspectRatio(src: string): Promise<number> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -234,10 +209,6 @@ export default function UploadReviewModal({
     }
   };
 
-  const imageCount = images.length;
-  const countPercentage = Math.min((imageCount / MAX_IMAGES) * 100, 100);
-  const countRating = getCountRating(imageCount);
-
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
@@ -274,7 +245,7 @@ export default function UploadReviewModal({
           />
           <div className="grid justify-center rounded-xl border border-dashed border-transparent p-5">
             <div className="flex items-center justify-center">
-              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm font-semibold uppercase tracking-wide text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]">
+              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]">
                 <SparkleIcon className="size-5" />
                 Upload images
               </span>
@@ -316,42 +287,9 @@ export default function UploadReviewModal({
           onSubmit={handleSubmit}
           className="sticky bottom-4 z-10 grid grid-cols-12 grid-rows-[auto_4rem] gap-2 rounded-3xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-3 md:bottom-8 lg:grid-rows-1"
         >
-          {/* Stats Section */}
-          <div
-            className={`col-span-12 flex flex-col justify-center gap-1 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 ${showProductType ? 'lg:col-span-3' : 'lg:col-span-4'}`}
-          >
-            <div className="grid grid-flow-row-dense auto-rows-min items-center md:grid-cols-[1fr_auto]">
-              <p className="text-xs text-[var(--base-color-brand--umber)] md:order-1 md:text-sm">
-                Images
-              </p>
-              <div className="grid grid-cols-[auto_1fr] items-center gap-1 md:gap-2">
-                <p
-                  className={`truncate text-[10px] font-bold tracking-wide uppercase ${countRating.color}`}
-                >
-                  {countRating.label}
-                </p>
-                <p className="truncate text-xs text-[var(--base-color-brand--umber)]">
-                  {imageCount}/{MAX_IMAGES}
-                </p>
-              </div>
-            </div>
-            <div
-              role="progressbar"
-              className="relative w-full rounded-full bg-[var(--base-color-brand--cream)] p-px"
-            >
-              <div
-                className="h-1.5 rounded-full transition-all duration-300"
-                style={{
-                  width: `${countPercentage}%`,
-                  background: `linear-gradient(to right, ${countRating.gradientFrom}, ${countRating.gradientTo})`,
-                }}
-              />
-            </div>
-          </div>
-
           {/* Product Type Dropdown */}
           {showProductType && (
-            <div className="col-span-12 flex flex-col justify-center gap-1 px-1 lg:col-span-3">
+            <div className="col-span-12 flex flex-col justify-center gap-1 px-1 lg:col-span-4">
               <span className="text-xs text-[var(--base-color-brand--umber)] md:text-sm">
                 Product type
               </span>
@@ -367,7 +305,7 @@ export default function UploadReviewModal({
 
           {/* Name Input and Save Button */}
           <div
-            className={`col-span-12 grid grid-cols-12 gap-2 ${showProductType ? 'lg:col-span-6' : 'lg:col-span-8'}`}
+            className={`col-span-12 grid grid-cols-12 gap-2 ${showProductType ? 'lg:col-span-8' : 'lg:col-span-12'}`}
           >
             <label className="col-span-6 flex flex-col justify-center gap-1 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-3 lg:col-span-7">
               <span className="h-4 text-xs text-[var(--base-color-brand--umber)] md:text-sm">
@@ -390,7 +328,7 @@ export default function UploadReviewModal({
               <button
                 type="submit"
                 disabled={images.length === 0 || !entityName.trim() || isLoading}
-                className={`relative z-10 inline-grid h-full w-full grid-flow-col items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold uppercase tracking-wide transition-all duration-300 ${
+                className={`relative z-10 inline-grid h-full w-full grid-flow-col items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold tracking-wide transition-all duration-300 ${
                   isLoading
                     ? 'bg-[var(--base-color-brand--umber)] text-[var(--base-color-brand--shell)]'
                     : 'border-none bg-[var(--base-color-brand--cinamon)] text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_3px_0_0_var(--base-color-brand--bean)]'

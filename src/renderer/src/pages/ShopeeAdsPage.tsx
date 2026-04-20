@@ -38,7 +38,7 @@ function KpiCard({ label, value, sub, colorClass, trend }: KpiCardProps) {
 
   return (
     <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
-      <p className="text-xs font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+      <p className="text-xs font-medium tracking-wide text-[var(--base-color-brand--umber)]">
         {label}
       </p>
       <p
@@ -104,11 +104,11 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
               {campaign.name}
             </h3>
             <span
-              className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${statusStyle}`}
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyle}`}
             >
               {campaign.status}
             </span>
-            <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)] uppercase">
+            <span className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-medium text-[var(--base-color-brand--umber)]">
               {campaign.type}
             </span>
           </div>
@@ -140,7 +140,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
                 </button>
                 <button
                   onClick={handleBudgetSave}
-                  className="ml-1 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--red)]"
+                  className="ml-1 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--red)]"
                 >
                   Save
                 </button>
@@ -190,7 +190,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
         {!isEnded && (
           <button
             onClick={() => onToggleStatus(campaign.id)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
               campaign.status === 'active'
                 ? 'border-[var(--base-color-brand--umber)]/50 text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--shell)]'
                 : 'border-[var(--status--success)]/40 text-[var(--status--success)] hover:bg-[var(--status--success)]/10'
@@ -204,7 +204,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
       {/* Metrics row */}
       <div className="mt-4 grid grid-cols-5 gap-4 border-t border-[var(--base-color-brand--umber)]/20 pt-4">
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Spent
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -212,13 +212,13 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             CTR
           </p>
           <p className={`text-sm font-semibold ${ctrColor}`}>{campaign.ctr}%</p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             CPC
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -226,7 +226,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             Orders
           </p>
           <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
@@ -234,7 +234,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
           </p>
         </div>
         <div>
-          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+          <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
             ROAS
           </p>
           <p className={`text-sm font-semibold ${roasColor}`}>{campaign.roas}x</p>
@@ -254,7 +254,7 @@ function InsightCard({ title, metric, segments }: InsightCardProps) {
   return (
     <div className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+        <p className="text-[10px] font-medium tracking-wide text-[var(--base-color-brand--umber)]">
           {title}
         </p>
         <p className="text-[10px] text-[var(--base-color-brand--umber)]/70">by {metric}</p>
@@ -354,7 +354,7 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
           <div className="flex items-start justify-between">
             <div>
               <h2
-                className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] uppercase sm:text-5xl"
+                className="text-4xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-5xl"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
                 Shopee <span className="text-[var(--base-color-brand--cinamon)]">Ads</span>
@@ -409,7 +409,7 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
 
         {/* Audience Insights */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Audience Insights
           </h3>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -426,7 +426,7 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
 
         {/* Campaign Cards */}
         <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)] uppercase">
+          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Campaigns
           </h3>
           <div className="flex flex-col gap-3">

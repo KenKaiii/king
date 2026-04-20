@@ -3,7 +3,7 @@ export default function ImageEmptyState() {
     <div className="flex h-full w-full items-center justify-center">
       <div className="flex flex-col items-center justify-center gap-3">
         <h2
-          className="text-center text-3xl font-bold text-[var(--base-color-brand--bean)] uppercase"
+          className="text-center text-3xl font-bold text-[var(--base-color-brand--bean)]"
           style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
         >
           Nothing Here Yet
