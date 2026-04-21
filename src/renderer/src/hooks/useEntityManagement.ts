@@ -70,7 +70,7 @@ export function useEntityManagement({
       const isDuplicate = entities.some((e) => e.name.trim().toLowerCase() === trimmed);
       if (isDuplicate) {
         const label = entityType === 'products' ? 'product' : 'character';
-        toast.error(`A ${label} named "${name.trim()}" already exists`);
+        toast.error(`You already have a ${label} called “${name.trim()}”. Pick a different name.`);
         throw new Error('Duplicate name');
       }
 
@@ -88,7 +88,8 @@ export function useEntityManagement({
         await window.api.entities.create(entityType, { name, files, productType });
         await fetchEntities();
       } catch {
-        toast.error(`Failed to create ${entityType.slice(0, -1)}. Please try again.`);
+        const label = entityType === 'products' ? 'product' : 'character';
+        toast.error(`Couldn't save your ${label}. Please try again.`);
         throw new Error(`Failed to create ${entityType.slice(0, -1)}`);
       } finally {
         setIsCreating(false);
@@ -105,7 +106,7 @@ export function useEntityManagement({
       );
       if (isDuplicate) {
         const label = entityType === 'products' ? 'product' : 'character';
-        toast.error(`A ${label} named "${name.trim()}" already exists`);
+        toast.error(`You already have a ${label} called “${name.trim()}”. Pick a different name.`);
         throw new Error('Duplicate name');
       }
 
@@ -131,7 +132,8 @@ export function useEntityManagement({
         await fetchEntities();
         setEditingEntity(null);
       } catch {
-        toast.error(`Failed to update ${entityType.slice(0, -1)}. Please try again.`);
+        const label = entityType === 'products' ? 'product' : 'character';
+        toast.error(`Couldn't save your changes to this ${label}. Please try again.`);
         throw new Error(`Failed to update ${entityType.slice(0, -1)}`);
       } finally {
         setIsCreating(false);

@@ -50,6 +50,22 @@ select,
   display: none;
 }
 
+/* Wizard step transition — a subtle fade + lift as each step mounts. */
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step-in {
+  animation: step-fade-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Legacy gradient wordmark — kept as no-op utility in case it is still referenced.
    In Clensae the wordmark is plain bean ink Genty, so this class is now a simple
    display-font color helper. */

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import Header from '@/components/layout/Header';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import ImagePage from '@/pages/ImagePage';
+import CreateAdsPage from '@/pages/CreateAdsPage';
 import ProductsPage from '@/pages/ProductsPage';
 import CharactersPage from '@/pages/CharactersPage';
 import FacebookAdsPage from '@/pages/FacebookAdsPage';
@@ -14,6 +15,7 @@ import PromptsPage from '@/pages/PromptsPage';
 
 export type PageType =
   | 'image'
+  | 'create-ads'
   | 'products'
   | 'characters'
   | 'facebook-ads'
@@ -42,6 +44,7 @@ function AppContent() {
       {currentPage === 'image' && (
         <ImagePage prefillPrompt={prefillPrompt} onPromptConsumed={handlePromptConsumed} />
       )}
+      {currentPage === 'create-ads' && <CreateAdsPage />}
       {currentPage === 'products' && <ProductsPage onNavigate={setCurrentPage} />}
       {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
       {currentPage === 'facebook-ads' && <FacebookAdsPage onNavigate={setCurrentPage} />}

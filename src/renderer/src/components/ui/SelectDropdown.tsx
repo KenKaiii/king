@@ -95,7 +95,7 @@ export default memo(function SelectDropdown({
                     </div>
                   )}
                   <div
-                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : ''}`}
+                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 text-[var(--base-color-brand--bean)] transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : ''}`}
                   >
                     <span className="text-sm text-[var(--text-color--text-primary)]">
                       {option.label}

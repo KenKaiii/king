@@ -59,12 +59,12 @@ export function useImages() {
     try {
       const result = await window.api.images.delete(id);
       if (result.success) {
-        toast.success('Image deleted');
+        toast.success('Image deleted.');
       } else {
-        toast.error('Failed to delete image');
+        toast.error("Couldn't delete the image. Please try again.");
       }
     } catch {
-      toast.error('Failed to delete image');
+      toast.error("Couldn't delete the image. Please try again.");
     }
   }, []);
 
@@ -74,12 +74,12 @@ export function useImages() {
     try {
       const result = await window.api.files.download(url, filename);
       if (result.success) {
-        toast.success('Image saved');
+        toast.success('Image saved.');
       } else if (!result.cancelled) {
-        toast.error('Failed to download image');
+        toast.error("Couldn't save the image. Please try again.");
       }
     } catch {
-      toast.error('Failed to download image');
+      toast.error("Couldn't save the image. Please try again.");
     }
   }, []);
 

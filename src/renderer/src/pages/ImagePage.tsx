@@ -115,7 +115,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
           });
 
           if (!result.success || !result.resultUrls?.length) {
-            toast.error('Failed to generate image');
+            toast.error("Couldn't generate that image. Please try again.");
             removeImageGeneration(generationId);
             continue;
           }
@@ -133,19 +133,21 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
           removeImageGeneration(generationId);
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+          toast.error(
+            err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+          );
           removeImageGeneration(generationId);
         }
       }
 
       if (successCount > 0) {
-        toast.success(`Generated ${successCount} image${successCount > 1 ? 's' : ''}`);
+        toast.success(`Generated ${successCount} image${successCount > 1 ? 's' : ''}.`);
       }
     };
 
     generateImages().catch((error) => {
       console.error('Unhandled error in image generation:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error('Something went wrong. Please try again.');
       generationIds.forEach((id) => removeImageGeneration(id));
     });
   };

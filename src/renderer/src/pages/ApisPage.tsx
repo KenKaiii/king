@@ -99,9 +99,9 @@ export default function ApisPage() {
       await window.api.apiKeys.set(serviceId, key);
       setInputs((prev) => ({ ...prev, [serviceId]: '' }));
       await fetchKeys();
-      toast.success('API key saved');
+      toast.success('API key saved.');
     } catch {
-      toast.error('Failed to save API key');
+      toast.error("Couldn't save your API key. Please try again.");
     } finally {
       setSavingService(null);
     }
@@ -111,9 +111,9 @@ export default function ApisPage() {
     try {
       await window.api.apiKeys.delete(serviceId);
       await fetchKeys();
-      toast.success('API key removed');
+      toast.success('API key removed.');
     } catch {
-      toast.error('Failed to remove API key');
+      toast.error("Couldn't remove your API key. Please try again.");
     }
   };
 

@@ -219,7 +219,7 @@ export default function ImagePromptForm({
     if (isImagesLoading) return;
 
     if (!prompt.trim()) {
-      toast.error('Please enter a prompt');
+      toast.error('Type a prompt first.');
       return;
     }
 

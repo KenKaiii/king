@@ -26,6 +26,28 @@ export const ChevronDownIcon = () => (
   </svg>
 );
 
+export const ChevronLeftIcon = ({ className = 'h-4 w-4' }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" className={className}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12.6867 3.81344C12.882 4.0087 12.882 4.32528 12.6867 4.52055L7.20697 10.0003L12.6867 15.4801C12.882 15.6754 12.882 15.9919 12.6867 16.1872C12.4915 16.3825 12.1749 16.3825 11.9796 16.1872L6.14631 10.3539L5.79276 10.0003L6.14631 9.64677L11.9796 3.81344C12.1749 3.61818 12.4915 3.61818 12.6867 3.81344Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const ChevronRightIcon = ({ className = 'h-4 w-4' }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" className={className}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M7.31337 3.81344C7.50864 3.61818 7.82522 3.61818 8.02048 3.81344L13.8538 9.64677L14.2074 10.0003L13.8538 10.3539L8.02048 16.1872C7.82522 16.3825 7.50864 16.3825 7.31337 16.1872C7.11811 15.9919 7.11811 15.6754 7.31337 15.4801L12.7932 10.0003L7.31337 4.52055C7.11811 4.32528 7.11811 4.0087 7.31337 3.81344Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 export const SparkleIcon = ({ className = 'h-4 w-4' }: { className?: string }) => (
   <svg width="20" height="20" viewBox="0 0 20 20" className={className}>
     <path
@@ -48,11 +70,11 @@ export const AutoIcon = () => (
   </svg>
 );
 
-export const CheckIcon = ({
-  className = 'h-4 w-4 text-[var(--base-color-brand--umber)]',
-}: {
-  className?: string;
-}) => (
+export const CheckIcon = ({ className = 'h-4 w-4' }: { className?: string }) => (
+  // Fill inherits from `currentColor` so the icon adopts whatever text color
+  // the parent sets. Never hardcode a brand color here — callers that place
+  // this on a dark background must already have a `text-*` utility that
+  // gives proper contrast.
   <svg width="24" height="24" viewBox="0 0 24 24" className={className}>
     <path
       fillRule="evenodd"
