@@ -51,6 +51,23 @@ const INVALID_KEY_MESSAGE =
   "Your fal.ai key didn't work. Double-check it on the APIs page and save a fresh one if needed.";
 const OUT_OF_CREDITS_MESSAGE =
   'Your fal.ai account is locked — usually because the balance ran out. If you just topped up, give it a minute to sync and try again. Otherwise top up at fal.ai/dashboard/billing, or check that your API key belongs to the account you topped up.';
+const SAFETY_BLOCK_MESSAGE =
+  'Google blocked this one as a safety precaution. The filter is probabilistic — hitting Try again often works, especially on face-swap and character workflows.';
+const VALIDATION_MESSAGE =
+  "Something about this request wasn't accepted. Try a different image or prompt.";
+
+/**
+ * Detect Gemini / Nano Banana Pro safety-filter refusals. Gemini wraps
+ * both its prompt-level and post-generation safety blocks inside a 422
+ * with a generic "did not generate the expected output" body — we match
+ * on that phrase (and its known variants) so we can surface an actionable
+ * message instead of the cryptic default.
+ */
+function isSafetyBlock(message: string): boolean {
+  return /\b(unsafe content|did not generate the expected output|prohibited[_ ]content|image[_ ]safety)\b/i.test(
+    message,
+  );
+}
 
 /**
  * Walk a fal error body looking for the underlying human-readable message.
@@ -170,6 +187,14 @@ export function registerGenerateHandlers(): void {
           '\nimage_urls count:',
           hasReferenceImages ? resolvedUrls.length : 0,
         );
+
+        // Safety-filter refusals come through as 422s with a generic
+        // Gemini message. Detect and surface a useful error instead of
+        // the generic validation one.
+        if (isSafetyBlock(falMessage)) {
+          throw new Error(SAFETY_BLOCK_MESSAGE);
+        }
+
         const details =
           (e.body as { detail?: Array<{ loc?: unknown[]; msg?: string; type?: string }> })
             ?.detail ?? [];
@@ -177,9 +202,7 @@ export function registerGenerateHandlers(): void {
           .map((d) => `${(d.loc ?? []).join('.')}: ${d.msg ?? d.type ?? 'invalid'}`)
           .join('; ');
         console.error('[generate:image] validation detail:', msg);
-        throw new Error(
-          "Something about this request wasn't accepted. Try a different image or prompt.",
-        );
+        throw new Error(VALIDATION_MESSAGE);
       }
       throw err;
     }

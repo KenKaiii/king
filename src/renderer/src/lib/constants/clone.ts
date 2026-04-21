@@ -5,6 +5,12 @@
 // clothing, lighting, background, and composition identical. Small
 // tweaks (colour changes etc.) can be layered on via the brief.
 //
+// The reference can be ANY kind of photo — editorial, phone candid,
+// film snap, indoor flash pic, low-res social upload. The prompt
+// deliberately avoids prescribing a quality level and instead tells the
+// model to inherit whatever style, quality, grain, and lighting Image 1
+// has. "Editorial" bias would wreck faithful clones of casual shots.
+//
 // Prompt structure borrows from several production sources:
 //   - [REFERENCES] / [RELATIONSHIP] / [TWEAKS] block skeleton — Google's
 //     multi-part prompting style (ai.google.dev/gemini-api/docs/image-generation)
@@ -12,7 +18,7 @@
 //     meitu/meitu-skills workflows (production skill shipped to real users)
 //   - "preserve facial structure / no face morphing / 100% recognizable"
 //     idioms — YouMind-OpenLab/awesome-nano-banana-pro-prompts
-//   - Fabric / drape / weave language — sanjay3290/ai-skills Imagen examples
+//   - Fabric / drape language — sanjay3290/ai-skills Imagen examples
 //   - Selective attribute transfer + explicit re-lighting direction —
 //     calesthio/OpenMontage flux-best-practices multi-reference-editing
 //   - Tweak phrasing "Do not change any other element of the image" —
@@ -35,10 +41,10 @@ export const CLONE_OUTPUT_FORMAT = 'png';
 export function buildClonePrompt(tweaks: string, aspectRatio: string): string {
   const trimmed = tweaks.trim();
 
-  return `Reshoot Image 1 with the character from Image 2 onward as the model instead of the original person. The final image should look as if Image 1's photographer had simply booked a different model for the same shoot — same day, same set, same light, same wardrobe, same pose, same camera. Output a single ${aspectRatio} photorealistic image, editorial quality.
+  return `Recreate Image 1 with the character from Image 2 onward as the subject instead of the original person. The final image should look like Image 1 but with a different person in it — same place, same time, same camera, same conditions. Output a single ${aspectRatio} photorealistic image that matches Image 1's overall look, quality, and style exactly — whether Image 1 is a studio shot, a phone candid, a film snap, or anything in between.
 
 [REFERENCES]
-- Image 1 — SOURCE SCENE (primary anchor, highest weight): ground truth for composition, framing, crop, pose, limb positions, head tilt, weight distribution, camera angle, lens, focal length, depth of field, lighting direction, lighting colour temperature, shadows, contact shadows, colour palette, colour grade, film grain, outfit (design, cut, colour, fabric, weave, drape, folds, stitching, creases), background, props, and atmosphere. Every visual element except the person's identity is inherited pixel-perfect from this image.
+- Image 1 — SOURCE SCENE (primary anchor, highest weight): ground truth for composition, framing, crop, pose, limb positions, head tilt, weight distribution, camera angle, lens character, focal length, depth of field, lighting direction, lighting colour temperature, shadows, contact shadows, colour palette, colour grade, image grain/noise, overall sharpness or softness, outfit (design, cut, colour, material, drape, folds, creases), background, props, and atmosphere. Inherit the image's style and quality exactly as-is — if it looks like a phone snap, it should still look like a phone snap; if it looks editorial, it should still look editorial.
 - Image 2 and onward — CHARACTER (identity anchor): ground truth for the person's face, hairline, hairstyle, hair colour, skin tone, eye shape, eyebrow shape, jawline, facial structure, body proportions, body type, and any distinguishing features (moles, freckles, scars, tattoos). When multiple character images are provided, treat them as different angles of the same person and triangulate a consistent 3D identity.
 
 [IDENTITY LOCK]
@@ -46,16 +52,16 @@ FACE LIKENESS IS THE #1 PRIORITY. Preserve exact facial structure, hairline, and
 
 [RELATIONSHIP]
 - IDENTITY: Take face, hairline, hairstyle, hair colour, skin tone, eye colour, eyebrow shape, jawline, facial structure, body type, and distinguishing features strictly from Image 2 onward.
-- SCENE: Take everything else from Image 1 — pose (exact limb positions, hand positions, finger positions, head tilt, gaze direction, weight distribution, contrapposto), outfit (exact design, colour, cut, fabric, weave, drape, folds, stitching, creases, shadow on garment), background, props, framing, crop, camera angle, lens, depth of field, and overall atmosphere. Do not change any other element of the image.
+- SCENE: Take everything else from Image 1 — pose (exact limb positions, hand positions, finger positions, head tilt, gaze direction, weight distribution), outfit (exact design, colour, cut, material, drape, folds, creases, shadows on garment), background, props, framing, crop, camera angle, lens character, depth of field, and overall atmosphere. Do not change any other element of the image.
 - BODY ADAPTATION: If the character's body proportions differ from the original person's, adapt the outfit's fit and drape naturally to the character's body while preserving the outfit's design, colour, material, and silhouette exactly. Do not invent a different garment.
-- RE-LIGHTING: Re-light the character's face, hair, and skin so the light direction, colour temperature, softness, and shadow placement match Image 1's existing light exactly. The character's face must not look "pasted in" — their shadows, highlights, and rim light must come from Image 1's light sources. Contact shadows on the ground and against the background must match Image 1's existing shadows in direction, softness, and colour.
+- RE-LIGHTING: Re-light the character's face, hair, and skin so the light direction, colour temperature, softness, and shadow placement match Image 1's existing light exactly. The character's face must not look "pasted in" — their shadows, highlights, and any rim light must come from Image 1's light sources. Contact shadows on the ground and against the background must match Image 1's existing shadows in direction, softness, and colour.
 
 [TWEAKS]
 ${
   trimmed
     ? `Apply the following changes on top of the clone. Do not change any other element of the image:\n${trimmed}`
-    : 'None — keep the scene exactly as Image 1, pixel-perfect, except for the identity swap described above.'
+    : 'None — keep the scene exactly as Image 1, except for the identity swap described above.'
 }
 
-Output: ${aspectRatio} aspect ratio, photorealistic, editorial quality, faces rendered with sharp accurate detail, natural skin texture with visible pores, hands with five fingers and natural anatomy, no duplicate people, no extra limbs, no warped hands, no visible AI artifacts, no beauty-filter smoothing. Match Image 1's grain, colour grade, and film look exactly.`;
+Output: ${aspectRatio} aspect ratio, photorealistic. Inherit Image 1's quality level, sharpness, grain, colour grade, and overall look exactly — do not upgrade a casual snap into a polished studio shot, and do not downgrade a polished shot either. Faces rendered accurately, hands with five fingers and natural anatomy, no duplicate people, no extra limbs, no warped hands, no visible AI artifacts, no beauty-filter smoothing unless Image 1 already has it.`;
 }
