@@ -188,7 +188,7 @@ export default function CreateAdsPage() {
   return (
     <main className="flex flex-1 justify-center overflow-y-auto">
       <div className="flex min-h-full w-full max-w-5xl items-center px-6 py-8 md:px-10">
-        <div className="flex w-full flex-col gap-8">
+        <div className="flex w-full flex-col gap-6">
           {/* Progress indicator — kept at the narrower wizard width so it
               stays visually anchored in the centre even when the body step
               (e.g. the ad carousel) uses the full container width. */}
@@ -198,7 +198,7 @@ export default function CreateAdsPage() {
 
           {/* Step title — fixed min-height so the footer doesn't shift when
               the hint line appears only on some steps. */}
-          <div className="mx-auto flex min-h-[96px] w-full max-w-3xl flex-col gap-2 text-center">
+          <div className="mx-auto flex min-h-[112px] w-full max-w-3xl flex-col gap-2 text-center">
             <h2
               className="text-3xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-4xl"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
