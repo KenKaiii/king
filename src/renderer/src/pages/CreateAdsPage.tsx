@@ -73,6 +73,8 @@ export default function CreateAdsPage() {
   const removeResultByImageId = useCreateAdsStore((s) => s.removeResultByImageId);
   const startNewAd = useCreateAdsStore((s) => s.startNewAd);
   const runGeneration = useCreateAdsStore((s) => s.runGeneration);
+  const retrySlot = useCreateAdsStore((s) => s.retrySlot);
+  const cancelGeneration = useCreateAdsStore((s) => s.cancelGeneration);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,19 +112,31 @@ export default function CreateAdsPage() {
   };
 
   const currentIndex = WIZARD_STEPS.findIndex((s) => s.id === step);
-  const canGoBack = step !== 'ad' && step !== 'results';
+  // Back is available on every step except the first. On the results
+  // step it doubles as the Cancel action for in-flight generations.
+  const canGoBack = step !== 'ad';
 
   const goNext = useCallback(() => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx < 0 || idx >= WIZARD_STEPS.length - 1) return;
     setStep(WIZARD_STEPS[idx + 1].id);
-  }, [step]);
+  }, [step, setStep]);
 
   const goBack = useCallback(() => {
+    // On the results step, Back means "go re-adjust" — for in-flight
+    // generations that also cancels any pending fal calls.
+    if (step === 'results') {
+      if (isGenerating) cancelGeneration();
+      else setStep('format');
+      return;
+    }
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx <= 0) return;
     setStep(WIZARD_STEPS[idx - 1].id);
-  }, [step]);
+  }, [step, isGenerating, cancelGeneration, setStep]);
+
+  // Label the back button appropriately for the current context.
+  const backLabel = step === 'results' && isGenerating ? 'Cancel' : 'Back';
 
   // Kick off generation via the store. The store handles all state updates,
   // so if the user navigates away mid-generation the results still stream
@@ -236,7 +250,12 @@ export default function CreateAdsPage() {
               <FormatStep aspectRatio={aspectRatio} onAspectRatioChange={setAspectRatio} />
             )}
             {step === 'results' && (
-              <ResultsStep results={results} aspectRatio={aspectRatio} onOpen={setSelectedImage} />
+              <ResultsStep
+                results={results}
+                aspectRatio={aspectRatio}
+                onOpen={setSelectedImage}
+                onRetry={retrySlot}
+              />
             )}
           </div>
 
@@ -250,7 +269,7 @@ export default function CreateAdsPage() {
               className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-5 py-2.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] disabled:cursor-not-allowed disabled:opacity-0"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
-              Back
+              {backLabel}
             </button>
 
             {step === 'results' ? (
@@ -598,10 +617,12 @@ function ResultsStep({
   results,
   aspectRatio,
   onOpen,
+  onRetry,
 }: {
   results: ResultSlot[];
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
+  onRetry: (slotId: string) => void;
 }) {
   if (results.length === 0) {
     return (
@@ -615,7 +636,13 @@ function ResultsStep({
   return (
     <div className="grid grid-cols-4 gap-4">
       {results.map((slot) => (
-        <ResultCard key={slot.id} slot={slot} aspectRatio={aspectRatio} onOpen={onOpen} />
+        <ResultCard
+          key={slot.id}
+          slot={slot}
+          aspectRatio={aspectRatio}
+          onOpen={onOpen}
+          onRetry={onRetry}
+        />
       ))}
     </div>
   );
@@ -625,10 +652,12 @@ function ResultCard({
   slot,
   aspectRatio,
   onOpen,
+  onRetry,
 }: {
   slot: ResultSlot;
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
+  onRetry: (slotId: string) => void;
 }) {
   const [w, h] = aspectRatio.split(':').map(Number);
   const aspectStyle =
@@ -636,29 +665,55 @@ function ResultCard({
       ? { aspectRatio: `${w} / ${h}` }
       : { aspectRatio: '1 / 1' };
 
-  const clickable = slot.status === 'success' && slot.image;
+  const cardClass =
+    'relative w-full overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]';
+
+  // Error state — shows the failure reason and a "Try again" button that
+  // re-runs just this one slot without touching the successful ones.
+  if (slot.status === 'error') {
+    return (
+      <div className={cardClass} style={aspectStyle}>
+        <div className="flex size-full flex-col items-center justify-center gap-3 p-4 text-center">
+          <p className="text-xs leading-snug text-[var(--base-color-brand--umber)]">
+            {slot.error ?? "Couldn't generate this one."}
+          </p>
+          <button
+            type="button"
+            onClick={() => onRetry(slot.id)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending skeleton — plain div, nothing to click.
+  if (slot.status === 'pending') {
+    return (
+      <div className={cardClass} style={aspectStyle}>
+        <div className="skeleton-loader size-full" />
+      </div>
+    );
+  }
+
+  // Success — click to open the full-size detail overlay.
+  const image = slot.image!;
   return (
     <button
       type="button"
-      onClick={clickable && slot.image ? () => onOpen(slot.image!) : undefined}
-      disabled={!clickable}
-      className="group relative w-full overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] transition-shadow enabled:cursor-zoom-in enabled:hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] disabled:cursor-default"
+      onClick={() => onOpen(image)}
+      className={`group cursor-zoom-in transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] ${cardClass}`}
       style={aspectStyle}
-      aria-label={clickable ? 'Open generated ad' : undefined}
+      aria-label="Open generated ad"
     >
-      {slot.status === 'pending' && <div className="skeleton-loader size-full" />}
-      {slot.status === 'success' && slot.image && (
-        <img
-          src={slot.image.url}
-          alt="Generated ad"
-          className="size-full object-cover transition-transform group-enabled:group-hover:scale-[1.03]"
-        />
-      )}
-      {slot.status === 'error' && (
-        <div className="grid size-full place-items-center p-4 text-center text-xs text-[var(--base-color-brand--umber)]">
-          {slot.error ?? 'Generation failed'}
-        </div>
-      )}
+      <img
+        src={image.url}
+        alt="Generated ad"
+        className="size-full object-cover transition-transform group-hover:scale-[1.03]"
+      />
     </button>
   );
 }
