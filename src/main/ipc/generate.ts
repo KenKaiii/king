@@ -18,11 +18,16 @@ interface GenerateImageData {
   imageUrls: string[];
 }
 
+// Mirror of the renderer's SUPPORTED_IMAGE_MIME_TYPES — covers every
+// format Google Gemini's image input accepts: PNG, JPEG, WebP, HEIC, HEIF.
+// https://ai.google.dev/gemini-api/docs/image-understanding
 const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
 };
 
 function resolveImageUrl(url: string): string {

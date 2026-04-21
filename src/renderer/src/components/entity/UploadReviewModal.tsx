@@ -5,6 +5,7 @@ import SelectDropdown from '@/components/ui/SelectDropdown';
 import type { UploadedImage, EntityType } from '@/hooks/useEntityManagement';
 import type { EntityData } from '@/types/electron';
 import { productTypes } from '@/lib/productTypes';
+import { SUPPORTED_IMAGE_ACCEPT } from '@/lib/constants/image-form';
 
 interface UploadReviewModalProps {
   isOpen: boolean;
@@ -239,7 +240,7 @@ export default function UploadReviewModal({
           <input
             multiple
             className="sr-only"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/heic"
+            accept={SUPPORTED_IMAGE_ACCEPT}
             type="file"
             onChange={handleAddMoreImages}
           />

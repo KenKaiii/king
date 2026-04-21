@@ -14,6 +14,7 @@ interface HeaderProps {
 const navItems: { page: PageType; label: string }[] = [
   { page: 'image', label: 'Image' },
   { page: 'create-ads', label: 'Create Ads' },
+  { page: 'clone', label: 'Clone' },
   { page: 'prompts', label: 'Prompts' },
   { page: 'products', label: 'Products' },
   { page: 'characters', label: 'Characters' },

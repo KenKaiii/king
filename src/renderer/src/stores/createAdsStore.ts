@@ -81,12 +81,6 @@ interface CreateAdsStore {
   runGeneration: (ad: AdReference, product: EntityData) => Promise<void>;
   /** Re-run a single failed slot using the cached generation inputs. */
   retrySlot: (slotId: string) => Promise<void>;
-  /**
-   * Stop listening for any in-flight fal calls, drop pending skeletons,
-   * and send the user back to the format step so they can adjust and
-   * regenerate. Already-successful results are kept visible.
-   */
-  cancelGeneration: () => void;
 }
 
 const INITIAL_STATE = {
@@ -175,7 +169,10 @@ export const useCreateAdsStore = create<CreateAdsStore>((set, get) => ({
     // back to the page, since the store outlives the component.
     await Promise.all(slotIds.map((slotId) => generateSingleSlot(slotId, set, thisGenId)));
 
-    // If the user cancelled while we were waiting, bail out silently.
+    // If the user has started a fresh wizard session while we were
+    // waiting, this run no longer owns the UI — skip the summary state
+    // update and toast. Outputs have already been saved to the gallery
+    // by each individual slot, so nothing is lost.
     if (useCreateAdsStore.getState().generationId !== thisGenId) return;
 
     set({ isGenerating: false });
@@ -203,20 +200,6 @@ export const useCreateAdsStore = create<CreateAdsStore>((set, get) => ({
 
     await generateSingleSlot(slotId, set, generationId, lastGenerationInputs);
   },
-
-  cancelGeneration: () => {
-    set((state) => ({
-      // Bump the nonce — any in-flight fal calls will notice this when
-      // they return and skip their state update.
-      generationId: state.generationId + 1,
-      isGenerating: false,
-      // Drop pending skeletons; keep anything that already succeeded or
-      // errored so the user sees what landed before they cancelled.
-      results: state.results.filter((s) => s.status !== 'pending'),
-      // Send them back to format so they can adjust and regenerate.
-      step: 'format',
-    }));
-  },
 }));
 
 /**
@@ -240,13 +223,14 @@ async function generateSingleSlot(
   if (!inputs) return;
 
   // `ownedGenId` is the generationId captured when this call started. If
-  // the store's counter has moved on by the time we complete, the user has
-  // cancelled (or restarted) — so we silently discard the result instead
-  // of writing stale data into the UI.
-  const isStillCurrent = () => useCreateAdsStore.getState().generationId === ownedGenId;
-
+  // the store's counter has moved on by the time we complete, the user
+  // has started a fresh wizard session — so we silently skip writing to
+  // the current wizard's results. We still let the fal request complete
+  // and save its output to the gallery (images.json) so in-flight work is
+  // never lost when the user moves on; it just won't reappear in the
+  // (now empty) wizard.
   const updateSlot = (update: Partial<ResultSlot>) => {
-    if (!isStillCurrent()) return;
+    if (useCreateAdsStore.getState().generationId !== ownedGenId) return;
     set((state: CreateAdsStore) => ({
       results: state.results.map((s) => (s.id === slotId ? { ...s, ...update } : s)),
     }));
@@ -260,8 +244,6 @@ async function generateSingleSlot(
       outputFormat: CREATE_ADS_OUTPUT_FORMAT,
       imageUrls: inputs.imageUrls,
     });
-
-    if (!isStillCurrent()) return;
 
     if (!result.success || !result.resultUrls?.length) {
       updateSlot({ status: 'error', error: "Couldn't generate this one." });

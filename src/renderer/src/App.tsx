@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import ImagePage from '@/pages/ImagePage';
 import CreateAdsPage from '@/pages/CreateAdsPage';
+import ClonePage from '@/pages/ClonePage';
 import ProductsPage from '@/pages/ProductsPage';
 import CharactersPage from '@/pages/CharactersPage';
 import FacebookAdsPage from '@/pages/FacebookAdsPage';
@@ -16,6 +17,7 @@ import PromptsPage from '@/pages/PromptsPage';
 export type PageType =
   | 'image'
   | 'create-ads'
+  | 'clone'
   | 'products'
   | 'characters'
   | 'facebook-ads'
@@ -45,6 +47,7 @@ function AppContent() {
         <ImagePage prefillPrompt={prefillPrompt} onPromptConsumed={handlePromptConsumed} />
       )}
       {currentPage === 'create-ads' && <CreateAdsPage />}
+      {currentPage === 'clone' && <ClonePage />}
       {currentPage === 'products' && <ProductsPage onNavigate={setCurrentPage} />}
       {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
       {currentPage === 'facebook-ads' && <FacebookAdsPage onNavigate={setCurrentPage} />}

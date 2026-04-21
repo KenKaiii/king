@@ -19,6 +19,8 @@ import {
   MAX_REFERENCE_IMAGES,
   MAX_IMAGE_SIZE_MB,
   MAX_IMAGES_PER_GENERATION,
+  SUPPORTED_IMAGE_ACCEPT,
+  SUPPORTED_IMAGE_MIME_REGEX,
 } from '@/lib/constants/image-form';
 import { renderPrompt } from '@/lib/productTypes';
 import type { EntityData } from '@/types/electron';
@@ -171,7 +173,7 @@ export default function ImagePromptForm({
 
       const validFiles: File[] = [];
       for (const file of Array.from(files)) {
-        if (!file.type.match(/^image\/(jpeg|png|webp)$/)) continue;
+        if (!SUPPORTED_IMAGE_MIME_REGEX.test(file.type)) continue;
         if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) continue;
         if (referenceImages.length + validFiles.length >= MAX_REFERENCE_IMAGES) break;
         validFiles.push(file);
@@ -307,7 +309,7 @@ export default function ImagePromptForm({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept={SUPPORTED_IMAGE_ACCEPT}
               multiple
               className="sr-only"
               onChange={handleFileSelect}

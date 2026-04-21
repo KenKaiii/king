@@ -1,90 +1,103 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, SparkleIcon } from '@/components/icons';
+import { CheckIcon, CloseIcon, ImageAddIcon, SparkleIcon } from '@/components/icons';
 import ImageDetailOverlay from '@/components/image/ImageDetailOverlay';
 import type { GeneratedImage } from '@/components/image/types';
-import Badge from '@/components/ui/Badge';
+import { useCloneStore, type CloneResultSlot, type CloneStepId } from '@/stores/cloneStore';
 import {
-  AD_CATEGORY_LABELS,
-  AD_REFERENCES,
-  getThumbnail,
-  type AdReference,
-} from '@/lib/adReferences';
-import { useCreateAdsStore, type ResultSlot, type StepId } from '@/stores/createAdsStore';
+  MAX_IMAGE_SIZE_MB,
+  SUPPORTED_IMAGE_ACCEPT,
+  SUPPORTED_IMAGE_MIME_REGEX,
+} from '@/lib/constants/image-form';
 import type { EntityData } from '@/types/electron';
 
-// Create Ads offers a curated set of ad-relevant aspect ratios. Plain
-// numeric labels ("1:1") confuse non-technical users, so each tile is
-// labelled with the format's name and its typical placement.
-interface AdAspectRatio {
-  value: string;
-  label: string;
-  description: string;
-  /** Visual preview dimensions in pixels — matches the ratio. */
-  width: number;
-  height: number;
-}
-
-const AD_ASPECT_RATIOS: AdAspectRatio[] = [
-  { value: '1:1', label: 'Square', description: 'Feed posts', width: 48, height: 48 },
-  { value: '4:5', label: 'Portrait', description: 'Feed ads', width: 40, height: 50 },
-  { value: '9:16', label: 'Vertical', description: 'Stories & Reels', width: 30, height: 53 },
-  { value: '16:9', label: 'Landscape', description: 'Link ads', width: 56, height: 32 },
-];
-
 interface StepDefinition {
-  id: StepId;
+  id: CloneStepId;
   label: string;
   title: string;
   hint?: string;
 }
 
 const WIZARD_STEPS: StepDefinition[] = [
-  { id: 'ad', label: 'Style', title: 'Pick an ad style' },
-  { id: 'product', label: 'Product', title: 'Pick your product' },
+  { id: 'source', label: 'Source', title: 'Upload an image to clone' },
+  { id: 'character', label: 'Character', title: 'Pick a character' },
   {
-    id: 'brief',
-    label: 'Brief',
-    title: 'Describe your product',
-    hint: "A sentence or two — what it is, who it's for, key benefits. This guides scene, props, and any text the model renders.",
+    id: 'tweaks',
+    label: 'Tweaks',
+    title: 'Any changes?',
+    hint: 'Optional. Only small adjustments — for example: change the dress from black to red, or swap the background from nude to white. Leave blank to clone the scene exactly.',
   },
   { id: 'format', label: 'Format', title: 'Format and generate' },
 ];
 
-export default function CreateAdsPage() {
-  const [products, setProducts] = useState<EntityData[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+// Aspect ratio tiles mirror the Create Ads page so the app feels
+// consistent. Labelled by placement, not cryptic ratio.
+interface CloneAspectRatio {
+  value: string;
+  label: string;
+  description: string;
+  width: number;
+  height: number;
+}
+
+// Descriptions are intentionally neutral — the Clone flow isn't only used
+// for ads, so we avoid placement names like "Feed" or "Link ads" here.
+const ASPECT_RATIOS: CloneAspectRatio[] = [
+  { value: '1:1', label: 'Square', description: '1:1', width: 48, height: 48 },
+  { value: '4:5', label: 'Portrait', description: '4:5', width: 40, height: 50 },
+  { value: '9:16', label: 'Vertical', description: '9:16', width: 30, height: 53 },
+  { value: '16:9', label: 'Landscape', description: '16:9', width: 56, height: 32 },
+];
+
+/** Pick the aspect ratio tile closest to a source image's natural dimensions. */
+function closestAspectRatio(width: number, height: number): string {
+  if (!width || !height) return '1:1';
+  const sourceRatio = width / height;
+  let best = ASPECT_RATIOS[0];
+  let bestDiff = Infinity;
+  for (const r of ASPECT_RATIOS) {
+    const [rw, rh] = r.value.split(':').map(Number);
+    const diff = Math.abs(sourceRatio - rw / rh);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = r;
+    }
+  }
+  return best.value;
+}
+
+export default function ClonePage() {
+  const [characters, setCharacters] = useState<EntityData[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
 
-  // Wizard state lives in a Zustand store so it (and any in-flight fal
-  // generations) survive navigating away from and back to this page.
-  const step = useCreateAdsStore((s) => s.step);
-  const selectedAdId = useCreateAdsStore((s) => s.selectedAdId);
-  const selectedProductId = useCreateAdsStore((s) => s.selectedProductId);
-  const productBrief = useCreateAdsStore((s) => s.productBrief);
-  const aspectRatio = useCreateAdsStore((s) => s.aspectRatio);
-  const results = useCreateAdsStore((s) => s.results);
-  const isGenerating = useCreateAdsStore((s) => s.isGenerating);
-  const setStep = useCreateAdsStore((s) => s.setStep);
-  const setSelectedAdId = useCreateAdsStore((s) => s.setSelectedAdId);
-  const setSelectedProductId = useCreateAdsStore((s) => s.setSelectedProductId);
-  const setProductBrief = useCreateAdsStore((s) => s.setProductBrief);
-  const setAspectRatio = useCreateAdsStore((s) => s.setAspectRatio);
-  const removeResultByImageId = useCreateAdsStore((s) => s.removeResultByImageId);
-  const startNewAd = useCreateAdsStore((s) => s.startNewAd);
-  const runGeneration = useCreateAdsStore((s) => s.runGeneration);
-  const retrySlot = useCreateAdsStore((s) => s.retrySlot);
+  const step = useCloneStore((s) => s.step);
+  const sourceImage = useCloneStore((s) => s.sourceImage);
+  const selectedCharacterId = useCloneStore((s) => s.selectedCharacterId);
+  const tweaks = useCloneStore((s) => s.tweaks);
+  const aspectRatio = useCloneStore((s) => s.aspectRatio);
+  const results = useCloneStore((s) => s.results);
+  const isGenerating = useCloneStore((s) => s.isGenerating);
+  const setStep = useCloneStore((s) => s.setStep);
+  const setSourceImage = useCloneStore((s) => s.setSourceImage);
+  const setSelectedCharacterId = useCloneStore((s) => s.setSelectedCharacterId);
+  const setTweaks = useCloneStore((s) => s.setTweaks);
+  const setAspectRatio = useCloneStore((s) => s.setAspectRatio);
+  const removeResultByImageId = useCloneStore((s) => s.removeResultByImageId);
+  const startNewClone = useCloneStore((s) => s.startNewClone);
+  const runGeneration = useCloneStore((s) => s.runGeneration);
+  const retrySlot = useCloneStore((s) => s.retrySlot);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('products');
-        if (!cancelled) setProducts(list);
+        const list = await window.api.entities.list('characters');
+        if (!cancelled) setCharacters(list);
       } catch {
-        if (!cancelled) toast.error("Couldn't load your products. Please try again.");
+        if (!cancelled) toast.error("Couldn't load your characters. Please try again.");
       } finally {
-        if (!cancelled) setProductsLoading(false);
+        if (!cancelled) setCharactersLoading(false);
       }
     })();
     return () => {
@@ -92,28 +105,21 @@ export default function CreateAdsPage() {
     };
   }, []);
 
-  const selectedAd: AdReference | undefined = useMemo(
-    () => AD_REFERENCES.find((a) => a.id === selectedAdId),
-    [selectedAdId],
-  );
-  const selectedProduct: EntityData | undefined = useMemo(
-    () => products.find((p) => p.id === selectedProductId),
-    [products, selectedProductId],
+  const selectedCharacter: EntityData | undefined = useMemo(
+    () => characters.find((c) => c.id === selectedCharacterId),
+    [characters, selectedCharacterId],
   );
 
-  // Per-step validity — controls whether the Next button is enabled.
-  const canAdvance: Record<StepId, boolean> = {
-    ad: !!selectedAd,
-    product: !!selectedProduct,
-    brief: productBrief.trim().length > 0,
-    format: !!selectedAd && !!selectedProduct && productBrief.trim().length > 0 && !isGenerating,
+  const canAdvance: Record<CloneStepId, boolean> = {
+    source: !!sourceImage,
+    character: !!selectedCharacter,
+    tweaks: true, // tweaks are optional
+    format: !!sourceImage && !!selectedCharacter && !isGenerating,
     results: true,
   };
 
   const currentIndex = WIZARD_STEPS.findIndex((s) => s.id === step);
-  // Back is available on every step except the first. On the results
-  // step it doubles as the Cancel action for in-flight generations.
-  const canGoBack = step !== 'ad';
+  const canGoBack = step !== 'source';
 
   const goNext = useCallback(() => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
@@ -122,11 +128,10 @@ export default function CreateAdsPage() {
   }, [step, setStep]);
 
   const goBack = useCallback(() => {
-    // On the results step, Back goes back to the format step so the user
-    // can adjust and regenerate. In-flight generations are NOT stopped —
-    // fal runs server-side and we've already been charged, so we let the
-    // request complete and save its output to the gallery in the
-    // background.
+    // On the results step, Back goes back to format so the user can
+    // adjust and regenerate. In-flight fal requests are NOT stopped —
+    // we can't actually cancel them server-side, so they're allowed to
+    // finish and save their outputs to the gallery in the background.
     if (step === 'results') {
       setStep('format');
       return;
@@ -136,16 +141,11 @@ export default function CreateAdsPage() {
     setStep(WIZARD_STEPS[idx - 1].id);
   }, [step, setStep]);
 
-  // Kick off generation via the store. The store handles all state updates,
-  // so if the user navigates away mid-generation the results still stream
-  // in and are visible when they return.
   const handleGenerate = useCallback(() => {
-    if (!selectedAd || !selectedProduct) return;
-    void runGeneration(selectedAd, selectedProduct);
-  }, [selectedAd, selectedProduct, runGeneration]);
+    if (!selectedCharacter) return;
+    void runGeneration(selectedCharacter);
+  }, [selectedCharacter, runGeneration]);
 
-  // Download a generated ad to the user's filesystem — same mechanism the
-  // Image page uses so the two flows stay consistent.
   const handleDownload = useCallback(async (url: string, prompt: string) => {
     const filename = `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
     try {
@@ -160,8 +160,6 @@ export default function CreateAdsPage() {
     }
   }, []);
 
-  // Delete a generated ad from the app gallery and drop it from the
-  // results grid so the UI stays in sync.
   const handleDelete = useCallback(
     async (id: string) => {
       try {
@@ -179,26 +177,23 @@ export default function CreateAdsPage() {
     [removeResultByImageId],
   );
 
-  // Current step's title (the Results step isn't in WIZARD_STEPS but needs one).
   const activeStep =
     step === 'results'
-      ? { id: 'results' as const, label: 'Results', title: 'Your ads' }
+      ? { id: 'results' as const, label: 'Results', title: 'Your clones' }
       : WIZARD_STEPS[currentIndex];
 
   return (
     <main className="flex flex-1 justify-center overflow-y-auto">
       <div className="flex min-h-full w-full max-w-5xl items-center px-6 py-8 md:px-10">
-        <div className="flex w-full flex-col gap-8">
-          {/* Progress indicator — kept at the narrower wizard width so it
-              stays visually anchored in the centre even when the body step
-              (e.g. the ad carousel) uses the full container width. */}
+        <div className="flex w-full flex-col gap-6">
           <div className="mx-auto w-full max-w-3xl">
             <WizardProgress currentStep={step} />
           </div>
 
-          {/* Step title — fixed min-height so the footer doesn't shift when
-              the hint line appears only on some steps. */}
-          <div className="mx-auto flex min-h-[96px] w-full max-w-3xl flex-col gap-2 text-center">
+          {/* Fixed min-height reserves enough vertical space for the
+              longest step hint (the Tweaks step), so the step body and
+              footer buttons stay in the same position across every step. */}
+          <div className="mx-auto flex min-h-[112px] w-full max-w-3xl flex-col gap-2 text-center">
             <h2
               className="text-3xl font-bold tracking-tight text-[var(--base-color-brand--bean)] sm:text-4xl"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
@@ -214,33 +209,37 @@ export default function CreateAdsPage() {
           </div>
 
           {/* Step body — fixed 360px on every step (including results) so
-              the progress indicator, title, and Back/Next buttons stay in
+              progress indicator, title, and Back/Next buttons sit in
               identical positions across the whole flow. Tall content
-              (portrait result cards, long product lists) scrolls internally
-              within the box. Click any result card to open the full-size
-              detail overlay.
-
-              The ad carousel and the results grid get the full container
-              width so all thumbnails / all 4 generations fit on one row;
-              every other step stays at the narrower wizard width. */}
+              scrolls inside the box; click any result card to open the
+              full-size detail overlay. The results grid uses the full
+              container width so four 9:16 cards fit on one row. */}
           <div
             key={step}
             className={`animate-step-in hide-scrollbar h-[360px] overflow-y-auto ${
-              step === 'ad' || step === 'results' ? 'w-full' : 'mx-auto w-full max-w-3xl'
+              step === 'results' ? 'w-full' : 'mx-auto w-full max-w-3xl'
             }`}
           >
-            {step === 'ad' && (
-              <AdStyleStep selectedAdId={selectedAdId} onSelect={setSelectedAdId} />
-            )}
-            {step === 'product' && (
-              <ProductStep
-                products={products}
-                isLoading={productsLoading}
-                selectedProductId={selectedProductId}
-                onSelect={setSelectedProductId}
+            {step === 'source' && (
+              <SourceStep
+                source={sourceImage}
+                onPick={(img) => {
+                  setSourceImage(img);
+                  // Preselect the aspect ratio closest to the source's
+                  // natural shape — user can override on the format step.
+                  if (img) setAspectRatio(closestAspectRatio(img.width, img.height));
+                }}
               />
             )}
-            {step === 'brief' && <BriefStep value={productBrief} onChange={setProductBrief} />}
+            {step === 'character' && (
+              <CharacterStep
+                characters={characters}
+                isLoading={charactersLoading}
+                selectedCharacterId={selectedCharacterId}
+                onSelect={setSelectedCharacterId}
+              />
+            )}
+            {step === 'tweaks' && <TweaksStep value={tweaks} onChange={setTweaks} />}
             {step === 'format' && (
               <FormatStep aspectRatio={aspectRatio} onAspectRatioChange={setAspectRatio} />
             )}
@@ -254,8 +253,6 @@ export default function CreateAdsPage() {
             )}
           </div>
 
-          {/* Footer nav — pinned to the narrow wizard width so the
-              Back/Next buttons stay in the same place across every step. */}
           <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
             <button
               type="button"
@@ -270,12 +267,12 @@ export default function CreateAdsPage() {
             {step === 'results' ? (
               <button
                 type="button"
-                onClick={startNewAd}
+                onClick={startNewClone}
                 disabled={isGenerating}
                 className="inline-grid h-[52px] grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-6 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
               >
-                Create another
+                Clone another
               </button>
             ) : step === 'format' ? (
               <button
@@ -303,8 +300,6 @@ export default function CreateAdsPage() {
         </div>
       </div>
 
-      {/* Full-screen detail overlay for previewing, downloading, or deleting
-          a generated ad — same component the Image page uses. */}
       {selectedImage && (
         <ImageDetailOverlay
           image={selectedImage}
@@ -314,9 +309,6 @@ export default function CreateAdsPage() {
             handleDelete(id);
             setSelectedImage(null);
           }}
-          // Recreate isn't meaningful here — the user is already inside the
-          // ad wizard with their inputs. Provide a no-op so the shared panel
-          // component's button stays wired without sending them elsewhere.
           onRecreate={() => {}}
         />
       )}
@@ -326,7 +318,7 @@ export default function CreateAdsPage() {
 
 // --- Progress indicator ---------------------------------------------------
 
-function WizardProgress({ currentStep }: { currentStep: StepId }) {
+function WizardProgress({ currentStep }: { currentStep: CloneStepId }) {
   const currentIdx =
     currentStep === 'results'
       ? WIZARD_STEPS.length
@@ -365,135 +357,160 @@ function WizardProgress({ currentStep }: { currentStep: StepId }) {
   );
 }
 
-// --- Step: Ad style -------------------------------------------------------
+// --- Step: Source image upload -------------------------------------------
 
-function AdStyleStep({
-  selectedAdId,
-  onSelect,
+function SourceStep({
+  source,
+  onPick,
 }: {
-  selectedAdId: string | null;
-  onSelect: (id: string) => void;
+  source: ReturnType<typeof useCloneStore.getState>['sourceImage'];
+  onPick: (source: ReturnType<typeof useCloneStore.getState>['sourceImage']) => void;
 }) {
-  // Soft fade on the left/right edges so cards appear to dissolve off-screen
-  // instead of getting clipped abruptly at the carousel boundary.
-  const fadeMask =
-    'linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)';
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const handleFile = useCallback(
+    async (file: File) => {
+      if (!SUPPORTED_IMAGE_MIME_REGEX.test(file.type)) {
+        toast.error('Use a JPEG, PNG, WebP, or HEIC image.');
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+        toast.error(`Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`);
+        return;
+      }
 
-  // Scroll by roughly one card-and-a-bit per click so multiple presses walk
-  // cleanly through the carousel.
-  const scrollBy = useCallback((direction: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollBy({ left: direction * 320, behavior: 'smooth' });
-  }, []);
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error ?? new Error('Read failed'));
+        reader.readAsDataURL(file);
+      });
 
-  return (
-    <div className="flex items-center gap-3">
-      <CarouselScrollButton direction="left" onClick={() => scrollBy(-1)} />
-      <div
-        ref={scrollerRef}
-        className="hide-scrollbar min-w-0 flex-1 overflow-x-auto"
-        style={{ maskImage: fadeMask, WebkitMaskImage: fadeMask }}
-      >
-        <div className="flex gap-4 pb-2">
-          {AD_REFERENCES.map((ad) => {
-            const active = selectedAdId === ad.id;
-            const categoryLabel = AD_CATEGORY_LABELS[ad.category];
-            return (
-              <button
-                key={ad.id}
-                type="button"
-                onClick={() => onSelect(ad.id)}
-                title={categoryLabel}
-                className={`group relative h-64 shrink-0 overflow-hidden rounded-2xl border-2 bg-[var(--base-color-brand--shell)] transition-all sm:h-72 ${
-                  active
-                    ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
-                    : 'border-transparent hover:border-[var(--base-color-brand--umber)]/40'
-                }`}
-              >
-                <img
-                  src={getThumbnail(ad)}
-                  alt={categoryLabel}
-                  className="block h-full w-auto transition-transform group-hover:scale-[1.03]"
-                />
-                <div className="absolute top-2 left-2 z-20">
-                  <Badge>{categoryLabel}</Badge>
-                </div>
-                {active && (
-                  <div className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]">
-                    <CheckIcon />
-                  </div>
-                )}
-              </button>
-            );
-          })}
+      const dims = await new Promise<{ width: number; height: number }>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve({ width: 0, height: 0 });
+        img.src = dataUrl;
+      });
+
+      onPick({ dataUrl, name: file.name, width: dims.width, height: dims.height });
+    },
+    [onPick],
+  );
+
+  const handleFiles = useCallback(
+    (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      void handleFile(files[0]);
+    },
+    [handleFile],
+  );
+
+  if (source) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="relative inline-block max-h-[340px] overflow-hidden rounded-2xl border-2 border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--shell)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]">
+          <img
+            src={source.dataUrl}
+            alt={source.name}
+            className="block max-h-[340px] w-auto object-contain"
+          />
+          <button
+            type="button"
+            onClick={() => onPick(null)}
+            aria-label="Remove image"
+            className="absolute top-2 right-2 grid h-8 w-8 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+          >
+            <CloseIcon />
+          </button>
         </div>
       </div>
-      <CarouselScrollButton direction="right" onClick={() => scrollBy(1)} />
+    );
+  }
+
+  return (
+    <div className="flex h-full items-center justify-center">
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+        className={`flex h-64 w-full max-w-xl cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed bg-[var(--base-color-brand--champagne)] p-6 text-center transition-colors ${
+          isDragging
+            ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--shell)]'
+            : 'border-[var(--base-color-brand--umber)]/50 hover:border-[var(--base-color-brand--bean)]'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept={SUPPORTED_IMAGE_ACCEPT}
+          className="sr-only"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+        <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]">
+          <ImageAddIcon className="size-6" />
+        </div>
+        <p
+          className="text-base font-bold tracking-tight text-[var(--base-color-brand--bean)]"
+          style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+        >
+          Drop a reference image here
+        </p>
+        <p className="text-xs text-[var(--base-color-brand--umber)]">
+          or click to browse · JPEG, PNG, WebP, HEIC · up to {MAX_IMAGE_SIZE_MB}MB
+        </p>
+      </label>
     </div>
   );
 }
 
-function CarouselScrollButton({
-  direction,
-  onClick,
-}: {
-  direction: 'left' | 'right';
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={direction === 'left' ? 'Scroll left' : 'Scroll right'}
-      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] shadow-[0_4px_12px_-4px_rgba(51,32,26,0.35)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
-    >
-      {direction === 'left' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-    </button>
-  );
-}
+// --- Step: Character picker ----------------------------------------------
 
-// --- Step: Product --------------------------------------------------------
-
-function ProductStep({
-  products,
+function CharacterStep({
+  characters,
   isLoading,
-  selectedProductId,
+  selectedCharacterId,
   onSelect,
 }: {
-  products: EntityData[];
+  characters: EntityData[];
   isLoading: boolean;
-  selectedProductId: string | null;
+  selectedCharacterId: string | null;
   onSelect: (id: string) => void;
 }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-3 py-8 text-sm text-[var(--base-color-brand--umber)]">
         <div className="size-4 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
-        Loading products...
+        Loading characters...
       </div>
     );
   }
-  if (products.length === 0) {
+  if (characters.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-8 text-center">
         <p className="text-sm text-[var(--base-color-brand--umber)]">
-          No products yet. Add a product on the Products page to get started.
+          No characters yet. Add one on the Characters page to get started.
         </p>
       </div>
     );
   }
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-      {products.map((product) => {
-        const active = selectedProductId === product.id;
+      {characters.map((character) => {
+        const active = selectedCharacterId === character.id;
         return (
           <button
-            key={product.id}
+            key={character.id}
             type="button"
-            onClick={() => onSelect(product.id)}
+            onClick={() => onSelect(character.id)}
             className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 bg-[var(--base-color-brand--champagne)] text-left transition-all ${
               active
                 ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
@@ -501,10 +518,10 @@ function ProductStep({
             }`}
           >
             <div className="relative aspect-square w-full overflow-hidden bg-[var(--base-color-brand--shell)]">
-              {product.thumbnailUrl ? (
+              {character.thumbnailUrl ? (
                 <img
-                  src={product.thumbnailUrl}
-                  alt={product.name}
+                  src={character.thumbnailUrl}
+                  alt={character.name}
                   className="size-full object-cover transition-transform group-hover:scale-[1.03]"
                 />
               ) : (
@@ -522,9 +539,9 @@ function ProductStep({
               <span
                 className="block truncate text-sm font-bold tracking-tight text-[var(--base-color-brand--bean)]"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                title={product.name}
+                title={character.name}
               >
-                {product.name}
+                {character.name}
               </span>
             </div>
           </button>
@@ -534,21 +551,21 @@ function ProductStep({
   );
 }
 
-// --- Step: Brief ----------------------------------------------------------
+// --- Step: Tweaks --------------------------------------------------------
 
-function BriefStep({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TweaksStep({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="e.g. A double-walled stainless steel coffee mug that keeps drinks hot for 6 hours. Leak-proof lid, minimalist design, aimed at remote workers."
+      placeholder="e.g. Change the dress from black to red. Swap the background from nude to white. Keep everything else identical."
       autoFocus
       className="min-h-[180px] w-full resize-y rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 text-[15px] text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
     />
   );
 }
 
-// --- Step: Format ---------------------------------------------------------
+// --- Step: Format --------------------------------------------------------
 
 function FormatStep({
   aspectRatio,
@@ -559,7 +576,7 @@ function FormatStep({
 }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {AD_ASPECT_RATIOS.map((ratio) => {
+      {ASPECT_RATIOS.map((ratio) => {
         const active = aspectRatio === ratio.value;
         return (
           <button
@@ -572,7 +589,6 @@ function FormatStep({
                 : 'border-transparent hover:border-[var(--base-color-brand--umber)]/40'
             }`}
           >
-            {/* Proportional shape preview */}
             <div className="grid h-[60px] w-full place-items-center">
               <div
                 className={`rounded-md border-2 transition-colors ${
@@ -614,7 +630,7 @@ function ResultsStep({
   onOpen,
   onRetry,
 }: {
-  results: ResultSlot[];
+  results: CloneResultSlot[];
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
   onRetry: (slotId: string) => void;
@@ -626,8 +642,6 @@ function ResultsStep({
       </div>
     );
   }
-  // All 4 generations side-by-side on one row so the user can compare them
-  // at a glance. Uses the same wider container width as the ad carousel.
   return (
     <div className="grid grid-cols-4 gap-4">
       {results.map((slot) => (
@@ -649,7 +663,7 @@ function ResultCard({
   onOpen,
   onRetry,
 }: {
-  slot: ResultSlot;
+  slot: CloneResultSlot;
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
   onRetry: (slotId: string) => void;
@@ -663,8 +677,6 @@ function ResultCard({
   const cardClass =
     'relative w-full overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]';
 
-  // Error state — shows the failure reason and a "Try again" button that
-  // re-runs just this one slot without touching the successful ones.
   if (slot.status === 'error') {
     return (
       <div className={cardClass} style={aspectStyle}>
@@ -685,7 +697,6 @@ function ResultCard({
     );
   }
 
-  // Pending skeleton — plain div, nothing to click.
   if (slot.status === 'pending') {
     return (
       <div className={cardClass} style={aspectStyle}>
@@ -694,7 +705,6 @@ function ResultCard({
     );
   }
 
-  // Success — click to open the full-size detail overlay.
   const image = slot.image!;
   return (
     <button
@@ -702,11 +712,11 @@ function ResultCard({
       onClick={() => onOpen(image)}
       className={`group cursor-zoom-in transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] ${cardClass}`}
       style={aspectStyle}
-      aria-label="Open generated ad"
+      aria-label="Open generated clone"
     >
       <img
         src={image.url}
-        alt="Generated ad"
+        alt="Generated clone"
         className="size-full object-cover transition-transform group-hover:scale-[1.03]"
       />
     </button>

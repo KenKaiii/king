@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { CheckIcon, CloseIcon, UploadIcon } from '@/components/icons';
+import { SUPPORTED_IMAGE_ACCEPT } from '@/lib/constants/image-form';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ export default function UploadModal({
             Upload images
             <input
               type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/heic"
+              accept={SUPPORTED_IMAGE_ACCEPT}
               multiple
               className="hidden"
               onChange={(e) => {
