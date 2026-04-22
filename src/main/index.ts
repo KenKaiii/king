@@ -36,10 +36,17 @@ function createWindow(): void {
 }
 
 function registerLocalFileProtocol(): void {
-  protocol.handle('local-file', (request) => {
+  protocol.handle('local-file', async (request) => {
     const url = new URL(request.url);
     const filePath = join(getImagesDir(), decodeURIComponent(url.pathname));
-    return net.fetch(pathToFileURL(filePath).toString());
+    try {
+      return await net.fetch(pathToFileURL(filePath).toString());
+    } catch {
+      // File is gone (deleted / never written / renamed). Return a clean
+      // 404 so the renderer can show a broken-image placeholder instead
+      // of spewing ERR_UNEXPECTED into the console.
+      return new Response('Image not found', { status: 404 });
+    }
   });
 }
 
@@ -61,7 +68,9 @@ function setContentSecurityPolicy(): void {
             "default-src 'self'",
             `script-src ${scriptSrc}`,
             `style-src 'self' 'unsafe-inline'`,
-            `img-src 'self' data: blob: local-file:`,
+            // fal.media / fal.ai are fal.ai's image CDNs — we load their
+            // URLs directly in the renderer for soft-refusal hash checks.
+            `img-src 'self' data: blob: local-file: https://*.fal.media https://*.fal.ai`,
             `font-src 'self' data:`,
             `connect-src ${connectSrc}`,
             `worker-src ${workerSrc}`,

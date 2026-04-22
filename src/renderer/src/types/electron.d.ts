@@ -65,6 +65,7 @@ export interface ElectronAPI {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
+      modelVariant?: 'pro' | 'flash';
     }) => Promise<{ success: boolean; resultUrls: string[] }>;
   };
   files: {

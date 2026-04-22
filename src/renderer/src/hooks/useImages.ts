@@ -68,6 +68,29 @@ export function useImages() {
     }
   }, []);
 
+  // Batch delete — removes every image in `ids` with a single summary
+  // toast instead of one toast per deletion. Used by the selection
+  // toolbar on the Image page.
+  const deleteImages = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+
+    // Optimistic update — drop them all from the grid up-front.
+    const idSet = new Set(ids);
+    setImages((prev) => prev.filter((img) => !idSet.has(img.id)));
+
+    const results = await Promise.allSettled(ids.map((id) => window.api.images.delete(id)));
+    const deleted = results.filter((r) => r.status === 'fulfilled' && r.value.success).length;
+    const failed = ids.length - deleted;
+
+    if (failed === 0) {
+      toast.success(`Deleted ${deleted} image${deleted === 1 ? '' : 's'}.`);
+    } else if (deleted === 0) {
+      toast.error("Couldn't delete those images. Please try again.");
+    } else {
+      toast.success(`Deleted ${deleted} image${deleted === 1 ? '' : 's'} (${failed} failed).`);
+    }
+  }, []);
+
   // Download image
   const downloadImage = useCallback(async (url: string, prompt: string) => {
     const filename = `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
@@ -87,6 +110,7 @@ export function useImages() {
     images,
     isLoading,
     isLoadingMore,
+    deleteImages,
     hasMore,
     error,
     loadMore,

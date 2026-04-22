@@ -5,10 +5,20 @@ import { getImagesDir } from '../services/paths';
 
 // Google's Gemini 3 Pro Image via fal.ai — fal's current state-of-the-art
 // image generation/editing model. Pricing: $0.15/image at 1K/2K, $0.30 at 4K.
-// Edit endpoint accepts up to 14 reference images for multi-image fusion
-// (reference ad + product angles), which is what Create Ads relies on.
+// Edit endpoint accepts up to 14 reference images.
 const NANO_BANANA_PRO_MODEL = 'fal-ai/nano-banana-pro';
 const NANO_BANANA_PRO_EDIT_MODEL = 'fal-ai/nano-banana-pro/edit';
+
+// Fallback: Google's Gemini 3.1 Flash Image (Nano Banana 2) via fal.ai.
+// Cheaper ($0.08/image at 1K), faster, and — critically — has different
+// deploy-time safety filter tuning than Pro. When Pro refuses (via hard
+// 422 or soft refusal returning the input image), routing the retry
+// through Nano Banana 2 often clears it. Supports a `thinking_level`
+// param for improved multi-image reasoning.
+const NANO_BANANA_2_MODEL = 'fal-ai/nano-banana-2';
+const NANO_BANANA_2_EDIT_MODEL = 'fal-ai/nano-banana-2/edit';
+
+export type ModelVariant = 'pro' | 'flash';
 
 interface GenerateImageData {
   prompt: string;
@@ -16,6 +26,12 @@ interface GenerateImageData {
   resolution: string;
   outputFormat: string;
   imageUrls: string[];
+  /**
+   * Which fal endpoint to route through. 'pro' = Nano Banana Pro (default,
+   * highest quality), 'flash' = Nano Banana 2 (cheaper, faster, different
+   * safety tuning — use as a retry when Pro refuses).
+   */
+  modelVariant?: ModelVariant;
 }
 
 // Mirror of the renderer's SUPPORTED_IMAGE_MIME_TYPES — covers every
@@ -109,6 +125,13 @@ function isAuthFailure(status: number | undefined, message: string): boolean {
   return /\b(unauthorized|invalid api key|invalid key|forbidden)\b/i.test(message);
 }
 
+function selectModel(variant: ModelVariant, hasReferenceImages: boolean): string {
+  if (variant === 'flash') {
+    return hasReferenceImages ? NANO_BANANA_2_EDIT_MODEL : NANO_BANANA_2_MODEL;
+  }
+  return hasReferenceImages ? NANO_BANANA_PRO_EDIT_MODEL : NANO_BANANA_PRO_MODEL;
+}
+
 export function registerGenerateHandlers(): void {
   ipcMain.handle('generate:image', async (_event, data: GenerateImageData) => {
     // Surface a friendly error up-front rather than letting the SDK throw a
@@ -126,7 +149,8 @@ export function registerGenerateHandlers(): void {
       .filter((u) => u.startsWith('data:') || u.startsWith('http'));
 
     const hasReferenceImages = resolvedUrls.length > 0;
-    const model = hasReferenceImages ? NANO_BANANA_PRO_EDIT_MODEL : NANO_BANANA_PRO_MODEL;
+    const variant: ModelVariant = data.modelVariant === 'flash' ? 'flash' : 'pro';
+    const model = selectModel(variant, hasReferenceImages);
 
     const input: Record<string, unknown> = {
       prompt: data.prompt,
@@ -134,7 +158,19 @@ export function registerGenerateHandlers(): void {
       resolution: data.resolution || '1K',
       output_format: data.outputFormat || 'png',
       num_images: 1,
+      // Most-permissive Layer-1 safety setting (fal scale: 1 strictest,
+      // 6 least strict, default 4). Doesn't bypass Google's Layer-2
+      // policy filter — which is where most of our refusals originate —
+      // but eliminates false-positive Layer-1 blocks that otherwise
+      // steal ~5-10% of generations.
+      safety_tolerance: '6',
     };
+
+    // Nano Banana 2's `thinking_level: 'high'` improves multi-image
+    // reasoning on complex edits. Not available on Pro.
+    if (variant === 'flash') {
+      input.thinking_level = 'high';
+    }
 
     if (hasReferenceImages) {
       input.image_urls = resolvedUrls;

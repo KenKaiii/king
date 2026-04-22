@@ -708,6 +708,20 @@ function ResultCard({
         src={image.url}
         alt="Generated ad"
         className="size-full object-cover transition-transform group-hover:scale-[1.03]"
+        onError={(e) => {
+          // If the saved file has gone missing, show a placeholder
+          // instead of a broken image icon.
+          const img = e.currentTarget;
+          img.style.display = 'none';
+          const parent = img.parentElement;
+          if (parent && !parent.querySelector('.missing-image-placeholder')) {
+            const placeholder = document.createElement('div');
+            placeholder.className =
+              'missing-image-placeholder grid size-full place-items-center p-4 text-center text-xs text-[var(--base-color-brand--umber)]';
+            placeholder.textContent = 'This image is no longer available.';
+            parent.appendChild(placeholder);
+          }
+        }}
       />
     </button>
   );

@@ -94,7 +94,11 @@ const GridImageItem = memo(function GridImageItem({
 
   return (
     <div
-      className="group relative aspect-square cursor-pointer overflow-hidden border border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)]"
+      className={`group relative aspect-square cursor-pointer overflow-hidden border bg-[var(--base-color-brand--champagne)] transition-shadow ${
+        isSelected
+          ? 'border-[var(--base-color-brand--cinamon)] ring-2 ring-[var(--base-color-brand--cinamon)] ring-inset'
+          : 'border-[var(--base-color-brand--umber)]/20'
+      }`}
       style={{ contain: 'layout style paint' }}
       onClick={handleClick}
     >
@@ -125,7 +129,19 @@ const GridImageItem = memo(function GridImageItem({
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--base-color-brand--bean)]/70 via-transparent to-transparent opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
 
-      <div className="absolute top-2 left-2 z-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+      {/* Persistent cinamon tint when selected — gives the card a clearly
+          different look regardless of whether it's hovered. */}
+      {isSelected && (
+        <div className="pointer-events-none absolute inset-0 bg-[var(--base-color-brand--cinamon)]/15" />
+      )}
+
+      {/* Selection checkbox — always visible when the card is selected,
+          only appears on hover otherwise. */}
+      <div
+        className={`absolute top-2 left-2 z-10 transition-opacity duration-150 ${
+          isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
         <button
           type="button"
           role="checkbox"

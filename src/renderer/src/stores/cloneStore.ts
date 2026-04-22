@@ -6,6 +6,7 @@ import {
   CLONE_RESOLUTION,
   buildClonePrompt,
 } from '@/lib/constants/clone';
+import { detectSoftRefusal } from '@/lib/imageHash';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type CloneStepId = 'source' | 'character' | 'tweaks' | 'format' | 'results';
@@ -17,10 +18,11 @@ export interface CloneResultSlot {
   error?: string;
 }
 
-// Max character reference images to include. Characters typically have
-// multiple angles (front / side / three-quarter) — 3 is a good sweet spot
-// for identity fidelity without bloating the payload.
-const MAX_CHARACTER_REFERENCES = 3;
+// Max character reference images to include. Google's Gemini 3 Pro Image
+// officially supports up to 5 character images for identity consistency;
+// more angles = better triangulation of the character's face and body.
+// https://ai.google.dev/gemini-api/docs/image-generation
+const MAX_CHARACTER_REFERENCES = 5;
 
 /**
  * A source image the user uploads as the scene to clone. Kept as an
@@ -183,27 +185,81 @@ async function generateSingleSlot(
     }));
   };
 
-  try {
+  // Run one attempt against a specific model variant. Returns the output
+  // URL on success, or null if fal returned no image. Throws on network
+  // / API error (caller handles).
+  const callFal = async (modelVariant: 'pro' | 'flash'): Promise<string | null> => {
     const result = await window.api.generate.image({
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       resolution: CLONE_RESOLUTION,
       outputFormat: CLONE_OUTPUT_FORMAT,
       imageUrls: inputs.imageUrls,
+      modelVariant,
     });
+    if (!result.success || !result.resultUrls?.length) return null;
+    return result.resultUrls[0];
+  };
 
-    if (!result.success || !result.resultUrls?.length) {
+  try {
+    // First attempt on Nano Banana Pro (the quality tier).
+    let outputUrl = await callFal('pro');
+    let variantUsed: 'pro' | 'flash' = 'pro';
+
+    // If fal returned no image, or Gemini soft-refused by echoing one of
+    // our input images, auto-retry once on Nano Banana 2 (different
+    // deploy-time safety tuning, partial overlap — often succeeds where
+    // Pro didn't). Covers both failure modes the user's hitting.
+    const isSoftRefusal =
+      outputUrl !== null && (await detectSoftRefusal(outputUrl, inputs.imageUrls)).isSoftRefusal;
+
+    if (outputUrl === null || isSoftRefusal) {
+      try {
+        const retryUrl = await callFal('flash');
+        if (retryUrl) {
+          // Don't blindly trust the retry either — check again.
+          const retryCheck = await detectSoftRefusal(retryUrl, inputs.imageUrls);
+          if (!retryCheck.isSoftRefusal) {
+            outputUrl = retryUrl;
+            variantUsed = 'flash';
+          }
+        }
+      } catch {
+        // Retry itself errored — fall through to the soft-refusal / null
+        // handling below so the user sees the best available message.
+      }
+    }
+
+    if (outputUrl === null) {
       updateSlot({ status: 'error', error: "Couldn't generate this one." });
       return;
     }
 
+    // Final soft-refusal check on whatever we ended up with — if both
+    // Pro and Flash echoed an input back at us, surface that clearly so
+    // the user knows retrying on the same inputs won't help.
+    const finalCheck = await detectSoftRefusal(outputUrl, inputs.imageUrls);
+    if (finalCheck.isSoftRefusal) {
+      updateSlot({
+        status: 'error',
+        error:
+          'Google returned your reference image instead of the edit (a soft refusal). Try a different scene or character reference.',
+      });
+      return;
+    }
+
     const saved = await window.api.images.save({
-      url: result.resultUrls[0],
+      url: outputUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
     });
 
     updateSlot({ status: 'success', image: saved });
+    if (variantUsed === 'flash') {
+      // Light breadcrumb so we can tell from the main log when the
+      // fallback rescued a generation.
+      console.log('[clone] slot', slotId, 'rescued by nano-banana-2');
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Couldn't generate this one.";
     updateSlot({ status: 'error', error: message });

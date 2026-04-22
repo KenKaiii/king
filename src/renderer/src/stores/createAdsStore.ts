@@ -18,10 +18,13 @@ export interface ResultSlot {
   error?: string;
 }
 
-// Max product reference images to include with the generation. Nano Banana
-// Pro accepts up to 14; 2 product angles is plenty for shape/label fidelity
-// and keeps the IPC payload small.
-const MAX_PRODUCT_REFERENCES = 2;
+// Max product reference images to include with the generation. Google's
+// Gemini 3 Pro Image supports up to 6 object reference images with high
+// fidelity; 4 angles (e.g. front, side, back, detail) gives the model
+// enough to lock in shape, label text, and packaging without bloating
+// the IPC payload.
+// https://ai.google.dev/gemini-api/docs/image-generation
+const MAX_PRODUCT_REFERENCES = 4;
 
 /**
  * Convert a bundled vite-served asset URL to a base64 data URL so it can be

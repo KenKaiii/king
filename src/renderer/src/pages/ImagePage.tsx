@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { CloseIcon, DeleteIcon } from '@/components/icons';
 import ImagePromptForm from '@/components/ImagePromptForm';
 import {
   ImageEmptyState,
@@ -43,8 +44,34 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
     loadMore: loadMoreImages,
     addImage,
     deleteImage,
+    deleteImages,
     downloadImage: handleDownload,
   } = useImages();
+
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const selectedCount = selectedImages.size;
+
+  const clearSelection = useCallback(() => setSelectedImages(new Set()), []);
+
+  const handleBatchDeleteClick = useCallback(() => {
+    if (selectedCount === 0) return;
+    setBatchDeleteOpen(true);
+  }, [selectedCount]);
+
+  const confirmBatchDelete = useCallback(async () => {
+    const ids = Array.from(selectedImages);
+    setBatchDeleteOpen(false);
+    setSelectedImages(new Set());
+    await deleteImages(ids);
+  }, [selectedImages, deleteImages]);
+
+  const batchDeleteMessage = useMemo(
+    () =>
+      `Are you sure you want to delete ${selectedCount} image${
+        selectedCount === 1 ? '' : 's'
+      }? This action cannot be undone.`,
+    [selectedCount],
+  );
 
   const toggleSelectImage = useCallback((id: string) => {
     setSelectedImages((prev) => {
@@ -154,33 +181,74 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
   return (
     <>
-      <div className="min-h-0 flex-1 px-4 pt-4">
-        {isLoading ? (
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="size-8 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
-              <span className="text-sm text-[var(--base-color-brand--umber)]">
-                Loading images...
-              </span>
-            </div>
+      <div className="relative min-h-0 flex-1 px-4 pt-4">
+        {/* Selection toolbar — slides down from the top-right of the image
+            grid whenever at least one image is selected. Contains a count,
+            a delete action, and a clear-selection button. */}
+        <div
+          aria-hidden={selectedCount === 0}
+          className={`absolute top-4 right-4 z-20 transition-all duration-200 ease-out ${
+            selectedCount > 0
+              ? 'translate-y-0 opacity-100'
+              : 'pointer-events-none -translate-y-3 opacity-0'
+          }`}
+        >
+          <div className="flex items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] py-1.5 pr-1.5 pl-4 shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]">
+            <span
+              className="text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {selectedCount} selected
+            </span>
+            <button
+              type="button"
+              onClick={handleBatchDeleteClick}
+              className="btn-cinamon btn-sm"
+              title="Delete selected"
+            >
+              <DeleteIcon />
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="grid h-7 w-7 place-items-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
+              title="Clear selection"
+              aria-label="Clear selection"
+            >
+              <CloseIcon />
+            </button>
           </div>
-        ) : generatedImages.length > 0 || pendingCount > 0 ? (
-          <VirtualizedImageGrid
-            images={generatedImages}
-            selectedImages={selectedImages}
-            onSelect={toggleSelectImage}
-            onClick={handleImageClick}
-            onDownload={handleDownload}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            onLoadMore={loadMoreImages}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore}
-            pendingCount={pendingCount}
-          />
-        ) : (
-          <ImageEmptyState />
-        )}
+        </div>
+
+        <div className="h-full">
+          {isLoading ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="size-8 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
+                <span className="text-sm text-[var(--base-color-brand--umber)]">
+                  Loading images...
+                </span>
+              </div>
+            </div>
+          ) : generatedImages.length > 0 || pendingCount > 0 ? (
+            <VirtualizedImageGrid
+              images={generatedImages}
+              selectedImages={selectedImages}
+              onSelect={toggleSelectImage}
+              onClick={handleImageClick}
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              onLoadMore={loadMoreImages}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              pendingCount={pendingCount}
+            />
+          ) : (
+            <ImageEmptyState />
+          )}
+        </div>
       </div>
 
       <ImagePromptForm onSubmit={handleGenerate} recreateData={recreateData} editData={editData} />
@@ -207,6 +275,14 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
         message="Are you sure you want to delete this image? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteConfirmId(null)}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={batchDeleteOpen}
+        title={`Delete ${selectedCount} image${selectedCount === 1 ? '' : 's'}`}
+        message={batchDeleteMessage}
+        onConfirm={confirmBatchDelete}
+        onCancel={() => setBatchDeleteOpen(false)}
       />
     </>
   );

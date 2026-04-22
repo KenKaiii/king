@@ -15,6 +15,7 @@ const api = {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
+      modelVariant?: 'pro' | 'flash';
     }) => ipcRenderer.invoke('generate:image', data),
   },
   files: {
