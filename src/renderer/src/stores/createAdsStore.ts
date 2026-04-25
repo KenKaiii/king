@@ -7,6 +7,8 @@ import {
   buildCreateAdsPrompt,
 } from '@/lib/constants/create-ads';
 import { pickVariant, type AdReference } from '@/lib/adReferences';
+import { useModelStore } from '@/stores/modelStore';
+import { useImagesStore } from '@/stores/imagesStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results';
@@ -98,7 +100,7 @@ const INITIAL_STATE = {
   lastGenerationInputs: null as CreateAdsStore['lastGenerationInputs'],
 };
 
-export const useCreateAdsStore = create<CreateAdsStore>((set, get) => ({
+export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
   ...INITIAL_STATE,
 
   setStep: (step) => set({ step }),
@@ -246,18 +248,24 @@ async function generateSingleSlot(
       resolution: CREATE_ADS_RESOLUTION,
       outputFormat: CREATE_ADS_OUTPUT_FORMAT,
       imageUrls: inputs.imageUrls,
+      modelVariant: useModelStore.getState().selectedModel,
     });
 
-    if (!result.success || !result.resultUrls?.length) {
+    const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
+    if (!firstUrl) {
       updateSlot({ status: 'error', error: "Couldn't generate this one." });
       return;
     }
 
     const saved = await window.api.images.save({
-      url: result.resultUrls[0],
+      url: firstUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
     });
+
+    // Push into the global gallery store so the Image page picks it up
+    // immediately, even though the user is currently on the Create Ads page.
+    useImagesStore.getState().addImage(saved);
 
     updateSlot({ status: 'success', image: saved });
   } catch (err) {

@@ -15,7 +15,7 @@ const api = {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
-      modelVariant?: 'pro' | 'flash';
+      modelVariant?: 'nano_banana_pro' | 'gpt_image_2';
     }) => ipcRenderer.invoke('generate:image', data),
   },
   files: {
@@ -29,6 +29,10 @@ const api = {
   },
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  },
+  log: {
+    error: (level: string, message: string, stack?: string) =>
+      ipcRenderer.invoke('log:error', level, message, stack),
   },
   update: {
     getVersion: (): Promise<string> => ipcRenderer.invoke('updater:getVersion'),

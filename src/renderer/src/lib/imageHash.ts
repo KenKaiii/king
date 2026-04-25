@@ -63,9 +63,13 @@ function hashImageElement(image: HTMLImageElement): Uint8Array {
   const grays = new Uint8Array(HASH_BITS);
   let total = 0;
   for (let i = 0; i < HASH_BITS; i++) {
-    const r = data[i * 4];
-    const g = data[i * 4 + 1];
-    const b = data[i * 4 + 2];
+    // canvas.getImageData returns RGBA interleaved with exactly
+    // width*height*4 entries, so these are always in-bounds. The `?? 0`
+    // narrows the index type under noUncheckedIndexedAccess without the
+    // runtime cost of a guard; grayscale from missing channels never fires.
+    const r = data[i * 4] ?? 0;
+    const g = data[i * 4 + 1] ?? 0;
+    const b = data[i * 4 + 2] ?? 0;
     const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
     grays[i] = y;
     total += y;
@@ -75,8 +79,9 @@ function hashImageElement(image: HTMLImageElement): Uint8Array {
   // Pack 256 bits into 32 bytes. Bit = 1 if pixel exceeds the mean.
   const hash = new Uint8Array(HASH_BITS / 8);
   for (let i = 0; i < HASH_BITS; i++) {
-    if (grays[i] > mean) {
-      hash[Math.floor(i / 8)] |= 1 << (i % 8);
+    if ((grays[i] ?? 0) > mean) {
+      const byteIdx = Math.floor(i / 8);
+      hash[byteIdx] = (hash[byteIdx] ?? 0) | (1 << (i % 8));
     }
   }
   return hash;
@@ -91,7 +96,8 @@ export function hammingDistance(a: Uint8Array, b: Uint8Array): number {
   }
   let distance = 0;
   for (let i = 0; i < a.length; i++) {
-    let xor = a[i] ^ b[i];
+    // Length-matched above; indices are in-bounds for both arrays.
+    let xor = (a[i] ?? 0) ^ (b[i] ?? 0);
     while (xor) {
       distance += xor & 1;
       xor >>>= 1;
@@ -119,8 +125,10 @@ export async function detectSoftRefusal(
     let bestDistance = Number.POSITIVE_INFINITY;
 
     for (let i = 0; i < inputUrls.length; i++) {
+      const url = inputUrls[i];
+      if (!url) continue;
       try {
-        const inputHash = await hashImageUrl(inputUrls[i]);
+        const inputHash = await hashImageUrl(url);
         const d = hammingDistance(outputHash, inputHash);
         if (d < bestDistance) {
           bestDistance = d;

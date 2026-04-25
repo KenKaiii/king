@@ -209,14 +209,14 @@ export default function ImageDetailPanel({
                   <span className="text-[var(--base-color-brand--umber)]">
                     <PromptIcon />
                   </span>
-                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
+                  <p className="text-xs font-semibold tracking-wider text-[var(--base-color-brand--umber)]">
                     Prompt
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={copyPrompt}
-                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--bean)] tracking-wide transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
                 >
                   Copy
                 </button>
@@ -234,7 +234,7 @@ export default function ImageDetailPanel({
                 <span className="text-[var(--base-color-brand--umber)]">
                   <InfoIcon />
                 </span>
-                <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
+                <p className="text-xs font-semibold tracking-wider text-[var(--base-color-brand--umber)]">
                   Information
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function ImageDetailPanel({
                   <span className="text-[var(--base-color-brand--umber)]">
                     <SettingsIcon />
                   </span>
-                  <p className="text-xs font-semibold text-[var(--base-color-brand--umber)] tracking-wider">
+                  <p className="text-xs font-semibold tracking-wider text-[var(--base-color-brand--umber)]">
                     Additional
                   </p>
                 </div>

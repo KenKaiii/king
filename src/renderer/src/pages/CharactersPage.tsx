@@ -1,7 +1,8 @@
 import { EntityManagementPage } from '@/components/entity';
+import type { PageType } from '@/App';
 
 interface CharactersPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: PageType) => void;
 }
 
 export default function CharactersPage({ onNavigate }: CharactersPageProps) {

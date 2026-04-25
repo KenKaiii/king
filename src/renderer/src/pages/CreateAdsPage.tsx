@@ -118,7 +118,8 @@ export default function CreateAdsPage() {
   const goNext = useCallback(() => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx < 0 || idx >= WIZARD_STEPS.length - 1) return;
-    setStep(WIZARD_STEPS[idx + 1].id);
+    const next = WIZARD_STEPS[idx + 1];
+    if (next) setStep(next.id);
   }, [step, setStep]);
 
   const goBack = useCallback(() => {
@@ -133,7 +134,8 @@ export default function CreateAdsPage() {
     }
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx <= 0) return;
-    setStep(WIZARD_STEPS[idx - 1].id);
+    const prev = WIZARD_STEPS[idx - 1];
+    if (prev) setStep(prev.id);
   }, [step, setStep]);
 
   // Kick off generation via the store. The store handles all state updates,
@@ -180,10 +182,14 @@ export default function CreateAdsPage() {
   );
 
   // Current step's title (the Results step isn't in WIZARD_STEPS but needs one).
+  // Fall back to the first step if the index lookup fails so the header still
+  // renders instead of crashing during a bad state.
+  // WIZARD_STEPS is a hardcoded non-empty array; the `!` codifies that so
+  // activeStep is never `undefined` under noUncheckedIndexedAccess.
   const activeStep =
     step === 'results'
-      ? { id: 'results' as const, label: 'Results', title: 'Your ads' }
-      : WIZARD_STEPS[currentIndex];
+      ? { id: 'results' as const, label: 'Results', title: 'Your ads', hint: undefined }
+      : (WIZARD_STEPS[currentIndex] ?? WIZARD_STEPS[0]!);
 
   return (
     <main className="flex flex-1 justify-center overflow-y-auto">
@@ -656,7 +662,7 @@ function ResultCard({
 }) {
   const [w, h] = aspectRatio.split(':').map(Number);
   const aspectStyle =
-    Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
+    w !== undefined && h !== undefined && Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
       ? { aspectRatio: `${w} / ${h}` }
       : { aspectRatio: '1 / 1' };
 

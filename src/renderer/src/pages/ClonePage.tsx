@@ -57,13 +57,14 @@ function closestAspectRatio(width: number, height: number): string {
   let bestDiff = Infinity;
   for (const r of ASPECT_RATIOS) {
     const [rw, rh] = r.value.split(':').map(Number);
+    if (!rw || !rh) continue;
     const diff = Math.abs(sourceRatio - rw / rh);
     if (diff < bestDiff) {
       bestDiff = diff;
       best = r;
     }
   }
-  return best.value;
+  return best?.value ?? '1:1';
 }
 
 export default function ClonePage() {
@@ -124,7 +125,8 @@ export default function ClonePage() {
   const goNext = useCallback(() => {
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx < 0 || idx >= WIZARD_STEPS.length - 1) return;
-    setStep(WIZARD_STEPS[idx + 1].id);
+    const next = WIZARD_STEPS[idx + 1];
+    if (next) setStep(next.id);
   }, [step, setStep]);
 
   const goBack = useCallback(() => {
@@ -138,7 +140,8 @@ export default function ClonePage() {
     }
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx <= 0) return;
-    setStep(WIZARD_STEPS[idx - 1].id);
+    const prev = WIZARD_STEPS[idx - 1];
+    if (prev) setStep(prev.id);
   }, [step, setStep]);
 
   const handleGenerate = useCallback(() => {
@@ -177,10 +180,16 @@ export default function ClonePage() {
     [removeResultByImageId],
   );
 
+  // `WIZARD_STEPS[currentIndex]` is `T | undefined` under
+  // `noUncheckedIndexedAccess`; fall back to the first step for the impossible
+  // case where `step` is non-'results' but absent from WIZARD_STEPS (a
+  // defensive default rather than a runtime invariant we rely on).
+  // WIZARD_STEPS is a hardcoded non-empty array; `[0]!` tells TS what we
+  // already know so activeStep is never `undefined` downstream.
   const activeStep =
     step === 'results'
-      ? { id: 'results' as const, label: 'Results', title: 'Your clones' }
-      : WIZARD_STEPS[currentIndex];
+      ? { id: 'results' as const, label: 'Results', title: 'Your clones', hint: undefined }
+      : (WIZARD_STEPS[currentIndex] ?? WIZARD_STEPS[0]!);
 
   return (
     <main className="flex flex-1 justify-center overflow-y-auto">
@@ -402,7 +411,9 @@ function SourceStep({
   const handleFiles = useCallback(
     (files: FileList | null) => {
       if (!files || files.length === 0) return;
-      void handleFile(files[0]);
+      const first = files[0];
+      if (!first) return;
+      void handleFile(first);
     },
     [handleFile],
   );
@@ -670,7 +681,7 @@ function ResultCard({
 }) {
   const [w, h] = aspectRatio.split(':').map(Number);
   const aspectStyle =
-    Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
+    w !== undefined && h !== undefined && Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
       ? { aspectRatio: `${w} / ${h}` }
       : { aspectRatio: '1 / 1' };
 

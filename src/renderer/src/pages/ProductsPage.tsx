@@ -1,7 +1,8 @@
 import { EntityManagementPage } from '@/components/entity';
+import type { PageType } from '@/App';
 
 interface ProductsPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: PageType) => void;
 }
 
 export default function ProductsPage({ onNavigate }: ProductsPageProps) {

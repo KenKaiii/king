@@ -14,7 +14,7 @@ interface GenerationStore {
   clearImageGenerations: () => void;
 }
 
-export const useGenerationStore = create<GenerationStore>((set) => ({
+export const useGenerationStore = create<GenerationStore>()((set) => ({
   pendingImageGenerations: [],
 
   addImageGeneration: (id, prompt) =>

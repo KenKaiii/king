@@ -65,7 +65,7 @@ export interface ElectronAPI {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
-      modelVariant?: 'pro' | 'flash';
+      modelVariant?: 'nano_banana_pro' | 'gpt_image_2';
     }) => Promise<{ success: boolean; resultUrls: string[] }>;
   };
   files: {
@@ -76,6 +76,9 @@ export interface ElectronAPI {
   };
   shell: {
     openExternal: (url: string) => Promise<void>;
+  };
+  log: {
+    error: (level: string, message: string, stack?: string) => Promise<void>;
   };
   update: {
     getVersion: () => Promise<string>;

@@ -61,7 +61,14 @@ export interface AdReference {
  * exact match (e.g. user selected 16:9 but the ad only ships as 9:16).
  */
 export function pickVariant(ad: AdReference, aspectRatio: string): AdVariant {
-  return ad.variants.find((v) => v.aspectRatio === aspectRatio) ?? ad.variants[0];
+  const match = ad.variants.find((v) => v.aspectRatio === aspectRatio);
+  if (match) return match;
+  const fallback = ad.variants[0];
+  // AD_REFERENCES entries always ship at least one variant; this invariant
+  // is guarded at the type level by the caller and asserted here so callers
+  // can rely on a concrete return.
+  if (!fallback) throw new Error(`AdReference ${ad.id} has no variants`);
+  return fallback;
 }
 
 /**
@@ -71,7 +78,9 @@ export function pickVariant(ad: AdReference, aspectRatio: string): AdVariant {
  */
 export function getThumbnail(ad: AdReference): string {
   const square = ad.variants.find((v) => v.aspectRatio === '1:1');
-  return (square ?? ad.variants[0]).imageUrl;
+  const pick = square ?? ad.variants[0];
+  if (!pick) throw new Error(`AdReference ${ad.id} has no variants`);
+  return pick.imageUrl;
 }
 
 export const AD_REFERENCES: AdReference[] = [

@@ -91,8 +91,14 @@ vi.mock('@/assets/prompts/beauty-aloe-gel.jpg', () => ({ default: 'beauty-aloe-g
 import { prompts, type Prompt } from '@/lib/prompts';
 
 describe('prompts', () => {
-  it('has 85 prompt entries', () => {
-    expect(prompts).toHaveLength(85);
+  it('has a non-empty, de-duplicated set of prompt entries', () => {
+    // A hardcoded count rots every time a prompt is added/removed. The
+    // structural invariants — non-empty + unique IDs — are what actually
+    // matter, and they catch real regressions (accidental duplicate ids
+    // from copy-paste, empty file after a refactor).
+    expect(prompts.length).toBeGreaterThan(0);
+    const ids = new Set(prompts.map((p) => p.id));
+    expect(ids.size).toBe(prompts.length);
   });
 
   it('every prompt has the required fields: id, title, description, prompt, image', () => {

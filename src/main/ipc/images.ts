@@ -1,18 +1,18 @@
-import { ipcMain } from 'electron';
 import { randomUUID } from 'crypto';
 import { listImages, addImage, deleteImage, getImage } from '../services/imageStore';
 import { downloadAndSaveImage, deleteImageFile } from '../services/fileManager';
+import { secureHandle } from './validateSender';
 
 export function registerImageHandlers(): void {
-  ipcMain.handle('images:list', async (_event, cursor?: string, limit?: number) => {
+  secureHandle('images:list', async (_event, cursor?: string, limit?: number) => {
     return listImages(cursor, limit);
   });
 
-  ipcMain.handle(
+  secureHandle(
     'images:save',
     async (_event, data: { url: string; prompt: string; aspectRatio: string }) => {
       const { filename, localUrl } = await downloadAndSaveImage(data.url);
-      const image = addImage({
+      const image = await addImage({
         id: randomUUID(),
         url: localUrl,
         prompt: data.prompt,
@@ -24,12 +24,12 @@ export function registerImageHandlers(): void {
     },
   );
 
-  ipcMain.handle('images:delete', async (_event, id: string) => {
-    const image = getImage(id);
+  secureHandle('images:delete', async (_event, id: string) => {
+    const image = await getImage(id);
     if (image) {
       deleteImageFile(image.filename);
     }
-    const success = deleteImage(id);
+    const success = await deleteImage(id);
     return { success };
   });
 }

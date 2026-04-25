@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { getImagesJsonPath } from './paths';
+import { readJson, writeJsonAtomic, withJsonLock } from './atomicJson';
 
 export interface StoredImage {
   id: string;
@@ -16,21 +16,7 @@ interface ImageStore {
 }
 
 function readStore(): ImageStore {
-  const path = getImagesJsonPath();
-  if (!existsSync(path)) {
-    return { images: [] };
-  }
-  try {
-    const data = readFileSync(path, 'utf-8');
-    return JSON.parse(data) as ImageStore;
-  } catch {
-    return { images: [] };
-  }
-}
-
-function writeStore(store: ImageStore): void {
-  const path = getImagesJsonPath();
-  writeFileSync(path, JSON.stringify(store, null, 2), 'utf-8');
+  return readJson<ImageStore>(getImagesJsonPath(), { images: [] });
 }
 
 export function listImages(
@@ -46,9 +32,14 @@ export function listImages(
   let startIndex = 0;
   if (cursor) {
     const cursorIndex = sorted.findIndex((img) => img.id === cursor);
-    if (cursorIndex !== -1) {
-      startIndex = cursorIndex + 1;
+    if (cursorIndex === -1) {
+      // Cursor image was deleted between pages — without this guard we'd
+      // silently restart from index 0 and the renderer would append
+      // duplicates of page 1. Terminate the sequence instead; the client can
+      // refresh if it needs more.
+      return { data: [], nextCursor: null, hasMore: false };
     }
+    startIndex = cursorIndex + 1;
   }
 
   const data = sorted.slice(startIndex, startIndex + limit);
@@ -58,23 +49,29 @@ export function listImages(
   return { data, nextCursor, hasMore };
 }
 
-export function addImage(image: StoredImage): StoredImage {
-  const store = readStore();
-  store.images.push(image);
-  writeStore(store);
-  return image;
+export async function addImage(image: StoredImage): Promise<StoredImage> {
+  const path = getImagesJsonPath();
+  return withJsonLock(path, () => {
+    const store = readStore();
+    store.images.push(image);
+    writeJsonAtomic(path, store);
+    return image;
+  });
 }
 
-export function deleteImage(id: string): boolean {
-  const store = readStore();
-  const index = store.images.findIndex((img) => img.id === id);
-  if (index === -1) return false;
-  store.images.splice(index, 1);
-  writeStore(store);
-  return true;
+export async function deleteImage(id: string): Promise<boolean> {
+  const path = getImagesJsonPath();
+  return withJsonLock(path, () => {
+    const store = readStore();
+    const index = store.images.findIndex((img) => img.id === id);
+    if (index === -1) return false;
+    store.images.splice(index, 1);
+    writeJsonAtomic(path, store);
+    return true;
+  });
 }
 
-export function getImage(id: string): StoredImage | undefined {
+export async function getImage(id: string): Promise<StoredImage | undefined> {
   const store = readStore();
   return store.images.find((img) => img.id === id);
 }

@@ -13,8 +13,10 @@ import {
   ImageAddIcon,
 } from '@/components/icons';
 import {
-  aspectRatioOptions,
-  resolutionOptions,
+  nanoBananaAspectRatioOptions,
+  gptImage2AspectRatioOptions,
+  nanoBananaResolutionOptions,
+  gptImage2QualityOptions,
   outputFormatOptions,
   MAX_REFERENCE_IMAGES,
   MAX_IMAGE_SIZE_MB,
@@ -23,6 +25,14 @@ import {
   SUPPORTED_IMAGE_MIME_REGEX,
 } from '@/lib/constants/image-form';
 import { renderPrompt } from '@/lib/productTypes';
+import { useModelStore, type ImageModel } from '@/stores/modelStore';
+
+// Same option list the Settings modal uses — kept in lockstep so the
+// labels don't drift between surfaces.
+const MODEL_OPTIONS: { value: ImageModel; label: string }[] = [
+  { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
+  { value: 'gpt_image_2', label: 'GPT Image 2' },
+];
 import type { EntityData } from '@/types/electron';
 
 interface ReferenceImage {
@@ -36,7 +46,6 @@ interface ReferenceImage {
 interface ImagePromptFormProps {
   onSubmit?: (data: {
     prompt: string;
-    model: string;
     count: number;
     aspectRatio: string;
     resolution: string;
@@ -54,12 +63,32 @@ export default function ImagePromptForm({
   recreateData,
   editData,
 }: ImagePromptFormProps) {
+  const selectedModel = useModelStore((s) => s.selectedModel);
+  const setSelectedModel = useModelStore((s) => s.setSelectedModel);
+  const isGpt = selectedModel === 'gpt_image_2';
+  const aspectRatioOptions = isGpt ? gptImage2AspectRatioOptions : nanoBananaAspectRatioOptions;
+  const resolutionOptions = isGpt ? gptImage2QualityOptions : nanoBananaResolutionOptions;
+
   const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedEntity, setSelectedEntity] = useState('none');
   const [imageCount, setImageCount] = useState(1);
   const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [resolution, setResolution] = useState('1K');
+  const [resolution, setResolution] = useState(isGpt ? 'high' : '1K');
   const [outputFormat, setOutputFormat] = useState('png');
+
+  // Reconcile selections when the user switches models from Settings.
+  // Both ratio and resolution have model-specific value sets — if the
+  // current selection isn't valid for the new model, snap to a sensible
+  // default rather than rendering a blank dropdown label.
+  useEffect(() => {
+    if (!aspectRatioOptions.some((o) => o.value === aspectRatio)) {
+      setAspectRatio('1:1');
+    }
+    if (!resolutionOptions.some((o) => o.value === resolution)) {
+      setResolution(isGpt ? 'high' : '1K');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModel]);
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [products, setProducts] = useState<EntityData[]>([]);
   const [characters, setCharacters] = useState<EntityData[]>([]);
@@ -192,7 +221,9 @@ export default function ImagePromptForm({
       // Convert files to base64 data URLs so they're accessible from the main process
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
-        const id = pendingImages[i].id;
+        const pending = pendingImages[i];
+        if (!file || !pending) continue;
+        const id = pending.id;
         const reader = new FileReader();
         reader.onload = () => {
           const dataUrl = reader.result as string;
@@ -238,7 +269,6 @@ export default function ImagePromptForm({
 
     onSubmit?.({
       prompt: resolvedPrompt,
-      model: 'nano_banana_2',
       count: imageCount,
       aspectRatio,
       resolution,
@@ -348,6 +378,13 @@ export default function ImagePromptForm({
           {/* Controls row */}
           <div className="flex h-9 items-center gap-2">
             <SelectDropdown
+              options={MODEL_OPTIONS}
+              value={selectedModel}
+              onChange={(v) => setSelectedModel(v as ImageModel)}
+              icon={<SparkleIcon />}
+            />
+
+            <SelectDropdown
               options={entityOptions}
               value={selectedEntity}
               onChange={handleEntityChange}
@@ -407,7 +444,7 @@ export default function ImagePromptForm({
             type="submit"
             disabled={isImagesLoading}
             tabIndex={-1}
-            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-2.5 text-sm font-semibold text-[var(--base-color-brand--shell)] tracking-wide shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
+            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-2.5 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             <div className="flex items-center gap-2">

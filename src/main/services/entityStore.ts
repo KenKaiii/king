@@ -1,7 +1,8 @@
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
+import { writeFileSync, existsSync, unlinkSync } from 'fs';
 import { join, extname } from 'path';
 import { randomUUID } from 'crypto';
 import { getEntityJsonPath, getEntityImagesDir } from './paths';
+import { readJson, writeJsonAtomic, withJsonLock } from './atomicJson';
 
 export interface StoredEntity {
   id: string;
@@ -17,21 +18,7 @@ interface EntityStore {
 }
 
 function readStore(entityType: string): EntityStore {
-  const path = getEntityJsonPath(entityType);
-  if (!existsSync(path)) {
-    return { entities: [] };
-  }
-  try {
-    const data = readFileSync(path, 'utf-8');
-    return JSON.parse(data) as EntityStore;
-  } catch {
-    return { entities: [] };
-  }
-}
-
-function writeStore(entityType: string, store: EntityStore): void {
-  const path = getEntityJsonPath(entityType);
-  writeFileSync(path, JSON.stringify(store, null, 2), 'utf-8');
+  return readJson<EntityStore>(getEntityJsonPath(entityType), { entities: [] });
 }
 
 export function listEntities(entityType: string): StoredEntity[] {
@@ -64,66 +51,78 @@ export function saveEntityImages(
   return urls;
 }
 
-export function addEntity(
+export async function addEntity(
   entityType: string,
   name: string,
   referenceImages: string[],
   productType?: string,
-): StoredEntity {
-  const store = readStore(entityType);
-  const entity: StoredEntity = {
-    id: randomUUID(),
-    name,
-    referenceImages,
-    thumbnailUrl: referenceImages[0] ?? null,
-    createdAt: new Date().toISOString(),
-    ...(productType ? { productType } : {}),
-  };
-  store.entities.push(entity);
-  writeStore(entityType, store);
-  return entity;
+): Promise<StoredEntity> {
+  const path = getEntityJsonPath(entityType);
+  return withJsonLock(path, () => {
+    const store = readStore(entityType);
+    const entity: StoredEntity = {
+      id: randomUUID(),
+      name,
+      referenceImages,
+      thumbnailUrl: referenceImages[0] ?? null,
+      createdAt: new Date().toISOString(),
+      ...(productType ? { productType } : {}),
+    };
+    store.entities.push(entity);
+    writeJsonAtomic(path, store);
+    return entity;
+  });
 }
 
-export function updateEntity(
+export async function updateEntity(
   entityType: string,
   id: string,
   name: string,
   referenceImages: string[],
   productType?: string,
-): StoredEntity | null {
-  const store = readStore(entityType);
-  const index = store.entities.findIndex((e) => e.id === id);
-  if (index === -1) return null;
+): Promise<StoredEntity | null> {
+  const path = getEntityJsonPath(entityType);
+  return withJsonLock(path, () => {
+    const store = readStore(entityType);
+    const index = store.entities.findIndex((e) => e.id === id);
+    const existing = index === -1 ? undefined : store.entities[index];
+    if (!existing) return null;
 
-  store.entities[index] = {
-    ...store.entities[index],
-    name,
-    referenceImages,
-    thumbnailUrl: referenceImages[0] ?? null,
-    ...(productType !== undefined ? { productType } : {}),
-  };
-  writeStore(entityType, store);
-  return store.entities[index];
+    const updated: StoredEntity = {
+      ...existing,
+      name,
+      referenceImages,
+      thumbnailUrl: referenceImages[0] ?? null,
+      ...(productType !== undefined ? { productType } : {}),
+    };
+    store.entities[index] = updated;
+    writeJsonAtomic(path, store);
+    return updated;
+  });
 }
 
-export function deleteEntity(entityType: string, id: string): boolean {
-  const store = readStore(entityType);
-  const entity = store.entities.find((e) => e.id === id);
-  if (!entity) return false;
+export async function deleteEntity(entityType: string, id: string): Promise<boolean> {
+  const path = getEntityJsonPath(entityType);
+  return withJsonLock(path, () => {
+    const store = readStore(entityType);
+    const entity = store.entities.find((e) => e.id === id);
+    if (!entity) return false;
 
-  // Delete reference image files
-  const dir = getEntityImagesDir(entityType);
-  for (const imageUrl of entity.referenceImages) {
-    // Extract filename from local-file:///entities/<type>/<filename>
-    const parts = imageUrl.split('/');
-    const filename = parts[parts.length - 1];
-    const filePath = join(dir, filename);
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
+    // Delete reference image files
+    const dir = getEntityImagesDir(entityType);
+    for (const imageUrl of entity.referenceImages) {
+      // Extract filename from local-file:///entities/<type>/<filename>
+      const parts = imageUrl.split('/');
+      const filename = parts[parts.length - 1];
+      if (!filename) continue;
+      const filePath = join(dir, filename);
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
     }
-  }
 
-  store.entities = store.entities.filter((e) => e.id !== id);
-  writeStore(entityType, store);
-  return true;
+    store.entities = store.entities.filter((e) => e.id !== id);
+    writeJsonAtomic(path, store);
+    return true;
+  });
 }

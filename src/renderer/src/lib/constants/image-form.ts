@@ -25,9 +25,9 @@ export const SUPPORTED_IMAGE_ACCEPT = SUPPORTED_IMAGE_MIME_TYPES.join(',');
 /** Regex used to validate File.type values from user uploads. */
 export const SUPPORTED_IMAGE_MIME_REGEX = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i;
 
-export const modelOptions = [{ value: 'nano_banana_2', label: 'Default' }];
-
-export const aspectRatioOptions = [
+// Aspect ratios supported by Nano Banana Pro (Google Gemini 3 Pro Image).
+// Full ladder; matches what fal exposes on `fal-ai/nano-banana-pro`.
+export const nanoBananaAspectRatioOptions = [
   { value: 'auto', label: 'Auto' },
   { value: '1:1', label: '1:1' },
   { value: '2:3', label: '2:3' },
@@ -41,11 +41,36 @@ export const aspectRatioOptions = [
   { value: '21:9', label: '21:9' },
 ];
 
-export const resolutionOptions = [
+// Aspect ratios supported by GPT Image 2 — only the `image_size` enum
+// values fal documents. Anything else is not customised here.
+//   https://fal.ai/models/openai/gpt-image-2/api
+export const gptImage2AspectRatioOptions = [
+  { value: 'auto', label: 'Auto' },
+  { value: '1:1', label: '1:1' },
+  { value: '4:3', label: '4:3' },
+  { value: '3:4', label: '3:4' },
+  { value: '16:9', label: '16:9' },
+  { value: '9:16', label: '9:16' },
+];
+
+// Backwards-compatible default export (used by tests, fallbacks). Mirrors
+// the Nano Banana ladder which is the broader of the two.
+export const aspectRatioOptions = nanoBananaAspectRatioOptions;
+
+export const nanoBananaResolutionOptions = [
   { value: '1K', label: '1K' },
   { value: '2K', label: '2K' },
   { value: '4K', label: '4K' },
 ];
+
+// GPT Image 2 has only two quality tiers (`low` / `high`). We surface
+// these in place of the resolution dropdown when GPT is selected.
+export const gptImage2QualityOptions = [
+  { value: 'low', label: 'Low' },
+  { value: 'high', label: 'High' },
+];
+
+export const resolutionOptions = nanoBananaResolutionOptions;
 
 export const outputFormatOptions = [
   { value: 'png', label: 'PNG' },

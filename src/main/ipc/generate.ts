@@ -1,24 +1,23 @@
-import { ipcMain } from 'electron';
 import { readFileSync } from 'fs';
-import { join, extname } from 'path';
-import { getImagesDir } from '../services/paths';
+import { extname } from 'path';
+import { resolveLocalFileUrl } from '../services/paths';
+import { secureHandle } from './validateSender';
 
-// Google's Gemini 3 Pro Image via fal.ai — fal's current state-of-the-art
-// image generation/editing model. Pricing: $0.15/image at 1K/2K, $0.30 at 4K.
-// Edit endpoint accepts up to 14 reference images.
+// Google's Gemini 3 Pro Image via fal.ai. Pricing: $0.15/image at 1K/2K,
+// $0.30 at 4K. Edit endpoint accepts up to 14 reference images.
 const NANO_BANANA_PRO_MODEL = 'fal-ai/nano-banana-pro';
 const NANO_BANANA_PRO_EDIT_MODEL = 'fal-ai/nano-banana-pro/edit';
 
-// Fallback: Google's Gemini 3.1 Flash Image (Nano Banana 2) via fal.ai.
-// Cheaper ($0.08/image at 1K), faster, and — critically — has different
-// deploy-time safety filter tuning than Pro. When Pro refuses (via hard
-// 422 or soft refusal returning the input image), routing the retry
-// through Nano Banana 2 often clears it. Supports a `thinking_level`
-// param for improved multi-image reasoning.
-const NANO_BANANA_2_MODEL = 'fal-ai/nano-banana-2';
-const NANO_BANANA_2_EDIT_MODEL = 'fal-ai/nano-banana-2/edit';
+// OpenAI GPT Image 2 via fal.ai. Top-tier text rendering and photoreal.
+// Pricing is token-based — practically $0.01/image at low/1024x768 up to
+// $0.41/image at high/4K. Edit endpoint runs the same underlying model.
+// Both endpoints are namespaced under `openai/...` per fal's official
+// launch announcement (April 21, 2026).
+// https://fal.ai/models/openai/gpt-image-2
+const GPT_IMAGE_2_MODEL = 'openai/gpt-image-2';
+const GPT_IMAGE_2_EDIT_MODEL = 'openai/gpt-image-2/edit';
 
-export type ModelVariant = 'pro' | 'flash';
+export type ModelVariant = 'nano_banana_pro' | 'gpt_image_2';
 
 interface GenerateImageData {
   prompt: string;
@@ -26,11 +25,7 @@ interface GenerateImageData {
   resolution: string;
   outputFormat: string;
   imageUrls: string[];
-  /**
-   * Which fal endpoint to route through. 'pro' = Nano Banana Pro (default,
-   * highest quality), 'flash' = Nano Banana 2 (cheaper, faster, different
-   * safety tuning — use as a retry when Pro refuses).
-   */
+  /** Which fal model to route through. Picked from the Settings modal. */
   modelVariant?: ModelVariant;
 }
 
@@ -50,10 +45,10 @@ function resolveImageUrl(url: string): string {
   if (url.startsWith('data:') || url.startsWith('http')) return url;
 
   if (url.startsWith('local-file://')) {
-    const pathname = decodeURIComponent(new URL(url).pathname);
-    const filePath = join(getImagesDir(), pathname);
+    const filePath = resolveLocalFileUrl(url);
+    if (!filePath) return url;
     const buffer = readFileSync(filePath);
-    const ext = extname(pathname).toLowerCase();
+    const ext = extname(filePath).toLowerCase();
     const mime = MIME_TYPES[ext] || 'image/png';
     return `data:${mime};base64,${buffer.toString('base64')}`;
   }
@@ -126,14 +121,89 @@ function isAuthFailure(status: number | undefined, message: string): boolean {
 }
 
 function selectModel(variant: ModelVariant, hasReferenceImages: boolean): string {
-  if (variant === 'flash') {
-    return hasReferenceImages ? NANO_BANANA_2_EDIT_MODEL : NANO_BANANA_2_MODEL;
+  if (variant === 'gpt_image_2') {
+    return hasReferenceImages ? GPT_IMAGE_2_EDIT_MODEL : GPT_IMAGE_2_MODEL;
   }
   return hasReferenceImages ? NANO_BANANA_PRO_EDIT_MODEL : NANO_BANANA_PRO_MODEL;
 }
 
+/**
+ * Map our app-level aspect ratio strings to GPT Image 2's `image_size`
+ * presets. GPT only ships these enum values via fal — anything else
+ * falls back to `auto` (model infers output dimensions). We do not
+ * fabricate custom {width, height} values; the user asked for the docs'
+ * options as-is.
+ *   https://fal.ai/models/openai/gpt-image-2/api
+ */
+function mapAspectToGptImageSize(aspectRatio: string): string {
+  switch (aspectRatio) {
+    case '1:1':
+      return 'square_hd';
+    case '4:3':
+      return 'landscape_4_3';
+    case '3:4':
+      return 'portrait_4_3';
+    case '16:9':
+      return 'landscape_16_9';
+    case '9:16':
+      return 'portrait_16_9';
+    case 'auto':
+      return 'auto';
+    default:
+      return 'auto';
+  }
+}
+
+/**
+ * GPT Image 2 has only two quality tiers (`low` / `high`) instead of the
+ * 1K/2K/4K resolution ladder Nano Banana exposes. 1K → low (cheap), 2K
+ * and 4K → high (default).
+ */
+function mapResolutionToGptQuality(resolution: string): 'low' | 'high' {
+  return resolution === 'low' || resolution === '1K' ? 'low' : 'high';
+}
+
+function buildNanoBananaInput(
+  data: GenerateImageData,
+  resolvedUrls: string[],
+): Record<string, unknown> {
+  const input: Record<string, unknown> = {
+    prompt: data.prompt,
+    aspect_ratio: data.aspectRatio || '1:1',
+    resolution: data.resolution || '1K',
+    output_format: data.outputFormat || 'png',
+    num_images: 1,
+    // Most-permissive Layer-1 safety setting (fal scale: 1 strictest,
+    // 6 least strict, default 4). Doesn't bypass Google's Layer-2 policy
+    // filter — most refusals originate there — but eliminates false-
+    // positive Layer-1 blocks that otherwise steal ~5-10% of generations.
+    safety_tolerance: '6',
+  };
+  if (resolvedUrls.length > 0) {
+    input.image_urls = resolvedUrls;
+  }
+  return input;
+}
+
+function buildGptImage2Input(
+  data: GenerateImageData,
+  resolvedUrls: string[],
+): Record<string, unknown> {
+  const input: Record<string, unknown> = {
+    prompt: data.prompt,
+    image_size: mapAspectToGptImageSize(data.aspectRatio),
+    quality: mapResolutionToGptQuality(data.resolution),
+    output_format: data.outputFormat || 'png',
+    num_images: 1,
+  };
+  if (resolvedUrls.length > 0) {
+    input.image_urls = resolvedUrls;
+  }
+  return input;
+}
+
 export function registerGenerateHandlers(): void {
-  ipcMain.handle('generate:image', async (_event, data: GenerateImageData) => {
+  secureHandle('generate:image', async (_event, data: GenerateImageData) => {
     // Surface a friendly error up-front rather than letting the SDK throw a
     // cryptic `Unauthorized` from fal's servers. Every caller (Image page,
     // Create Ads, future pages) goes through this handler, so fixing it here
@@ -149,32 +219,14 @@ export function registerGenerateHandlers(): void {
       .filter((u) => u.startsWith('data:') || u.startsWith('http'));
 
     const hasReferenceImages = resolvedUrls.length > 0;
-    const variant: ModelVariant = data.modelVariant === 'flash' ? 'flash' : 'pro';
+    const variant: ModelVariant =
+      data.modelVariant === 'gpt_image_2' ? 'gpt_image_2' : 'nano_banana_pro';
     const model = selectModel(variant, hasReferenceImages);
 
-    const input: Record<string, unknown> = {
-      prompt: data.prompt,
-      aspect_ratio: data.aspectRatio || '1:1',
-      resolution: data.resolution || '1K',
-      output_format: data.outputFormat || 'png',
-      num_images: 1,
-      // Most-permissive Layer-1 safety setting (fal scale: 1 strictest,
-      // 6 least strict, default 4). Doesn't bypass Google's Layer-2
-      // policy filter — which is where most of our refusals originate —
-      // but eliminates false-positive Layer-1 blocks that otherwise
-      // steal ~5-10% of generations.
-      safety_tolerance: '6',
-    };
-
-    // Nano Banana 2's `thinking_level: 'high'` improves multi-image
-    // reasoning on complex edits. Not available on Pro.
-    if (variant === 'flash') {
-      input.thinking_level = 'high';
-    }
-
-    if (hasReferenceImages) {
-      input.image_urls = resolvedUrls;
-    }
+    const input =
+      variant === 'gpt_image_2'
+        ? buildGptImage2Input(data, resolvedUrls)
+        : buildNanoBananaInput(data, resolvedUrls);
 
     try {
       const result = await fal.subscribe(model, { input, logs: true });

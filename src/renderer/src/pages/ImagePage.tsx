@@ -11,6 +11,7 @@ import {
 import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useImages } from '@/hooks';
 import { useGenerationStore } from '@/stores/generationStore';
+import { useModelStore } from '@/stores/modelStore';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
@@ -18,9 +19,14 @@ interface ImagePageProps {
 }
 
 export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePageProps) {
-  const { pendingImageGenerations, addImageGeneration, removeImageGeneration } =
-    useGenerationStore();
+  // Split single-atom selectors so ImagePage only re-renders when one of
+  // these slices actually changes. Destructuring the whole store returns a
+  // fresh object on every store update and triggers spurious renders.
+  const pendingImageGenerations = useGenerationStore((s) => s.pendingImageGenerations);
+  const addImageGeneration = useGenerationStore((s) => s.addImageGeneration);
+  const removeImageGeneration = useGenerationStore((s) => s.removeImageGeneration);
   const pendingCount = pendingImageGenerations.length;
+  const selectedModel = useModelStore((s) => s.selectedModel);
 
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
@@ -113,7 +119,6 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
   const handleGenerate = (data: {
     prompt: string;
-    model: string;
     count: number;
     aspectRatio: string;
     resolution: string;
@@ -132,6 +137,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
       for (let i = 0; i < data.count; i++) {
         const generationId = generationIds[i];
+        if (!generationId) continue;
         try {
           const result = await window.api.generate.image({
             prompt: data.prompt,
@@ -139,6 +145,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
             resolution: data.resolution,
             outputFormat: data.outputFormat,
             imageUrls: data.referenceImages,
+            modelVariant: selectedModel,
           });
 
           if (!result.success || !result.resultUrls?.length) {

@@ -93,7 +93,7 @@ function CampaignCard({ campaign, onToggleStatus, onBudgetSave }: CampaignCardPr
 
   return (
     <div
-      className={`rounded-xl border border-[var(--base-color-brand--umber)]/30 border-l-4 bg-[var(--base-color-brand--champagne)] p-5 ${health.accent}`}
+      className={`rounded-xl border border-l-4 border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-5 ${health.accent}`}
     >
       {/* Top row */}
       <div className="flex flex-wrap items-start justify-between gap-3">

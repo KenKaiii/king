@@ -7,6 +7,8 @@ import {
   buildClonePrompt,
 } from '@/lib/constants/clone';
 import { detectSoftRefusal } from '@/lib/imageHash';
+import { useModelStore } from '@/stores/modelStore';
+import { useImagesStore } from '@/stores/imagesStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type CloneStepId = 'source' | 'character' | 'tweaks' | 'format' | 'results';
@@ -81,7 +83,7 @@ const INITIAL_STATE = {
   lastGenerationInputs: null as CloneStore['lastGenerationInputs'],
 };
 
-export const useCloneStore = create<CloneStore>((set, get) => ({
+export const useCloneStore = create<CloneStore>()((set, get) => ({
   ...INITIAL_STATE,
 
   setStep: (step) => set({ step }),
@@ -185,10 +187,8 @@ async function generateSingleSlot(
     }));
   };
 
-  // Run one attempt against a specific model variant. Returns the output
-  // URL on success, or null if fal returned no image. Throws on network
-  // / API error (caller handles).
-  const callFal = async (modelVariant: 'pro' | 'flash'): Promise<string | null> => {
+  try {
+    const modelVariant = useModelStore.getState().selectedModel;
     const result = await window.api.generate.image({
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
@@ -197,53 +197,25 @@ async function generateSingleSlot(
       imageUrls: inputs.imageUrls,
       modelVariant,
     });
-    if (!result.success || !result.resultUrls?.length) return null;
-    return result.resultUrls[0];
-  };
 
-  try {
-    // First attempt on Nano Banana Pro (the quality tier).
-    let outputUrl = await callFal('pro');
-    let variantUsed: 'pro' | 'flash' = 'pro';
-
-    // If fal returned no image, or Gemini soft-refused by echoing one of
-    // our input images, auto-retry once on Nano Banana 2 (different
-    // deploy-time safety tuning, partial overlap — often succeeds where
-    // Pro didn't). Covers both failure modes the user's hitting.
-    const isSoftRefusal =
-      outputUrl !== null && (await detectSoftRefusal(outputUrl, inputs.imageUrls)).isSoftRefusal;
-
-    if (outputUrl === null || isSoftRefusal) {
-      try {
-        const retryUrl = await callFal('flash');
-        if (retryUrl) {
-          // Don't blindly trust the retry either — check again.
-          const retryCheck = await detectSoftRefusal(retryUrl, inputs.imageUrls);
-          if (!retryCheck.isSoftRefusal) {
-            outputUrl = retryUrl;
-            variantUsed = 'flash';
-          }
-        }
-      } catch {
-        // Retry itself errored — fall through to the soft-refusal / null
-        // handling below so the user sees the best available message.
-      }
-    }
+    const outputUrl = result.success ? (result.resultUrls?.[0] ?? null) : null;
 
     if (outputUrl === null) {
       updateSlot({ status: 'error', error: "Couldn't generate this one." });
       return;
     }
 
-    // Final soft-refusal check on whatever we ended up with — if both
-    // Pro and Flash echoed an input back at us, surface that clearly so
-    // the user knows retrying on the same inputs won't help.
-    const finalCheck = await detectSoftRefusal(outputUrl, inputs.imageUrls);
-    if (finalCheck.isSoftRefusal) {
+    // Soft-refusal check — Gemini sometimes echoes back one of the input
+    // images instead of generating a new one. Surface that clearly so the
+    // user knows retrying on the same inputs won't help. (GPT Image 2
+    // doesn't exhibit this failure mode the same way, but the check is
+    // cheap and harmless either way.)
+    const refusalCheck = await detectSoftRefusal(outputUrl, inputs.imageUrls);
+    if (refusalCheck.isSoftRefusal) {
       updateSlot({
         status: 'error',
         error:
-          'Google returned your reference image instead of the edit (a soft refusal). Try a different scene or character reference.',
+          'The model returned your reference image instead of the edit (a soft refusal). Try a different scene or character reference.',
       });
       return;
     }
@@ -254,12 +226,11 @@ async function generateSingleSlot(
       aspectRatio: inputs.aspectRatio,
     });
 
+    // Push into the global gallery store so the Image page picks it up
+    // immediately, even though the user is currently on the Clone page.
+    useImagesStore.getState().addImage(saved);
+
     updateSlot({ status: 'success', image: saved });
-    if (variantUsed === 'flash') {
-      // Light breadcrumb so we can tell from the main log when the
-      // fallback rescued a generation.
-      console.log('[clone] slot', slotId, 'rescued by nano-banana-2');
-    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Couldn't generate this one.";
     updateSlot({ status: 'error', error: message });

@@ -1,10 +1,11 @@
-import { ipcMain, dialog, BrowserWindow, app } from 'electron';
+import { dialog, BrowserWindow, app } from 'electron';
 import { writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { getImagesDir } from '../services/paths';
+import { resolveLocalFileUrl } from '../services/paths';
+import { secureHandle } from './validateSender';
 
 export function registerFileHandlers(): void {
-  ipcMain.handle('files:download', async (_event, url: string, filename: string) => {
+  secureHandle('files:download', async (_event, url: string, filename: string) => {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false };
 
@@ -18,8 +19,10 @@ export function registerFileHandlers(): void {
     let buffer: Buffer;
 
     if (url.startsWith('local-file://')) {
-      const pathname = decodeURIComponent(new URL(url).pathname);
-      const localPath = join(getImagesDir(), pathname);
+      const localPath = resolveLocalFileUrl(url);
+      if (!localPath) {
+        throw new Error('Invalid local file path');
+      }
       buffer = readFileSync(localPath);
     } else {
       const response = await fetch(url);

@@ -45,11 +45,20 @@ function persistCache(): void {
 }
 
 export function markImageLoaded(url: string): void {
+  // `local-file://` URLs resolve to the user's own disk via our custom
+  // protocol — they load synchronously for all intents and purposes, so
+  // there is nothing to remember. Skipping the add keeps the cache (and
+  // its 500-entry window) reserved for remote URLs that actually benefit
+  // from skeleton suppression on revisit.
+  if (url.startsWith('local-file://')) return;
   getCache().add(url);
   persistCache();
 }
 
 export function isImageLoaded(url: string): boolean {
+  // Treat local-file:// as always-loaded so the grid skips its skeleton
+  // fade-in on revisit. See `markImageLoaded` for the companion branch.
+  if (url.startsWith('local-file://')) return true;
   return getCache().has(url);
 }
 

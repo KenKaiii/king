@@ -6,6 +6,7 @@ import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useEntityManagement } from '@/hooks/useEntityManagement';
 import type { UploadedImage, EntityType } from '@/hooks/useEntityManagement';
 import type { EntityData } from '@/types/electron';
+import type { PageType } from '@/App';
 import { SparkleIcon } from '@/components/icons';
 
 interface EntityManagementPageProps {
@@ -15,7 +16,7 @@ interface EntityManagementPageProps {
   createLabel: string;
   deleteTitle: string;
   deleteMessage: string;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: PageType) => void;
 }
 
 export default function EntityManagementPage({

@@ -1,18 +1,18 @@
-import { ipcMain } from 'electron';
 import { getAllApiKeys, setApiKey, deleteApiKey } from '../services/apiKeyStore';
+import { secureHandle } from './validateSender';
 
 export function registerApiKeyHandlers(): void {
-  ipcMain.handle('apiKeys:list', async () => {
+  secureHandle('apiKeys:list', async () => {
     return getAllApiKeys();
   });
 
-  ipcMain.handle('apiKeys:set', async (_event, service: string, key: string) => {
-    setApiKey(service, key);
+  secureHandle('apiKeys:set', async (_event, service: string, key: string) => {
+    await setApiKey(service, key);
     return { success: true };
   });
 
-  ipcMain.handle('apiKeys:delete', async (_event, service: string) => {
-    deleteApiKey(service);
+  secureHandle('apiKeys:delete', async (_event, service: string) => {
+    await deleteApiKey(service);
     return { success: true };
   });
 }

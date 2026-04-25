@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, forwardRef } from 'react';
-import type { GridComponents, GridItemContent, ListRange } from 'react-virtuoso';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import type { GridComponents, GridItemContent } from 'react-virtuoso';
 import { VirtuosoGrid } from 'react-virtuoso';
 import type { GeneratedImage } from './types';
 
@@ -252,8 +252,15 @@ const GridImageItem = memo(function GridImageItem({
   );
 });
 
-const GridList = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ style, children, ...props }, ref) => (
+// React 19 accepts `ref` as a regular prop — no more `forwardRef` boilerplate.
+// Virtuoso's List/Item component types (`React.ComponentType<...>`) accept
+// this shape directly.
+type RefProps = React.HTMLAttributes<HTMLDivElement> & {
+  ref?: React.Ref<HTMLDivElement>;
+};
+
+function GridList({ ref, style, children, ...props }: RefProps) {
+  return (
     <div
       ref={ref}
       {...props}
@@ -266,18 +273,16 @@ const GridList = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>
     >
       {children}
     </div>
-  ),
-);
-GridList.displayName = 'GridList';
+  );
+}
 
-const GridItem = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ children, ...props }, ref) => (
+function GridItem({ ref, children, ...props }: RefProps) {
+  return (
     <div ref={ref} {...props} style={{ aspectRatio: '1/1' }}>
       {children}
     </div>
-  ),
-);
-GridItem.displayName = 'GridItem';
+  );
+}
 
 const GridFooter = () => <div style={{ height: '12rem' }} />;
 
@@ -314,19 +319,15 @@ export default function VirtualizedImageGrid({
   isLoadingMore,
   pendingCount = 0,
 }: VirtualizedImageGridProps) {
-  const rangeRef = useRef<ListRange>({ startIndex: 0, endIndex: 0 });
-
   const isSelected = useCallback((id: string) => selectedImages.has(id), [selectedImages]);
 
-  const handleRangeChanged = useCallback(
-    (range: ListRange) => {
-      rangeRef.current = range;
-      if (hasMore && !isLoadingMore && range.endIndex >= images.length - 6) {
-        onLoadMore?.();
-      }
-    },
-    [hasMore, isLoadingMore, images.length, onLoadMore],
-  );
+  // Virtuoso's built-in endReached handles the trigger calc internally against
+  // the `data` array it actually renders (here `combinedData`). Using
+  // `rangeChanged` with `images.length` under-triggered by `pendingCount`
+  // while generations were in flight.
+  const handleEndReached = useCallback(() => {
+    if (hasMore && !isLoadingMore) onLoadMore?.();
+  }, [hasMore, isLoadingMore, onLoadMore]);
 
   type GridItemType = GeneratedImage & { isPending?: boolean };
   const combinedData = useMemo((): GridItemType[] => {
@@ -378,7 +379,7 @@ export default function VirtualizedImageGrid({
           components={gridComponents}
           itemContent={combinedItemContent}
           computeItemKey={computeItemKey}
-          rangeChanged={handleRangeChanged}
+          endReached={handleEndReached}
           overscan={200}
         />
       </div>
