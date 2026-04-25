@@ -13,6 +13,73 @@ body {
   font-family: var(--text-color--font-family--body);
 }
 
+/* ----- Themed scrollbars -----
+   Warm cocoa thumb on shell/champagne track, matching the brand palette.
+   Explicit widths force *classic* (gutter-reserving) scrollbars on macOS
+   instead of overlay ones, so they never sit on top of UI content.
+   Opt out per-element with the `.hide-scrollbar` utility. */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--base-color-brand--umber) var(--base-color-brand--champagne);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background-color: var(--base-color-brand--champagne);
+}
+
+*::-webkit-scrollbar-track {
+  background-color: var(--base-color-brand--champagne);
+  border-left: 1px solid color-mix(in srgb, var(--base-color-brand--umber) 18%, transparent);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--base-color-brand--umber) 60%, transparent);
+  border: 3px solid var(--base-color-brand--champagne);
+  border-radius: 100vw;
+  background-clip: padding-box;
+  min-height: 40px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--base-color-brand--umber);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--base-color-brand--bean);
+}
+
+*::-webkit-scrollbar-corner {
+  background-color: var(--base-color-brand--champagne);
+}
+
+/* When a scrollable region sits on a darker bean surface, opt into a
+   matching track via this class. */
+.scrollbar-on-dark {
+  scrollbar-color: color-mix(in srgb, var(--base-color-brand--shell) 35%, transparent)
+    var(--base-color-brand--bean);
+}
+
+.scrollbar-on-dark::-webkit-scrollbar,
+.scrollbar-on-dark::-webkit-scrollbar-track,
+.scrollbar-on-dark::-webkit-scrollbar-corner {
+  background-color: var(--base-color-brand--bean);
+}
+
+.scrollbar-on-dark::-webkit-scrollbar-track {
+  border-left-color: color-mix(in srgb, var(--base-color-brand--shell) 18%, transparent);
+}
+
+.scrollbar-on-dark::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--base-color-brand--shell) 35%, transparent);
+  border-color: var(--base-color-brand--bean);
+}
+
+.scrollbar-on-dark::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--base-color-brand--shell) 60%, transparent);
+}
+
 /* Pointer cursor for all clickable elements */
 button,
 a,
