@@ -217,7 +217,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Amazon Packshot',
     description: 'Clean white background product shot',
     image: amazonPackshot,
-    prompt: `Ultra-realistic studio photograph of the product on a pure white seamless background, centered, fills ~85–90% of frame, 85mm prime look, f/8 sharpness, ISO 100, softbox high-key lighting, gentle contact shadow under product, natural colors, no props, no text, no logos, no watermark.`,
+    prompt: `Ultra-realistic studio photograph of the product on a pure white seamless background, centered, fills ~85–90% of frame, 85mm prime look, f/8 sharpness, ISO 100, softbox high-key lighting, gentle contact shadow under product, natural colors, no added props.`,
   },
   {
     id: 'footwear-packshot',
@@ -238,7 +238,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Beauty Bottle',
     description: 'Pump/dropper bottle studio shot',
     image: beautyBottle,
-    prompt: `Studio packshot of the product on white seamless, large diffused softbox overhead + front fill, controlled specular highlights, readable label, no glare, natural color, centered, fills ~85–90%, no text overlay or props.`,
+    prompt: `Studio packshot of the product on white seamless, large diffused softbox overhead + front fill, controlled specular highlights, readable label, no glare, natural color, centered, fills ~85–90%, no added props.`,
   },
   {
     id: 'skincare-jar',
@@ -289,7 +289,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Headphones Desk',
     description: 'Minimalist desk lifestyle shot',
     image: headphonesDesk,
-    prompt: `Realistic lifestyle image: the product resting on a minimalist desk setup with soft window light, neutral palette, shallow depth, gentle natural shadow, no brand logos beyond the product, clean composition.`,
+    prompt: `Realistic lifestyle image: the product resting on a minimalist desk setup with soft window light, neutral palette, shallow depth, gentle natural shadow, clean composition.`,
   },
   {
     id: 'shoe-pavement',
@@ -839,21 +839,21 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Instagram Feed 1:1',
     description: 'Clean 1:1 feed post with negative space for a caption sticker',
     image: igFeedSquare,
-    prompt: `Ultra-realistic 1:1 square Instagram feed product photograph of the product placed slightly off-center on a soft pastel paper backdrop, shot at 50mm f/4, soft window light from upper left, gentle contact shadow, warm minimal color palette, generous negative space in the top-right for a caption sticker overlay, color-accurate label, no text, no watermark, no logos beyond the product, 2026 social media feed aesthetic, shot ratio 1:1.`,
+    prompt: `Ultra-realistic 1:1 square Instagram feed product photograph of the product placed slightly off-center on a soft pastel paper backdrop, shot at 50mm f/4, soft window light from upper left, gentle contact shadow, warm minimal color palette, generous negative space in the top-right for a caption sticker overlay, color-accurate label, 2026 social media feed aesthetic, shot ratio 1:1.`,
   },
   {
     id: 'ig-story-vertical',
     title: 'Instagram Story 9:16',
     description: 'Full-bleed 9:16 story shot with top and bottom safe zones',
     image: igStoryVertical,
-    prompt: `Ultra-realistic 9:16 vertical Instagram Story photograph of the product centered in the middle third of the frame, tall pastel gradient backdrop, soft directional window light, subtle motion-blur hand reaching in from the right, generous empty space at top (for profile/sticker safe zone) and bottom (for reply bar safe zone), shallow depth of field at f/2.8, 2026 Gen Z story aesthetic, color-accurate product label, no on-image text, shot ratio 9:16.`,
+    prompt: `Ultra-realistic 9:16 vertical Instagram Story photograph of the product centered in the middle third of the frame, tall pastel gradient backdrop, soft directional window light, subtle motion-blur hand reaching in from the right, generous empty space at top (for profile/sticker safe zone) and bottom (for reply bar safe zone), shallow depth of field at f/2.8, 2026 Gen Z story aesthetic, color-accurate product label, shot ratio 9:16.`,
   },
   {
     id: 'ig-carousel-hook',
     title: 'Carousel Slide 1 Hook',
     description: 'Bold opening slide of a carousel with strong focal product',
     image: igCarouselHook,
-    prompt: `Hyper-realistic Instagram carousel opening slide of the product shot straight-on against a bold saturated color block background (choose a single vivid hue), dramatic single-source softbox from 45° upper-left, high-contrast shadow anchoring the product, crisp product edges, large clean area at top for a punchy two-word hook overlay, modern editorial feel, shot ratio 4:5, 8K resolution, no text rendered in image.`,
+    prompt: `Hyper-realistic Instagram carousel opening slide of the product shot straight-on against a bold saturated color block background (choose a single vivid hue), dramatic single-source softbox from 45° upper-left, high-contrast shadow anchoring the product, crisp product edges, large clean area at top for a punchy two-word hook overlay, modern editorial feel, shot ratio 4:5, 8K resolution.`,
   },
   {
     id: 'tiktok-vertical-hook',
@@ -867,7 +867,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Meta Ad + CTA Space',
     description: '1.91:1 landscape ad with clean right-side negative space',
     image: fbMetaAdCta,
-    prompt: `Ultra-realistic 1.91:1 landscape Meta/Facebook ad composition of the product placed in the left third of the frame on a clean warm-neutral surface, soft diffused studio light from upper-left, tidy prop cluster nearby, large clean negative space filling the right two-thirds for a headline and CTA button overlay, color-true product label, shot at 50mm f/5.6, crisp commercial advertising style, shot ratio 1.91:1, no rendered text.`,
+    prompt: `Ultra-realistic 1.91:1 landscape Meta/Facebook ad composition of the product placed in the left third of the frame on a clean warm-neutral surface, soft diffused studio light from upper-left, tidy prop cluster nearby, large clean negative space filling the right two-thirds for a headline and CTA button overlay, color-true product label, shot at 50mm f/5.6, crisp commercial advertising style, shot ratio 1.91:1.`,
   },
   {
     id: 'pinterest-vertical-pin',
@@ -888,7 +888,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'UGC iPhone Look',
     description: 'Authentic UGC-style handheld iPhone product shot',
     image: ugcIphoneLook,
-    prompt: `Authentic UGC-style iPhone photograph of a hand holding the product close to the camera in a sunlit kitchen, slight sensor noise, mild JPEG crunch, warm on-camera phone color, imperfect composition with a tiny bit of motion blur, overexposed window behind, real-life counter clutter blurred out of focus, completely un-retouched amateur feel, shot ratio 4:5, 2026 influencer-grade UGC aesthetic, no filters, no text.`,
+    prompt: `Authentic UGC-style iPhone photograph of a hand holding the product close to the camera in a sunlit kitchen, slight sensor noise, mild JPEG crunch, warm on-camera phone color, imperfect composition with a tiny bit of motion blur, overexposed window behind, real-life counter clutter blurred out of focus, completely un-retouched amateur feel, shot ratio 4:5, 2026 influencer-grade UGC aesthetic, no filters.`,
   },
   {
     id: 'daily-5-flatlay',
@@ -902,14 +902,14 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Hero Banner 16:9',
     description: 'Wide 16:9 hero banner with left-side product',
     image: heroBannerLandscape,
-    prompt: `Photorealistic 16:9 landscape hero banner of the product positioned in the left third on a soft tonal set (warm sand surface, blurred architectural backdrop), cinematic diffused side light, long gentle shadow trailing right, expansive clean negative space on the right two-thirds for headline and CTA, modern DTC site banner style, shot at 50mm f/4, shot ratio 16:9, 8K resolution, no rendered text.`,
+    prompt: `Photorealistic 16:9 landscape hero banner of the product positioned in the left third on a soft tonal set (warm sand surface, blurred architectural backdrop), cinematic diffused side light, long gentle shadow trailing right, expansive clean negative space on the right two-thirds for headline and CTA, modern DTC site banner style, shot at 50mm f/4, shot ratio 16:9, 8K resolution.`,
   },
   {
     id: 'before-after-vertical-ad',
     title: 'Before/After Ad 9:16',
     description: '9:16 vertical split for paid before/after creative',
     image: beforeAfterVerticalAd,
-    prompt: `Ultra-realistic 9:16 vertical split-screen ad of the product — top half labeled visually with a dull desaturated “before” scene (muted tones, tired lighting), bottom half a vibrant color-graded “after” scene with the product hero-lit. Clean horizontal divider at the middle, matched perspective in both halves, color-accurate product, polished paid-social creative look, shot ratio 9:16, 8K resolution, no rendered text.`,
+    prompt: `Ultra-realistic 9:16 vertical split-screen ad of the product — top half labeled visually with a dull desaturated “before” scene (muted tones, tired lighting), bottom half a vibrant color-graded “after” scene with the product hero-lit. Clean horizontal divider at the middle, matched perspective in both halves, color-accurate product, polished paid-social creative look, shot ratio 9:16, 8K resolution.`,
   },
   {
     id: 'aspirational-hand-hold',
@@ -930,7 +930,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     title: 'Reel Cover Minimal',
     description: 'Minimalist 9:16 reel cover with centered product',
     image: reelCoverMinimal,
-    prompt: `Minimalist 9:16 vertical Instagram Reel cover of the product perfectly centered on a soft single-tone backdrop (warm cream), extremely clean composition, tiny hero product with large surrounding negative space, soft even studio light, subtle contact shadow, precise symmetry for a tap-worthy thumbnail, shot ratio 9:16, 8K resolution, no rendered text, 2026 editorial reel cover style.`,
+    prompt: `Minimalist 9:16 vertical Instagram Reel cover of the product perfectly centered on a soft single-tone backdrop (warm cream), extremely clean composition, tiny hero product with large surrounding negative space, soft even studio light, subtle contact shadow, precise symmetry for a tap-worthy thumbnail, shot ratio 9:16, 8K resolution, 2026 editorial reel cover style.`,
   },
 
   // Health / Wellness — supplements, vitamins, fitness
