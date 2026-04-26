@@ -88,7 +88,7 @@ vi.mock('@/assets/prompts/beauty-rose-petals-bath.jpg', () => ({ default: 'beaut
 vi.mock('@/assets/prompts/beauty-cotton-cloud.jpg', () => ({ default: 'beauty-cotton-cloud.jpg' }));
 vi.mock('@/assets/prompts/beauty-aloe-gel.jpg', () => ({ default: 'beauty-aloe-gel.jpg' }));
 
-import { prompts, type Prompt } from '@/lib/prompts';
+import { prompts, PRODUCT_FIDELITY_CLAUSE, type Prompt } from '@/lib/prompts';
 
 describe('prompts', () => {
   it('has a non-empty, de-duplicated set of prompt entries', () => {
@@ -138,6 +138,30 @@ describe('prompts', () => {
   it('no ID contains whitespace', () => {
     for (const p of prompts) {
       expect(p.id).not.toMatch(/\s/);
+    }
+  });
+});
+
+describe('product fidelity clause', () => {
+  // Every prompt is sent to a multimodal image model alongside a reference
+  // image of the user's actual product. The single biggest failure mode is
+  // the model rebranding the product (paraphrasing labels, swapping logos,
+  // shifting brand colors). The canonical fidelity clause is the project's
+  // single source of truth for preventing that — these tests guarantee it
+  // is appended uniformly and that no weaker, contradictory hints survive
+  // in the prompt body.
+  it('every prompt ends with the canonical fidelity clause', () => {
+    for (const p of prompts) {
+      expect(p.prompt.endsWith(PRODUCT_FIDELITY_CLAUSE.trim())).toBe(true);
+    }
+  });
+
+  it('no prompt body contains legacy fidelity phrases that would conflict with the canonical clause', () => {
+    for (const p of prompts) {
+      const body = p.prompt.slice(0, p.prompt.length - PRODUCT_FIDELITY_CLAUSE.length);
+      expect(body.toLowerCase()).not.toMatch(
+        /color-accurate label|color-true label|readable label|label sharp and readable/,
+      );
     }
   });
 });

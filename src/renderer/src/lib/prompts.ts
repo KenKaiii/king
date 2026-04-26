@@ -1595,10 +1595,87 @@ for (const [cat, ids] of Object.entries(categoryMap) as [PromptCategory, string[
   for (const id of ids) idToCategory[id] = cat;
 }
 
+/**
+ * Canonical product-fidelity clause appended to every prompt.
+ *
+ * Every prompt in this app is sent to a multimodal image model (Nano Banana Pro
+ * / GPT-image-2) together with one or more reference images of the user's
+ * actual product. The single biggest failure mode in product photo generation
+ * is the model rebranding the product — paraphrasing the label copy, swapping
+ * the logo, shifting brand colors, or inventing new on-pack text.
+ *
+ * Google's own Nano Banana docs explicitly recommend describing critical
+ * details (faces, logos) you want preserved, and high-signal community guides
+ * use the exact same pattern: name what to preserve, name what NOT to change.
+ * (Sources: ai.google.dev image-generation docs; Google Cloud / DeepMind
+ * prompting guides; awesome-nanobanana-pro; Atlabs and Imagine.art guides.)
+ *
+ * This clause is the single source of truth — individual prompts above must
+ * NOT add their own "color-accurate label" / "readable label" wording, because
+ * weaker, ad-hoc fidelity hints conflict with this stronger one and dilute
+ * adherence. `stripLegacyFidelityPhrases` below removes any that have crept
+ * in over time so the canonical clause always wins.
+ */
+export const PRODUCT_FIDELITY_CLAUSE =
+  ' PRODUCT FIDELITY (mandatory — overrides any conflicting detail above): Treat the uploaded reference image as the absolute source of truth for the product itself, whatever the product is. Reproduce its exact shape, silhouette, proportions, materials, surface finish, texture, and full colorway with 100% accuracy. Every visible marking on the product — including logos, brand marks, wordmarks, monograms, icons, graphics, illustrations, prints, patterns, and any text in any language, no matter how large or small or where it appears (label, tag, hem, sole, bezel, screen, packaging, etc.) — must be copied verbatim from the reference, preserving identical wording, spelling, letterforms, weight, color, scale, orientation, and position. Reproduce all functional and decorative details exactly as shown: stitching, seams, trims, hardware, closures, embroidery, embossing, debossing, etching, engraving, foiling, and any visible construction detail. Do not redesign, restyle, recolor, translate, paraphrase, regenerate, simplify, stylize, or invent any element of the product, and do not add, remove, move, or substitute any logo, graphic, or text. If a detail is unclear in the reference, stay faithful to what is shown rather than inventing a replacement. Only the surrounding scene, lighting, camera, and composition follow the creative direction above; the product itself stays pixel-faithful to the reference.';
+
+/**
+ * Phrases (longest-first) that earlier prompts used to half-heartedly nudge
+ * the model toward label fidelity. They are weaker than `PRODUCT_FIDELITY_CLAUSE`
+ * and, when left in place, end up contradicting or diluting it. We strip them
+ * before appending the canonical clause so every prompt speaks with one voice.
+ */
+const LEGACY_FIDELITY_PHRASES = [
+  'color-accurate label in sharp focus',
+  'color-accurate product label',
+  'front label sharp and readable',
+  'product label sharp and readable',
+  'product label sharp and centered',
+  'color-accurate finish detail',
+  'color-accurate product detail',
+  'color-accurate product label',
+  'product label readable',
+  'label sharp and readable',
+  'label sharp and centered',
+  'color-accurate product',
+  'color-accurate details',
+  'color-accurate label',
+  'color-true label',
+  'readable label',
+  'color-accurate',
+  'color-true',
+];
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripLegacyFidelityPhrases(text: string): string {
+  let out = text;
+  for (const phrase of LEGACY_FIDELITY_PHRASES) {
+    // Match the phrase plus an optional leading ", " and/or trailing ", " so we
+    // don't leave dangling commas or double spaces.
+    const re = new RegExp(`(\\s*,\\s*)?\\b${escapeRegExp(phrase)}\\b(\\s*,)?`, 'gi');
+    out = out.replace(re, (_match, lead: string | undefined, trail: string | undefined) => {
+      // If we removed both a leading and a trailing comma, leave a single one
+      // so the surrounding clauses don't collapse into each other.
+      if (lead && trail) return ',';
+      return '';
+    });
+  }
+  return out
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*\./g, '.')
+    .replace(/,\s*,/g, ',')
+    .trim();
+}
+
 export const prompts: Prompt[] = rawPrompts.map((p) => {
   const category = idToCategory[p.id];
   if (!category) {
     throw new Error(`Prompt "${p.id}" is missing a category assignment in categoryMap.`);
   }
-  return { ...p, category };
+  const cleaned = stripLegacyFidelityPhrases(p.prompt);
+  return { ...p, prompt: cleaned + PRODUCT_FIDELITY_CLAUSE, category };
 });
