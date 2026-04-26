@@ -41,9 +41,13 @@ jobs:
         if: matrix.os == 'macos-latest'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Skip code signing on CI (no certs configured).
-          # To enable: set CSC_LINK / CSC_KEY_PASSWORD secrets and remove these two lines.
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # Code signing (Developer ID Application cert, base64-encoded p12)
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Notarization (electron-builder calls notarytool natively when these are set)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npx electron-builder --mac --publish always
 
       - name: Build & publish (Windows)

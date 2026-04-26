@@ -53,3 +53,4 @@ scripts/generate-prompt-thumbnails.js
 .gg/eyes/remote.json
 .gg/eyes/_lib.sh
 .gg/eyes/_redact.sh
+.gg/secrets-prep/
