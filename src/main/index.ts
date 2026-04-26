@@ -148,10 +148,15 @@ function setContentSecurityPolicy(): void {
           [
             "default-src 'self'",
             `script-src ${scriptSrc}`,
-            // 'unsafe-inline' is only necessary in dev — Vite / React-Refresh
-            // inject runtime <style> tags. Production builds emit static
-            // stylesheets via <link> so we can lock this down.
-            `style-src 'self'${isDev ? " 'unsafe-inline'" : ''}`,
+            // `'unsafe-inline'` for styles is the standard Electron-app
+            // compromise: electron-vite's runtime CSS injector (`__insertCSS`)
+            // and most modern UI deps (Tailwind v4 vendor chunks, sonner,
+            // CSS-in-JS libraries) inject `<style>` tags at runtime. Hash- or
+            // nonce-based CSP isn't viable for static `file://` loads.
+            // `script-src` stays strict (`'self'` only in prod) — inline
+            // styles cannot exfiltrate data, but inline scripts can; that's
+            // where the real XSS surface lives and we keep it locked down.
+            `style-src 'self' 'unsafe-inline'`,
             // fal.media / fal.ai: image generation CDNs.
             // shopify CDNs / cdn.shopify.com: product images for Store page.
             // shopee + tiktokcdn: product images for marketplace pages.
