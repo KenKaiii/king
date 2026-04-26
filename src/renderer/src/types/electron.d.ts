@@ -17,6 +17,16 @@ export interface EntityData {
   productType?: string;
 }
 
+export interface CustomAdReferenceData {
+  id: string;
+  filename: string;
+  url: string;
+  aspectRatio: string;
+  width: number;
+  height: number;
+  createdAt: string;
+}
+
 export interface ApiKeyEntry {
   maskedKey: string;
   savedAt: string;
@@ -92,6 +102,16 @@ export interface ElectronAPI {
     list: () => Promise<Record<string, ApiKeyEntry>>;
     set: (service: string, key: string) => Promise<{ success: boolean }>;
     delete: (service: string) => Promise<{ success: boolean }>;
+  };
+  adReferences: {
+    list: () => Promise<CustomAdReferenceData[]>;
+    create: (data: {
+      file: { name: string; buffer: ArrayBuffer };
+      width: number;
+      height: number;
+      aspectRatio: string;
+    }) => Promise<CustomAdReferenceData>;
+    delete: (id: string) => Promise<{ success: boolean }>;
   };
   entities: {
     list: (entityType: string) => Promise<EntityData[]>;

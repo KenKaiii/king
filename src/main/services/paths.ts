@@ -29,6 +29,16 @@ export function getImagesJsonPath(): string {
   return join(getDataDir(), 'images.json');
 }
 
+export function getAdReferencesDir(): string {
+  const dir = join(getImagesDir(), 'ad-references');
+  ensureDir(dir);
+  return dir;
+}
+
+export function getAdReferencesJsonPath(): string {
+  return join(getDataDir(), 'ad-references.json');
+}
+
 export function getEntityImagesDir(entityType: string): string {
   const dir = join(getImagesDir(), 'entities', entityType);
   ensureDir(dir);

@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, SparkleIcon } from '@/components/icons';
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DeleteIcon,
+  PlusIcon,
+  SparkleIcon,
+} from '@/components/icons';
 import ImageDetailOverlay from '@/components/image/ImageDetailOverlay';
 import type { GeneratedImage } from '@/components/image/types';
 import Badge from '@/components/ui/Badge';
@@ -10,8 +17,25 @@ import {
   getThumbnail,
   type AdReference,
 } from '@/lib/adReferences';
+import { readImageDimensions } from '@/lib/aspectRatio';
 import { useCreateAdsStore, type ResultSlot, type StepId } from '@/stores/createAdsStore';
-import type { EntityData } from '@/types/electron';
+import type { CustomAdReferenceData, EntityData } from '@/types/electron';
+
+// Image MIME types we accept for custom ad-reference uploads. Matches the
+// formats Gemini's image input handles end-to-end (PNG, JPEG, WebP, HEIC,
+// HEIF) so a successful upload always survives the generation pipeline.
+const CUSTOM_AD_ACCEPT = 'image/png,image/jpeg,image/webp,image/heic,image/heif';
+const MAX_CUSTOM_AD_BYTES = 15 * 1024 * 1024;
+
+function customRefToAdReference(ref: CustomAdReferenceData): AdReference {
+  return {
+    id: `custom-${ref.id}`,
+    category: 'custom',
+    variants: [{ aspectRatio: ref.aspectRatio, imageUrl: ref.url }],
+    isCustom: true,
+    createdAt: ref.createdAt,
+  };
+}
 
 // Create Ads offers a curated set of ad-relevant aspect ratios. Plain
 // numeric labels ("1:1") confuse non-technical users, so each tile is
@@ -54,6 +78,7 @@ const WIZARD_STEPS: StepDefinition[] = [
 export default function CreateAdsPage() {
   const [products, setProducts] = useState<EntityData[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [customRefs, setCustomRefs] = useState<CustomAdReferenceData[]>([]);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
 
   // Wizard state lives in a Zustand store so it (and any in-flight fal
@@ -92,9 +117,91 @@ export default function CreateAdsPage() {
     };
   }, []);
 
+  // Load user-uploaded ad references on mount. They live in the same
+  // carousel as the bundled defaults, prepended newest-first so a fresh
+  // upload is the first thing the user sees.
+  //
+  // A failure here is non-fatal — the bundled defaults still render and
+  // the rest of the wizard works fine, so we log to the main-process log
+  // instead of toasting. (The classic case is an old main-process build
+  // running against newer renderer code during dev: the IPC channel
+  // doesn't exist yet, but the page is still usable.)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await window.api.adReferences.list();
+        if (!cancelled) setCustomRefs(list);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        void window.api.log.error('warn', `adReferences.list failed: ${message}`);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Merge custom refs (newest-first) with bundled defaults. Defaults keep
+  // their hand-curated order so the existing layout still feels intentional.
+  const allAds: AdReference[] = useMemo(() => {
+    const customSorted = [...customRefs]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map(customRefToAdReference);
+    return [...customSorted, ...AD_REFERENCES];
+  }, [customRefs]);
+
   const selectedAd: AdReference | undefined = useMemo(
-    () => AD_REFERENCES.find((a) => a.id === selectedAdId),
-    [selectedAdId],
+    () => allAds.find((a) => a.id === selectedAdId),
+    [allAds, selectedAdId],
+  );
+
+  const handleUploadCustomAd = useCallback(async (file: File) => {
+    if (file.size > MAX_CUSTOM_AD_BYTES) {
+      toast.error('That image is too large. Please pick one under 15 MB.');
+      return;
+    }
+    let dims: { width: number; height: number; aspectRatio: string };
+    try {
+      dims = await readImageDimensions(file);
+    } catch {
+      toast.error("Couldn't read that image. Try a different file.");
+      return;
+    }
+    try {
+      const buffer = await file.arrayBuffer();
+      const created = await window.api.adReferences.create({
+        file: { name: file.name, buffer },
+        width: dims.width,
+        height: dims.height,
+        aspectRatio: dims.aspectRatio,
+      });
+      setCustomRefs((prev) => [created, ...prev]);
+      toast.success('Reference added.');
+    } catch {
+      toast.error("Couldn't save that reference. Please try again.");
+    }
+  }, []);
+
+  const handleDeleteCustomAd = useCallback(
+    async (adRefId: string) => {
+      // Custom AdReference ids are prefixed with `custom-` so they can't
+      // collide with bundled defaults; the backend record id is the rest.
+      const backendId = adRefId.startsWith('custom-') ? adRefId.slice('custom-'.length) : adRefId;
+      try {
+        const result = await window.api.adReferences.delete(backendId);
+        if (!result.success) {
+          toast.error("Couldn't delete that reference. Please try again.");
+          return;
+        }
+        setCustomRefs((prev) => prev.filter((r) => r.id !== backendId));
+        if (selectedAdId === adRefId) setSelectedAdId(null);
+        toast.success('Reference removed.');
+      } catch {
+        toast.error("Couldn't delete that reference. Please try again.");
+      }
+    },
+    [selectedAdId, setSelectedAdId],
   );
   const selectedProduct: EntityData | undefined = useMemo(
     () => products.find((p) => p.id === selectedProductId),
@@ -236,7 +343,13 @@ export default function CreateAdsPage() {
             }`}
           >
             {step === 'ad' && (
-              <AdStyleStep selectedAdId={selectedAdId} onSelect={setSelectedAdId} />
+              <AdStyleStep
+                ads={allAds}
+                selectedAdId={selectedAdId}
+                onSelect={setSelectedAdId}
+                onUpload={handleUploadCustomAd}
+                onDeleteCustom={handleDeleteCustomAd}
+              />
             )}
             {step === 'product' && (
               <ProductStep
@@ -374,18 +487,20 @@ function WizardProgress({ currentStep }: { currentStep: StepId }) {
 // --- Step: Ad style -------------------------------------------------------
 
 function AdStyleStep({
+  ads,
   selectedAdId,
   onSelect,
+  onUpload,
+  onDeleteCustom,
 }: {
+  ads: AdReference[];
   selectedAdId: string | null;
   onSelect: (id: string) => void;
+  onUpload: (file: File) => void | Promise<void>;
+  onDeleteCustom: (id: string) => void | Promise<void>;
 }) {
-  // Soft fade on the left/right edges so cards appear to dissolve off-screen
-  // instead of getting clipped abruptly at the carousel boundary.
-  const fadeMask =
-    'linear-gradient(to right, transparent 0, black 48px, black calc(100% - 48px), transparent 100%)';
-
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll by roughly one card-and-a-bit per click so multiple presses walk
   // cleanly through the carousel.
@@ -395,44 +510,103 @@ function AdStyleStep({
     el.scrollBy({ left: direction * 320, behavior: 'smooth' });
   }, []);
 
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      // Reset value immediately so picking the same file twice in a row
+      // still fires `change`.
+      e.target.value = '';
+      if (file) void onUpload(file);
+    },
+    [onUpload],
+  );
+
   return (
     <div className="flex items-center gap-3">
       <CarouselScrollButton direction="left" onClick={() => scrollBy(-1)} />
-      <div
-        ref={scrollerRef}
-        className="hide-scrollbar min-w-0 flex-1 overflow-x-auto"
-        style={{ maskImage: fadeMask, WebkitMaskImage: fadeMask }}
-      >
+      <div ref={scrollerRef} className="hide-scrollbar min-w-0 flex-1 overflow-x-auto">
         <div className="flex gap-4 pb-2">
-          {AD_REFERENCES.map((ad) => {
+          {/* Upload tile — always first so the action is discoverable
+              regardless of how many ads are in the carousel. */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="group flex h-64 w-44 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--shell)] sm:h-72"
+          >
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)] transition-transform group-hover:scale-105">
+              <PlusIcon />
+            </span>
+            <span
+              className="text-sm font-bold tracking-tight"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Add reference
+            </span>
+            <span className="px-3 text-center text-[11px] text-[var(--base-color-brand--umber)]">
+              PNG, JPG, WebP, HEIC
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={CUSTOM_AD_ACCEPT}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {ads.map((ad) => {
             const active = selectedAdId === ad.id;
             const categoryLabel = AD_CATEGORY_LABELS[ad.category];
             return (
-              <button
+              <div
                 key={ad.id}
-                type="button"
-                onClick={() => onSelect(ad.id)}
-                title={categoryLabel}
                 className={`group relative h-64 shrink-0 overflow-hidden rounded-2xl border-2 bg-[var(--base-color-brand--shell)] transition-all sm:h-72 ${
                   active
                     ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
                     : 'border-transparent hover:border-[var(--base-color-brand--umber)]/40'
                 }`}
               >
-                <img
-                  src={getThumbnail(ad)}
-                  alt={categoryLabel}
-                  className="block h-full w-auto transition-transform group-hover:scale-[1.03]"
-                />
-                <div className="absolute top-2 left-2 z-20">
+                <button
+                  type="button"
+                  onClick={() => onSelect(ad.id)}
+                  title={categoryLabel}
+                  className="block h-full w-full cursor-pointer"
+                >
+                  <img
+                    src={getThumbnail(ad)}
+                    alt={categoryLabel}
+                    className="block h-full w-auto transition-transform group-hover:scale-[1.03]"
+                  />
+                </button>
+                <div className="pointer-events-none absolute top-2 left-2 z-20">
                   <Badge>{categoryLabel}</Badge>
                 </div>
                 {active && (
-                  <div className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]">
+                  <div className="pointer-events-none absolute top-2 right-2 z-20 grid h-7 w-7 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]">
                     <CheckIcon />
                   </div>
                 )}
-              </button>
+                {/* Delete affordance — custom refs only. Mirrors the Image
+                    page pattern: hover-revealed pill in the corner with a
+                    destructive hover state. Sits below the active checkmark
+                    so both can coexist when a custom ad is also selected. */}
+                {ad.isCustom && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void onDeleteCustom(ad.id);
+                    }}
+                    title="Delete reference"
+                    aria-label="Delete reference"
+                    className={`absolute z-30 grid h-8 w-8 place-items-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-[var(--base-color-brand--dark-red)] ${
+                      active ? 'top-11 right-2' : 'top-2 right-2'
+                    }`}
+                  >
+                    <DeleteIcon />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

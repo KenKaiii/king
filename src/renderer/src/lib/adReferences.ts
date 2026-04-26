@@ -35,12 +35,13 @@ import supp2 from '@/assets/ad-references/supp-2.jpg';
 import supp3 from '@/assets/ad-references/supp-3.jpg';
 import supp4 from '@/assets/ad-references/supp-4.jpg';
 
-export type AdCategory = 'beauty' | 'health' | 'supp';
+export type AdCategory = 'beauty' | 'health' | 'supp' | 'custom';
 
 export const AD_CATEGORY_LABELS: Record<AdCategory, string> = {
   beauty: 'Beauty',
   health: 'Health',
   supp: 'Supplements',
+  custom: 'Custom',
 };
 
 export interface AdVariant {
@@ -53,6 +54,10 @@ export interface AdReference {
   id: string;
   category: AdCategory;
   variants: AdVariant[];
+  /** True for user-uploaded refs (deletable, prepended in the carousel). */
+  isCustom?: boolean;
+  /** ISO timestamp — only set for custom refs, used to sort newest first. */
+  createdAt?: string;
 }
 
 /**

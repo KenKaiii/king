@@ -52,6 +52,16 @@ const api = {
       };
     },
   },
+  adReferences: {
+    list: () => ipcRenderer.invoke('adReferences:list'),
+    create: (data: {
+      file: { name: string; buffer: ArrayBuffer };
+      width: number;
+      height: number;
+      aspectRatio: string;
+    }) => ipcRenderer.invoke('adReferences:create', data),
+    delete: (id: string) => ipcRenderer.invoke('adReferences:delete', id),
+  },
   entities: {
     list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),
     create: (

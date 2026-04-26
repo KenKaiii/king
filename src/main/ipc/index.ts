@@ -4,6 +4,7 @@ import { registerImageHandlers } from './images';
 import { registerGenerateHandlers } from './generate';
 import { registerFileHandlers } from './files';
 import { registerEntityHandlers } from './entities';
+import { registerAdReferenceHandlers } from './adReferences';
 import { registerApiKeyHandlers } from './apiKeys';
 import { registerUpdaterHandlers } from './updater';
 import { secureHandle } from './validateSender';
@@ -45,6 +46,7 @@ export function registerIpcHandlers(): void {
   registerGenerateHandlers();
   registerFileHandlers();
   registerEntityHandlers();
+  registerAdReferenceHandlers();
   registerApiKeyHandlers();
   registerUpdaterHandlers();
 

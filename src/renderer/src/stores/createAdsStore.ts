@@ -147,13 +147,21 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
     // chosen output aspect ratio (falls back to the ad's default variant).
     const variant = pickVariant(ad, aspectRatio);
 
-    let adDataUrl: string;
-    try {
-      adDataUrl = await bundledAssetToDataUrl(variant.imageUrl);
-    } catch {
-      toast.error("Couldn't load the reference ad. Please try again.");
-      set({ isGenerating: false, results: [], step: 'format' });
-      return;
+    // Custom ad references are already saved on disk and exposed as
+    // `local-file://` URLs — the main process resolves those to a base64
+    // data URL inside `generate.image`. Bundled defaults are vite-served
+    // assets, so we still have to inline them as data URLs ourselves.
+    let adReferenceUrl: string;
+    if (variant.imageUrl.startsWith('local-file://') || variant.imageUrl.startsWith('http')) {
+      adReferenceUrl = variant.imageUrl;
+    } else {
+      try {
+        adReferenceUrl = await bundledAssetToDataUrl(variant.imageUrl);
+      } catch {
+        toast.error("Couldn't load the reference ad. Please try again.");
+        set({ isGenerating: false, results: [], step: 'format' });
+        return;
+      }
     }
 
     const productUrls = product.referenceImages.slice(0, MAX_PRODUCT_REFERENCES);
@@ -164,7 +172,7 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
     }
 
     const prompt = buildCreateAdsPrompt(productBrief, aspectRatio);
-    const imageUrls = [adDataUrl, ...productUrls];
+    const imageUrls = [adReferenceUrl, ...productUrls];
 
     // Cache inputs so individual slot retries don't rebuild them.
     set({ lastGenerationInputs: { prompt, imageUrls, aspectRatio } });
