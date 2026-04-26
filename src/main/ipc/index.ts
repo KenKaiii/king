@@ -6,6 +6,7 @@ import { registerFileHandlers } from './files';
 import { registerEntityHandlers } from './entities';
 import { registerAdReferenceHandlers } from './adReferences';
 import { registerApiKeyHandlers } from './apiKeys';
+import { registerFacebookAdsHandlers } from './facebookAds';
 import { registerUpdaterHandlers } from './updater';
 import { secureHandle } from './validateSender';
 
@@ -48,6 +49,7 @@ export function registerIpcHandlers(): void {
   registerEntityHandlers();
   registerAdReferenceHandlers();
   registerApiKeyHandlers();
+  registerFacebookAdsHandlers();
   registerUpdaterHandlers();
 
   // Renderer errors (from React 19 root-level callbacks) funnel here so they

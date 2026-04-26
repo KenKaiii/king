@@ -1,6 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { PlusIcon, MinusIcon } from '@/components/icons';
+import { PlusIcon, MinusIcon, SparkleIcon } from '@/components/icons';
+import SelectDropdown from '@/components/ui/SelectDropdown';
+import NewFacebookAdModal from '@/components/facebook/NewFacebookAdModal';
+import { useFacebookAccountStore } from '@/stores/facebookAccountStore';
+import type { FbAdAccount } from '@/types/electron';
 import {
   mockCampaigns,
   audienceInsights,
@@ -281,9 +285,52 @@ interface FacebookAdsPageProps {
 
 export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  // TODO: Re-enable API key check when real API is wired up
-  const [connected] = useState<boolean>(true);
+  // null = still probing on first paint; flips to true/false once IPC returns.
+  // We start in 'probing' rather than optimistically `true` because the page
+  // would otherwise show mock data + an empty account switcher to a user who
+  // never saved a token — actively misleading.
+  const [connected, setConnected] = useState<boolean | null>(null);
   const [lastSynced] = useState(() => new Date());
+  const [adAccounts, setAdAccounts] = useState<FbAdAccount[]>([]);
+  const [showNewAdModal, setShowNewAdModal] = useState(false);
+  const selectedAdAccountId = useFacebookAccountStore((s) => s.selectedAdAccountId);
+  const setSelectedAdAccountId = useFacebookAccountStore((s) => s.setSelectedAdAccountId);
+
+  // Probe connection state + load ad accounts.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const status = await window.api.facebookAds.status();
+        if (cancelled) return;
+        setConnected(status.connected);
+        if (status.connected) {
+          const accs = await window.api.facebookAds.listAdAccounts();
+          if (cancelled) return;
+          setAdAccounts(accs);
+          if (!selectedAdAccountId && accs[0]) {
+            setSelectedAdAccountId(status.defaultAdAccountId ?? accs[0].id);
+          }
+        }
+      } catch {
+        // Treat a failed status probe as disconnected — the user can't
+        // meaningfully drive the page without working IPC anyway.
+        if (!cancelled) setConnected(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedAdAccountId, setSelectedAdAccountId]);
+
+  const adAccountOptions = useMemo(
+    () =>
+      adAccounts.map((a) => ({
+        value: a.id,
+        label: `${a.name} · ${a.currency}`,
+      })),
+    [adAccounts],
+  );
 
   const handleToggleStatus = useCallback((id: string) => {
     setCampaigns((prev) =>
@@ -310,6 +357,19 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     toast.success('Data refreshed');
   };
 
+  // Probing — brief loading state so we don't flash either mock data or the
+  // disconnect prompt before the status call resolves.
+  if (connected === null) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-6">
+        <div className="flex items-center gap-2 text-sm text-[var(--base-color-brand--umber)]">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--base-color-brand--cinamon)]" />
+          Checking Facebook connection…
+        </div>
+      </main>
+    );
+  }
+
   // Disconnected
   if (!connected) {
     return (
@@ -319,10 +379,10 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
             Connect Facebook Ads
           </h2>
           <p className="text-sm text-[var(--base-color-brand--umber)]">
-            Add your Facebook API key to view campaign performance and manage ads.
+            Link your Facebook account to see your campaigns and launch new ads from here.
           </p>
           <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
-            Go to API Keys
+            Connect Facebook
           </button>
         </div>
       </main>
@@ -361,15 +421,32 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              {adAccountOptions.length > 0 && (
+                <SelectDropdown
+                  options={adAccountOptions}
+                  value={selectedAdAccountId ?? ''}
+                  onChange={setSelectedAdAccountId}
+                  size="sm"
+                  placeholder="Select account"
+                />
+              )}
               <span className="text-xs text-[var(--base-color-brand--umber)]">
                 Synced {lastSynced.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
               <button
                 onClick={handleRefresh}
                 className="grid h-8 w-8 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
-                title="Refresh data"
+                title="Refresh"
               >
                 <RefreshIcon />
+              </button>
+              <button
+                onClick={() => setShowNewAdModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                <SparkleIcon />
+                New Ad
               </button>
             </div>
           </div>
@@ -438,6 +515,14 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
           </div>
         </section>
       </div>
+      <NewFacebookAdModal
+        isOpen={showNewAdModal}
+        onClose={() => setShowNewAdModal(false)}
+        onCreated={() => {
+          setShowNewAdModal(false);
+          toast.success('Ad created on Facebook');
+        }}
+      />
     </main>
   );
 }

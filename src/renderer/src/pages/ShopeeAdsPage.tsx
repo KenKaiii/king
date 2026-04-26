@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { PlusIcon, MinusIcon } from '@/components/icons';
 import {
@@ -287,7 +287,23 @@ interface ShopeeAdsPageProps {
 
 export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [connected] = useState<boolean>(true);
+  const [connected, setConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const keys = await window.api.apiKeys.list();
+        if (!cancelled) setConnected(Boolean(keys.shopee));
+      } catch {
+        if (!cancelled) setConnected(false);
+      }
+    };
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [lastSynced] = useState(() => new Date());
 
   const handleToggleStatus = useCallback((id: string) => {
@@ -315,6 +331,10 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
     toast.success('Data refreshed');
   };
 
+  if (connected === null) {
+    return <main className="flex-1" />;
+  }
+
   if (!connected) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
@@ -323,10 +343,10 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
             Connect Shopee Ads
           </h2>
           <p className="text-sm text-[var(--base-color-brand--umber)]">
-            Add your Shopee API key to view campaign performance and manage ads.
+            Link your Shopee account to see your campaigns and manage them from here.
           </p>
           <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
-            Go to API Keys
+            Connect Shopee
           </button>
         </div>
       </main>
@@ -370,7 +390,7 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
               <button
                 onClick={handleRefresh}
                 className="grid h-8 w-8 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
-                title="Refresh data"
+                title="Refresh"
               >
                 <RefreshIcon />
               </button>

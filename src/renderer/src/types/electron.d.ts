@@ -32,6 +32,102 @@ export interface ApiKeyEntry {
   savedAt: string;
 }
 
+export interface FbBusinessRef {
+  id: string;
+  name: string;
+}
+
+export interface FbAdAccount {
+  id: string;
+  name: string;
+  currency: string;
+  account_status: number;
+  business?: FbBusinessRef;
+}
+
+export interface FbPage {
+  id: string;
+  name: string;
+}
+
+export interface FbCampaign {
+  id: string;
+  name: string;
+  objective: string;
+  status: string;
+}
+
+export interface FbAdSet {
+  id: string;
+  name: string;
+  campaign_id: string;
+  daily_budget?: string;
+  status: string;
+}
+
+export type FbObjective =
+  | 'OUTCOME_TRAFFIC'
+  | 'OUTCOME_AWARENESS'
+  | 'OUTCOME_SALES'
+  | 'OUTCOME_ENGAGEMENT'
+  | 'OUTCOME_LEADS'
+  | 'OUTCOME_APP_PROMOTION';
+
+export type FbCtaType =
+  | 'SHOP_NOW'
+  | 'LEARN_MORE'
+  | 'SIGN_UP'
+  | 'DOWNLOAD'
+  | 'GET_OFFER'
+  | 'BOOK_TRAVEL'
+  | 'CONTACT_US';
+
+export interface FbStatusResult {
+  connected: boolean;
+  defaultAdAccountId?: string;
+  defaultPageId?: string;
+}
+
+export interface FbCreateAdInput {
+  adAccountId?: string;
+  pageId?: string;
+  campaignId?: string;
+  newCampaign?: { name: string; objective: FbObjective };
+  adSetId?: string;
+  newAdSet?: {
+    name: string;
+    dailyBudget: number;
+    countries: string[];
+    ageMin: number;
+    ageMax: number;
+  };
+  ad: {
+    name: string;
+    headline: string;
+    message: string;
+    link: string;
+    ctaType: FbCtaType;
+    status: 'ACTIVE' | 'PAUSED';
+  };
+  image: { filename: string; bytes: ArrayBuffer };
+}
+
+export interface FbCreateAdResult {
+  campaignId: string;
+  adSetId: string;
+  creativeId: string;
+  adId: string;
+  imageHash: string;
+  adAccountId: string;
+}
+
+export interface FbSaveCredentialsResult {
+  adAccountCount: number;
+  pageCount: number;
+  defaultAdAccountId?: string;
+  defaultPageId?: string;
+}
+
 export type UpdaterStage =
   | 'idle'
   | 'checking'
@@ -102,6 +198,19 @@ export interface ElectronAPI {
     list: () => Promise<Record<string, ApiKeyEntry>>;
     set: (service: string, key: string) => Promise<{ success: boolean }>;
     delete: (service: string) => Promise<{ success: boolean }>;
+  };
+  facebookAds: {
+    status: () => Promise<FbStatusResult>;
+    saveCredentials: (input: {
+      accessToken: string;
+      defaultAdAccountId?: string;
+      defaultPageId?: string;
+    }) => Promise<FbSaveCredentialsResult>;
+    listAdAccounts: () => Promise<FbAdAccount[]>;
+    listPages: () => Promise<FbPage[]>;
+    listCampaigns: (adAccountId?: string) => Promise<FbCampaign[]>;
+    listAdSets: (adAccountId?: string, campaignId?: string) => Promise<FbAdSet[]>;
+    createAd: (request: FbCreateAdInput) => Promise<FbCreateAdResult>;
   };
   adReferences: {
     list: () => Promise<CustomAdReferenceData[]>;

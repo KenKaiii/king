@@ -35,7 +35,7 @@
   "keywords": [],
   "license": "ISC",
   "dependencies": {
-    "@fal-ai/client": "^1.9.1",
+    "@fal-ai/client": "^1.10.0",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",
     "motion": "^12.38.0",

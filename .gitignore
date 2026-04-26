@@ -30,7 +30,8 @@ Thumbs.db
 # Tool / agent state
 .gg/
 .claude/
-.github/
+CLAUDE.md
+AGENTS.md
 
 # Generated assets
 src/renderer/src/assets/prompts/generation-log.json
@@ -54,3 +55,6 @@ scripts/generate-prompt-thumbnails.js
 .gg/eyes/_lib.sh
 .gg/eyes/_redact.sh
 .gg/secrets-prep/
+
+# Loopback agent API state file (port + bearer token)
+**/agent-api.json

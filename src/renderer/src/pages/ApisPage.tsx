@@ -18,64 +18,91 @@ const services: ServiceConfig[] = [
     id: 'fal',
     name: 'fal.ai',
     description: 'Powers AI image generation',
-    placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xxxxxxxx...',
+    placeholder: 'Paste your fal.ai key here',
     keyUrl: 'https://fal.ai/dashboard/keys',
-    keyUrlLabel: 'Get API key',
+    keyUrlLabel: 'Get your key',
   },
   {
     id: 'shopee',
     name: 'Shopee',
-    description: 'Pull product data from Shopee stores',
-    placeholder: 'Enter your Shopee API key...',
+    description: 'Pull products from your Shopee store',
+    placeholder: 'Paste your Shopee key here',
     keyUrl: 'https://open.shopee.com/',
-    keyUrlLabel: 'Get API key',
+    keyUrlLabel: 'Get your key',
   },
   {
     id: 'google-ads',
     name: 'Google Ads',
-    description: 'Manage and run Google ad campaigns',
-    placeholder: 'Enter your Google Ads developer token...',
+    description: 'Run and manage Google ad campaigns',
+    placeholder: 'Paste your Google Ads token here',
     keyUrl: 'https://ads.google.com/aw/apicenter',
-    keyUrlLabel: 'Get developer token',
+    keyUrlLabel: 'Get connected',
   },
   {
     id: 'amazon',
     name: 'Amazon',
-    description: 'Pull product data from Amazon listings',
-    placeholder: 'Enter your Amazon API key...',
+    description: 'Pull products from your Amazon listings',
+    placeholder: 'Paste your Amazon key here',
     keyUrl: 'https://developer-docs.amazon.com/sp-api/',
-    keyUrlLabel: 'Get API key',
+    keyUrlLabel: 'Get your key',
   },
   {
     id: 'facebook',
     name: 'Facebook Ads',
-    description: 'Manage and run Facebook ad campaigns',
-    placeholder: 'Enter your Facebook Ads API key...',
-    keyUrl: 'https://developers.facebook.com/apps/',
-    keyUrlLabel: 'Get API key',
+    description: 'Run and manage Facebook ad campaigns',
+    placeholder: 'Paste your Facebook key here',
+    keyUrl: 'https://developers.facebook.com/tools/explorer/',
+    keyUrlLabel: 'Get connected',
   },
   {
     id: 'shopify',
     name: 'Shopify',
-    description: 'Sync products and orders from Shopify stores',
-    placeholder: 'Enter your Shopify Admin API access token...',
+    description: 'Sync products and orders from Shopify',
+    placeholder: 'Paste your Shopify token here',
     keyUrl: 'https://admin.shopify.com/store/',
-    keyUrlLabel: 'Get access token',
+    keyUrlLabel: 'Get connected',
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok Shop',
+    description: 'Pull products and orders from TikTok Shop',
+    placeholder: 'Paste your TikTok Shop key here',
+    keyUrl: 'https://partner.tiktokshop.com/',
+    keyUrlLabel: 'Get your key',
   },
   {
     id: 'telegram',
     name: 'Telegram',
-    description: 'Send messages and media via Telegram bot',
-    placeholder: 'Enter your Telegram bot token...',
+    description: 'Send messages and media via Telegram',
+    placeholder: 'Paste your bot token here',
     keyUrl: 'https://t.me/BotFather',
-    keyUrlLabel: 'Create bot',
+    keyUrlLabel: 'Create a bot',
   },
 ];
+
+interface FacebookFormState {
+  accessToken: string;
+  defaultAdAccountId: string;
+  defaultPageId: string;
+}
+
+const EMPTY_FB_FORM: FacebookFormState = {
+  accessToken: '',
+  defaultAdAccountId: '',
+  defaultPageId: '',
+};
+
+interface FacebookSummary {
+  adAccountCount: number;
+  pageCount: number;
+}
 
 export default function ApisPage() {
   const [savedKeys, setSavedKeys] = useState<Record<string, ApiKeyEntry>>({});
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [savingService, setSavingService] = useState<string | null>(null);
+  const [fbForm, setFbForm] = useState<FacebookFormState>(EMPTY_FB_FORM);
+  const [fbSummary, setFbSummary] = useState<FacebookSummary | null>(null);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -90,6 +117,31 @@ export default function ApisPage() {
     fetchKeys();
   }, [fetchKeys]);
 
+  // Refresh the FB summary line whenever the saved key changes.
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.facebook) {
+      setFbSummary(null);
+      return;
+    }
+    void (async () => {
+      try {
+        const [accounts, pages] = await Promise.all([
+          window.api.facebookAds.listAdAccounts(),
+          window.api.facebookAds.listPages(),
+        ]);
+        if (!cancelled) {
+          setFbSummary({ adAccountCount: accounts.length, pageCount: pages.length });
+        }
+      } catch {
+        if (!cancelled) setFbSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.facebook]);
+
   const handleSave = async (serviceId: string) => {
     const key = inputs[serviceId]?.trim();
     if (!key) return;
@@ -102,6 +154,30 @@ export default function ApisPage() {
       toast.success('API key saved.');
     } catch {
       toast.error("Couldn't save your API key. Please try again.");
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  const handleSaveFacebook = async () => {
+    const accessToken = fbForm.accessToken.trim();
+    if (!accessToken) return;
+    setSavingService('facebook');
+    try {
+      const result = await window.api.facebookAds.saveCredentials({
+        accessToken,
+        defaultAdAccountId: fbForm.defaultAdAccountId.trim() || undefined,
+        defaultPageId: fbForm.defaultPageId.trim() || undefined,
+      });
+      setFbForm(EMPTY_FB_FORM);
+      await fetchKeys();
+      setFbSummary({ adAccountCount: result.adAccountCount, pageCount: result.pageCount });
+      toast.success(
+        `Connected — ${result.adAccountCount} ad account${result.adAccountCount === 1 ? '' : 's'} · ${result.pageCount} Page${result.pageCount === 1 ? '' : 's'}`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(`Facebook: ${msg}`);
     } finally {
       setSavingService(null);
     }
@@ -129,7 +205,7 @@ export default function ApisPage() {
             API <span className="text-[var(--base-color-brand--cinamon)]">Keys</span>
           </h2>
           <p className="text-sm text-[var(--base-color-brand--umber)]">
-            Connect external services by adding your API keys.
+            Hook up the apps you use so King can pull your data and post on your behalf.
           </p>
         </section>
 
@@ -167,18 +243,75 @@ export default function ApisPage() {
                     <button
                       onClick={() => handleDelete(service.id)}
                       className="grid h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
-                      title="Remove key"
+                      title="Remove"
                     >
                       <DeleteIcon className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
 
-                {saved ? (
+                {saved && service.id === 'facebook' ? (
+                  <div className="mt-3 flex flex-col gap-1">
+                    <div className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4 py-2">
+                      <code className="text-xs text-[var(--base-color-brand--umber)]">
+                        {saved.maskedKey}
+                      </code>
+                    </div>
+                    {fbSummary && (
+                      <span className="px-1 text-[10px] text-[var(--base-color-brand--umber)]">
+                        {fbSummary.adAccountCount} ad account
+                        {fbSummary.adAccountCount === 1 ? '' : 's'} · {fbSummary.pageCount} Page
+                        {fbSummary.pageCount === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </div>
+                ) : saved ? (
                   <div className="mt-3 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4 py-2">
                     <code className="text-xs text-[var(--base-color-brand--umber)]">
                       {saved.maskedKey}
                     </code>
+                  </div>
+                ) : service.id === 'facebook' ? (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <input
+                      type="password"
+                      value={fbForm.accessToken}
+                      onChange={(e) =>
+                        setFbForm((prev) => ({ ...prev, accessToken: e.target.value }))
+                      }
+                      placeholder={service.placeholder}
+                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={fbForm.defaultAdAccountId}
+                      onChange={(e) =>
+                        setFbForm((prev) => ({ ...prev, defaultAdAccountId: e.target.value }))
+                      }
+                      placeholder="Default ad account ID (we'll auto-pick if blank)"
+                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={fbForm.defaultPageId}
+                      onChange={(e) =>
+                        setFbForm((prev) => ({ ...prev, defaultPageId: e.target.value }))
+                      }
+                      placeholder="Default Facebook Page ID (optional)"
+                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
+                    />
+                    <p className="px-1 text-[10px] leading-tight text-[var(--base-color-brand--umber)]">
+                      Leave both blank and we&apos;ll pick the first ad account and Page on your
+                      Facebook account. You can switch any time.
+                    </p>
+                    <button
+                      onClick={handleSaveFacebook}
+                      disabled={!fbForm.accessToken.trim() || isSaving}
+                      className="self-end rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                    >
+                      {isSaving ? 'Connecting…' : 'Connect'}
+                    </button>
                   </div>
                 ) : (
                   <div className="mt-3 flex gap-2">

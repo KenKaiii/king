@@ -62,6 +62,43 @@ const api = {
     }) => ipcRenderer.invoke('adReferences:create', data),
     delete: (id: string) => ipcRenderer.invoke('adReferences:delete', id),
   },
+  facebookAds: {
+    status: () => ipcRenderer.invoke('facebookAds:status'),
+    saveCredentials: (input: {
+      accessToken: string;
+      defaultAdAccountId?: string;
+      defaultPageId?: string;
+    }) => ipcRenderer.invoke('facebookAds:saveCredentials', input),
+    listAdAccounts: () => ipcRenderer.invoke('facebookAds:listAdAccounts'),
+    listPages: () => ipcRenderer.invoke('facebookAds:listPages'),
+    listCampaigns: (adAccountId?: string) =>
+      ipcRenderer.invoke('facebookAds:listCampaigns', adAccountId),
+    listAdSets: (adAccountId?: string, campaignId?: string) =>
+      ipcRenderer.invoke('facebookAds:listAdSets', adAccountId, campaignId),
+    createAd: (request: {
+      adAccountId?: string;
+      pageId?: string;
+      campaignId?: string;
+      newCampaign?: { name: string; objective: string };
+      adSetId?: string;
+      newAdSet?: {
+        name: string;
+        dailyBudget: number;
+        countries: string[];
+        ageMin: number;
+        ageMax: number;
+      };
+      ad: {
+        name: string;
+        headline: string;
+        message: string;
+        link: string;
+        ctaType: string;
+        status: 'ACTIVE' | 'PAUSED';
+      };
+      image: { filename: string; bytes: ArrayBuffer };
+    }) => ipcRenderer.invoke('facebookAds:createAd', request),
+  },
   entities: {
     list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),
     create: (

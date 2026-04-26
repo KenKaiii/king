@@ -6,6 +6,7 @@ import { registerIpcHandlers } from './ipc';
 import { resolveLocalFileUrl } from './services/paths';
 import { loadApiKeysIntoEnv } from './services/apiKeyStore';
 import { initUpdater, checkForUpdates } from './services/updater';
+import { startAgentApiServer, stopAgentApiServer } from './services/agentApiServer';
 
 // Must run before `app.ready`. Marks our custom `local-file://` scheme as a
 // privileged origin so Chromium treats it as standard + secure (mandatory for
@@ -169,6 +170,7 @@ app.whenReady().then(() => {
   setContentSecurityPolicy();
   registerLocalFileProtocol();
   registerIpcHandlers();
+  startAgentApiServer();
   initUpdater();
   createWindow();
 
@@ -189,4 +191,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+let agentApiStopping = false;
+app.on('before-quit', (event) => {
+  if (agentApiStopping) return;
+  agentApiStopping = true;
+  event.preventDefault();
+  void stopAgentApiServer().finally(() => app.exit(0));
 });

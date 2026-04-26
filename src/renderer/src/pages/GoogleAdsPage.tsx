@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { PlusIcon, MinusIcon } from '@/components/icons';
 import {
@@ -288,8 +288,23 @@ interface GoogleAdsPageProps {
 
 export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  // TODO: Re-enable API key check when real API is wired up
-  const [connected] = useState<boolean>(true);
+  const [connected, setConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const keys = await window.api.apiKeys.list();
+        if (!cancelled) setConnected(Boolean(keys['google-ads']));
+      } catch {
+        if (!cancelled) setConnected(false);
+      }
+    };
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [lastSynced] = useState(() => new Date());
 
   const handleToggleStatus = useCallback((id: string) => {
@@ -317,6 +332,10 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
     toast.success('Data refreshed');
   };
 
+  if (connected === null) {
+    return <main className="flex-1" />;
+  }
+
   // Disconnected
   if (!connected) {
     return (
@@ -326,10 +345,10 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
             Connect Google Ads
           </h2>
           <p className="text-sm text-[var(--base-color-brand--umber)]">
-            Add your Google Ads API key to view campaign performance and manage ads.
+            Link your Google Ads account to see your campaigns and manage them from here.
           </p>
           <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
-            Go to API Keys
+            Connect Google Ads
           </button>
         </div>
       </main>
@@ -371,7 +390,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
               <button
                 onClick={handleRefresh}
                 className="grid h-8 w-8 place-items-center rounded-full border border-[var(--base-color-brand--umber)]/30 text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
-                title="Refresh data"
+                title="Refresh"
               >
                 <RefreshIcon />
               </button>
