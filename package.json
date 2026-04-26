@@ -1,6 +1,6 @@
 {
   "name": "king",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "King Electron App",
   "main": "./out/main/index.js",
   "author": {
@@ -101,9 +101,7 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": {
-        "teamId": "396M7LY29W"
-      },
+      "notarize": true,
       "target": [
         {
           "target": "dmg",
