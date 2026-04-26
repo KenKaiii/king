@@ -4,6 +4,7 @@ import { PlusIcon, MinusIcon, SparkleIcon } from '@/components/icons';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 import NewFacebookAdModal from '@/components/facebook/NewFacebookAdModal';
 import { useFacebookAccountStore } from '@/stores/facebookAccountStore';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import type { FbAdAccount } from '@/types/electron';
 import {
   mockCampaigns,
@@ -296,8 +297,15 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
   const selectedAdAccountId = useFacebookAccountStore((s) => s.selectedAdAccountId);
   const setSelectedAdAccountId = useFacebookAccountStore((s) => s.setSelectedAdAccountId);
 
-  // Probe connection state + load ad accounts.
+  const [demoMode] = useDemoMode();
+
+  // Probe connection state + load ad accounts. Skip entirely in demo mode
+  // (we render the existing mock fixtures + force `connected` true below).
   useEffect(() => {
+    if (demoMode) {
+      setConnected(true);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       try {
@@ -321,7 +329,7 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     return () => {
       cancelled = true;
     };
-  }, [selectedAdAccountId, setSelectedAdAccountId]);
+  }, [selectedAdAccountId, setSelectedAdAccountId, demoMode]);
 
   const adAccountOptions = useMemo(
     () =>

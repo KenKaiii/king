@@ -54,7 +54,7 @@ function AppContent() {
       {currentPage === 'google-ads' && <GoogleAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'tiktok-shop' && <TiktokShopPage onNavigate={setCurrentPage} />}
       {currentPage === 'shopee-ads' && <ShopeeAdsPage onNavigate={setCurrentPage} />}
-      {currentPage === 'store' && <StorePage />}
+      {currentPage === 'store' && <StorePage onNavigate={setCurrentPage} />}
       {currentPage === 'apis' && <ApisPage />}
       {currentPage === 'prompts' && (
         <PromptsPage onNavigate={setCurrentPage} onUsePrompt={handleUsePrompt} />

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { PageType } from '@/App';
 import { ChevronDownIcon, SettingsIcon } from '@/components/icons';
 import SettingsModal from '@/components/ui/SettingsModal';
+import { DemoToggle } from '@/components/ui/DemoToggle';
 
 // Baked in at build time from package.json via electron.vite.config.ts.
 const APP_VERSION = __APP_VERSION__;
@@ -148,6 +149,12 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           })}
         </nav>
         <div className="no-drag ml-auto flex items-center gap-2">
+          {/* Master demo-mode switch. Dev-only — `import.meta.env.DEV` is
+              statically replaced at build time, so the entire <DemoToggle/>
+              import + component drops out of production bundles via Vite
+              tree-shaking. End users in shipped releases never see the toggle,
+              and the underlying localStorage default is OFF anyway. */}
+          {import.meta.env.DEV && <DemoToggle />}
           <button onClick={() => onNavigate('apis')} className="btn-cinamon btn-sm">
             APIs
           </button>

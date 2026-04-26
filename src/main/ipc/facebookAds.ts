@@ -11,6 +11,8 @@ import {
   listCampaigns,
   listAdSets,
   createAdEndToEnd,
+  exchangeForLongLivedToken,
+  beginFacebookOAuth,
   FacebookApiError,
   type EndToEndInput,
   type FbObjective,
@@ -85,6 +87,7 @@ export function registerFacebookAdsHandlers(): void {
         connected: !!creds,
         defaultAdAccountId: creds?.defaultAdAccountId,
         defaultPageId: creds?.defaultPageId,
+        expiresAt: creds?.expiresAt,
       };
     }),
   );
@@ -96,8 +99,14 @@ export function registerFacebookAdsHandlers(): void {
         _event,
         input: { accessToken: string; defaultAdAccountId?: string; defaultPageId?: string },
       ) => {
-        const accessToken = input.accessToken?.trim();
-        if (!accessToken) throw new Error('Access token is required');
+        const inputToken = input.accessToken?.trim();
+        if (!inputToken) throw new Error('Access token is required');
+
+        // If FACEBOOK_APP_ID/_SECRET are configured, swap the short-lived token
+        // for a 60-day long-lived one before persisting. Falls back to the
+        // input token unchanged if no app is configured.
+        const exchanged = await exchangeForLongLivedToken(inputToken);
+        const accessToken = exchanged.accessToken;
 
         // Validate up front so the user gets immediate feedback on bad scopes.
         const result = await validateToken({ accessToken });
@@ -107,7 +116,12 @@ export function registerFacebookAdsHandlers(): void {
           input.defaultAdAccountId?.trim() || result.adAccounts[0]?.id || undefined;
         const defaultPageId = input.defaultPageId?.trim() || result.pages[0]?.id || undefined;
 
-        await setFacebookCredentials({ accessToken, defaultAdAccountId, defaultPageId });
+        await setFacebookCredentials({
+          accessToken,
+          defaultAdAccountId,
+          defaultPageId,
+          expiresAt: exchanged.expiresAt,
+        });
         return {
           adAccountCount: result.adAccounts.length,
           pageCount: result.pages.length,
@@ -116,6 +130,30 @@ export function registerFacebookAdsHandlers(): void {
         };
       },
     ),
+  );
+
+  secureHandle(
+    'facebookAds:beginOAuth',
+    wrap(async () => {
+      const { accessToken: shortLived } = await beginFacebookOAuth();
+      const exchanged = await exchangeForLongLivedToken(shortLived);
+      const accessToken = exchanged.accessToken;
+      const result = await validateToken({ accessToken });
+      const defaultAdAccountId = result.adAccounts[0]?.id;
+      const defaultPageId = result.pages[0]?.id;
+      await setFacebookCredentials({
+        accessToken,
+        defaultAdAccountId,
+        defaultPageId,
+        expiresAt: exchanged.expiresAt,
+      });
+      return {
+        adAccountCount: result.adAccounts.length,
+        pageCount: result.pages.length,
+        defaultAdAccountId,
+        defaultPageId,
+      };
+    }),
   );
 
   secureHandle(

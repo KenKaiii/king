@@ -3,13 +3,16 @@ import { toast } from 'sonner';
 import { PlusIcon, MinusIcon } from '@/components/icons';
 import {
   mockCampaigns,
-  audienceInsights,
+  audienceInsights as mockAudienceInsights,
   getHealthColor,
   getStatusStyle,
   getMetricColor,
   type Campaign,
+  type CampaignHealth,
+  type CampaignType,
 } from '@/lib/mock/googleAds';
 import type { PageType } from '@/App';
+import { useDemoMode } from '@/hooks/useDemoMode';
 
 function RefreshIcon() {
   return (
@@ -286,16 +289,94 @@ interface GoogleAdsPageProps {
   onNavigate: (page: PageType) => void;
 }
 
+function mapChannelType(t: string): CampaignType {
+  switch (t) {
+    case 'SEARCH':
+      return 'search';
+    case 'SHOPPING':
+      return 'shopping';
+    case 'PERFORMANCE_MAX':
+      return 'pmax';
+    case 'DISPLAY':
+      return 'display';
+    case 'VIDEO':
+      return 'video';
+    default:
+      return 'search';
+  }
+}
+
+function healthFromMetrics(c: { ctr: number; cpa: number; conversions: number }): CampaignHealth {
+  if (c.conversions > 0 && c.cpa > 0 && c.cpa < 5) return 'good';
+  if (c.cpa > 30 || (c.conversions === 0 && c.ctr < 1)) return 'poor';
+  return 'warning';
+}
+
 export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [audienceInsights, setAudienceInsights] =
+    useState<typeof mockAudienceInsights>(mockAudienceInsights);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [demoMode] = useDemoMode();
+  const [lastSynced, setLastSynced] = useState<Date>(() => new Date());
+  // Map: campaignId → budgetResourceName so pause/resume/budget mutations
+  // can target the real Google Ads resource without re-querying.
+  const [budgetByCampaign, setBudgetByCampaign] = useState<Record<string, string>>({});
+
+  const refreshFromApi = useCallback(async () => {
+    if (!window.api.googleAds) return;
+    const rows = await window.api.googleAds.listCampaigns();
+    const mapped: Campaign[] = rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      status: r.status === 'ENABLED' ? 'active' : 'paused',
+      type: mapChannelType(r.type),
+      health: healthFromMetrics(r),
+      dailyBudget: r.dailyBudget,
+      spent: r.spent,
+      ctr: r.ctr,
+      cpc: r.cpc,
+      conversions: r.conversions,
+      convRate: r.convRate,
+      cpa: r.cpa,
+      impressionShare: r.impressionShare,
+    }));
+    setCampaigns(mapped);
+    setBudgetByCampaign(
+      Object.fromEntries(
+        rows
+          .filter((r) => !!r.budgetResourceName)
+          .map((r) => [r.id, r.budgetResourceName!] as const),
+      ),
+    );
+    setLastSynced(new Date());
+  }, []);
 
   useEffect(() => {
+    // Demo mode: skip real API entirely; the page already initialises with
+    // `mockCampaigns` + `mockAudienceInsights` which look great for screenshots.
+    if (demoMode) {
+      setConnected(true);
+      return;
+    }
     let cancelled = false;
     const check = async () => {
       try {
-        const keys = await window.api.apiKeys.list();
-        if (!cancelled) setConnected(Boolean(keys['google-ads']));
+        const status = await window.api.googleAds?.status();
+        const isConnected = !!status?.connected;
+        if (cancelled) return;
+        setConnected(isConnected);
+        if (isConnected) {
+          try {
+            await refreshFromApi();
+            const insights = await window.api.googleAds?.listAudienceInsights();
+            if (insights && insights.length > 0 && !cancelled) setAudienceInsights(insights);
+          } catch (err) {
+            toast.error(
+              `Google Ads: ${err instanceof Error ? err.message : 'Failed to load campaigns'}`,
+            );
+          }
+        }
       } catch {
         if (!cancelled) setConnected(false);
       }
@@ -304,32 +385,72 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
-  const [lastSynced] = useState(() => new Date());
+  }, [refreshFromApi, demoMode]);
 
-  const handleToggleStatus = useCallback((id: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
-        const next = c.status === 'active' ? 'paused' : 'active';
-        toast.success(`${c.name} ${next === 'active' ? 'resumed' : 'paused'}`);
-        return { ...c, status: next };
-      }),
-    );
-  }, []);
+  const handleToggleStatus = useCallback(
+    async (id: string) => {
+      const current = campaigns.find((c) => c.id === id);
+      if (!current) return;
+      const nextStatus = current.status === 'active' ? 'paused' : 'active';
+      // Optimistic update.
+      setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status: nextStatus } : c)));
+      if (window.api.googleAds && connected) {
+        try {
+          if (nextStatus === 'paused') await window.api.googleAds.pauseCampaign(id);
+          else await window.api.googleAds.resumeCampaign(id);
+          toast.success(`${current.name} ${nextStatus === 'active' ? 'resumed' : 'paused'}`);
+        } catch (err) {
+          // Revert on failure.
+          setCampaigns((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, status: current.status } : c)),
+          );
+          toast.error(
+            `Google Ads: ${err instanceof Error ? err.message : 'Failed to update campaign'}`,
+          );
+        }
+      } else {
+        toast.success(`${current.name} ${nextStatus === 'active' ? 'resumed' : 'paused'}`);
+      }
+    },
+    [campaigns, connected],
+  );
 
-  const handleBudgetSave = useCallback((id: string, newBudget: number) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
+  const handleBudgetSave = useCallback(
+    async (id: string, newBudget: number) => {
+      const previous = campaigns.find((c) => c.id === id)?.dailyBudget ?? newBudget;
+      setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, dailyBudget: newBudget } : c)));
+      const budgetResourceName = budgetByCampaign[id];
+      if (window.api.googleAds && connected && budgetResourceName) {
+        const budgetId = budgetResourceName.split('/').pop() ?? '';
+        try {
+          await window.api.googleAds.updateBudget(budgetId, Math.round(newBudget * 1_000_000));
+          toast.success(`Budget updated to $${newBudget}/day`);
+        } catch (err) {
+          setCampaigns((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, dailyBudget: previous } : c)),
+          );
+          toast.error(
+            `Google Ads: ${err instanceof Error ? err.message : 'Failed to update budget'}`,
+          );
+        }
+      } else {
         toast.success(`Budget updated to $${newBudget}/day`);
-        return { ...c, dailyBudget: newBudget };
-      }),
-    );
-  }, []);
+      }
+    },
+    [campaigns, connected, budgetByCampaign],
+  );
 
-  const handleRefresh = () => {
-    toast.success('Data refreshed');
+  const handleRefresh = async () => {
+    if (!window.api.googleAds || !connected) {
+      toast.success('Data refreshed');
+      return;
+    }
+    try {
+      await refreshFromApi();
+      toast.success('Data refreshed');
+    } catch (err) {
+      toast.error(`Google Ads: ${err instanceof Error ? err.message : 'Failed to refresh'}`);
+    }
   };
 
   if (connected === null) {

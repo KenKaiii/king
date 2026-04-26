@@ -62,8 +62,54 @@ const api = {
     }) => ipcRenderer.invoke('adReferences:create', data),
     delete: (id: string) => ipcRenderer.invoke('adReferences:delete', id),
   },
+  telegram: {
+    status: () => ipcRenderer.invoke('telegram:status'),
+    saveToken: (botToken: string) => ipcRenderer.invoke('telegram:saveToken', botToken),
+    sendMessage: (chatId: string | number, text: string) =>
+      ipcRenderer.invoke('telegram:sendMessage', chatId, text),
+  },
+  shopify: {
+    status: () => ipcRenderer.invoke('shopify:status'),
+    saveCredentials: (input: { shopDomain: string; accessToken: string }) =>
+      ipcRenderer.invoke('shopify:saveCredentials', input),
+    listProducts: (limit?: number) => ipcRenderer.invoke('shopify:listProducts', limit),
+    listOrders: (limit?: number) => ipcRenderer.invoke('shopify:listOrders', limit),
+  },
+  googleAds: {
+    status: () => ipcRenderer.invoke('googleAds:status'),
+    beginOAuth: () => ipcRenderer.invoke('googleAds:beginOAuth'),
+    listCampaigns: (customerId?: string) =>
+      ipcRenderer.invoke('googleAds:listCampaigns', customerId),
+    pauseCampaign: (campaignId: string, customerId?: string) =>
+      ipcRenderer.invoke('googleAds:pauseCampaign', campaignId, customerId),
+    resumeCampaign: (campaignId: string, customerId?: string) =>
+      ipcRenderer.invoke('googleAds:resumeCampaign', campaignId, customerId),
+    updateBudget: (budgetId: string, amountMicros: number, customerId?: string) =>
+      ipcRenderer.invoke('googleAds:updateBudget', budgetId, amountMicros, customerId),
+    listAudienceInsights: (customerId?: string) =>
+      ipcRenderer.invoke('googleAds:listAudienceInsights', customerId),
+  },
+  tiktokShop: {
+    status: () => ipcRenderer.invoke('tiktokShop:status'),
+    beginOAuth: () => ipcRenderer.invoke('tiktokShop:beginOAuth'),
+    listProducts: () => ipcRenderer.invoke('tiktokShop:listProducts'),
+    listOrders: () => ipcRenderer.invoke('tiktokShop:listOrders'),
+  },
+  shopee: {
+    status: () => ipcRenderer.invoke('shopee:status'),
+    beginOAuth: () => ipcRenderer.invoke('shopee:beginOAuth'),
+    listProducts: () => ipcRenderer.invoke('shopee:listProducts'),
+    listOrders: () => ipcRenderer.invoke('shopee:listOrders'),
+  },
+  amazon: {
+    status: () => ipcRenderer.invoke('amazon:status'),
+    beginOAuth: () => ipcRenderer.invoke('amazon:beginOAuth'),
+    listOrders: () => ipcRenderer.invoke('amazon:listOrders'),
+    listCatalogItems: () => ipcRenderer.invoke('amazon:listCatalogItems'),
+  },
   facebookAds: {
     status: () => ipcRenderer.invoke('facebookAds:status'),
+    beginOAuth: () => ipcRenderer.invoke('facebookAds:beginOAuth'),
     saveCredentials: (input: {
       accessToken: string;
       defaultAdAccountId?: string;

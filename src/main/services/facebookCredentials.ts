@@ -14,6 +14,9 @@ export interface FacebookCredentials {
   defaultAdAccountId?: string;
   /** Default Facebook Page id used as `page_id` in `object_story_spec`. */
   defaultPageId?: string;
+  /** Epoch ms when the long-lived token expires (60d window). Absent for
+   *  paste-in tokens we couldn't exchange (no FACEBOOK_APP_ID configured). */
+  expiresAt?: number;
 }
 
 const SERVICE = 'facebook';
@@ -40,6 +43,7 @@ export function getFacebookCredentials(): FacebookCredentials | null {
           typeof parsed.defaultPageId === 'string' && parsed.defaultPageId.length > 0
             ? parsed.defaultPageId
             : undefined,
+        expiresAt: typeof parsed.expiresAt === 'number' ? parsed.expiresAt : undefined,
       };
     }
     return null;
@@ -54,6 +58,7 @@ export async function setFacebookCredentials(creds: FacebookCredentials): Promis
     accessToken: creds.accessToken,
     ...(creds.defaultAdAccountId ? { defaultAdAccountId: creds.defaultAdAccountId } : {}),
     ...(creds.defaultPageId ? { defaultPageId: creds.defaultPageId } : {}),
+    ...(creds.expiresAt ? { expiresAt: creds.expiresAt } : {}),
   };
   await setApiKey(SERVICE, JSON.stringify(blob));
 }

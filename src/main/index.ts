@@ -152,9 +152,14 @@ function setContentSecurityPolicy(): void {
             // inject runtime <style> tags. Production builds emit static
             // stylesheets via <link> so we can lock this down.
             `style-src 'self'${isDev ? " 'unsafe-inline'" : ''}`,
-            // fal.media / fal.ai are fal.ai's image CDNs — we load their
-            // URLs directly in the renderer for soft-refusal hash checks.
-            `img-src 'self' data: blob: local-file: https://*.fal.media https://*.fal.ai`,
+            // fal.media / fal.ai: image generation CDNs.
+            // shopify CDNs / cdn.shopify.com: product images for Store page.
+            // shopee + tiktokcdn: product images for marketplace pages.
+            // amazon image CDNs: product images for SP-API listings.
+            // All third-party API requests run from the main process, so
+            // connect-src only needs to cover renderer-side fetches (none
+            // currently — left at 'self').
+            `img-src 'self' data: blob: local-file: https://*.fal.media https://*.fal.ai https://cdn.shopify.com https://*.shopifycdn.com https://*.shopify.com https://*.tiktokcdn.com https://*.tiktokcdn-us.com https://*.shopeemobile.com https://*.shopee.com https://*.amazon.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://*.telegram.org`,
             `font-src 'self' data:`,
             `connect-src ${connectSrc}`,
             `worker-src ${workerSrc}`,

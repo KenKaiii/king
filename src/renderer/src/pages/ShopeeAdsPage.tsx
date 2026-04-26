@@ -10,6 +10,7 @@ import {
   type Campaign,
 } from '@/lib/mock/shopeeAds';
 import type { PageType } from '@/App';
+import { useDemoMode } from '@/hooks/useDemoMode';
 
 function RefreshIcon() {
   return (
@@ -288,13 +289,19 @@ interface ShopeeAdsPageProps {
 export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [demoMode] = useDemoMode();
 
   useEffect(() => {
+    // Demo mode: skip API; the page already initialises with `mockCampaigns`.
+    if (demoMode) {
+      setConnected(true);
+      return;
+    }
     let cancelled = false;
     const check = async () => {
       try {
-        const keys = await window.api.apiKeys.list();
-        if (!cancelled) setConnected(Boolean(keys.shopee));
+        const status = await window.api.shopee?.status();
+        if (!cancelled) setConnected(!!status?.connected);
       } catch {
         if (!cancelled) setConnected(false);
       }
@@ -303,7 +310,11 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [demoMode]);
+  // Shopee Ads (campaign budgets / impressions / CTR) lives on a different
+  // API surface than the Shopee Open Platform we connect to today. Until
+  // that's wired the page renders mock metrics for connected users so the
+  // dashboard layout stays useful as a preview.
   const [lastSynced] = useState(() => new Date());
 
   const handleToggleStatus = useCallback((id: string) => {

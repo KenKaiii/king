@@ -1,108 +1,64 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { DeleteIcon } from '@/components/icons';
 import type { ApiKeyEntry } from '@/types/electron';
-
-interface ServiceConfig {
-  id: string;
-  name: string;
-  description: string;
-  placeholder: string;
-  keyUrl: string;
-  keyUrlLabel: string;
-}
-
-// Ordered for 2-column grid: left = AI/Marketing/Messaging, right = Stores
-const services: ServiceConfig[] = [
-  {
-    id: 'fal',
-    name: 'fal.ai',
-    description: 'Powers AI image generation',
-    placeholder: 'Paste your fal.ai key here',
-    keyUrl: 'https://fal.ai/dashboard/keys',
-    keyUrlLabel: 'Get your key',
-  },
-  {
-    id: 'shopee',
-    name: 'Shopee',
-    description: 'Pull products from your Shopee store',
-    placeholder: 'Paste your Shopee key here',
-    keyUrl: 'https://open.shopee.com/',
-    keyUrlLabel: 'Get your key',
-  },
-  {
-    id: 'google-ads',
-    name: 'Google Ads',
-    description: 'Run and manage Google ad campaigns',
-    placeholder: 'Paste your Google Ads token here',
-    keyUrl: 'https://ads.google.com/aw/apicenter',
-    keyUrlLabel: 'Get connected',
-  },
-  {
-    id: 'amazon',
-    name: 'Amazon',
-    description: 'Pull products from your Amazon listings',
-    placeholder: 'Paste your Amazon key here',
-    keyUrl: 'https://developer-docs.amazon.com/sp-api/',
-    keyUrlLabel: 'Get your key',
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook Ads',
-    description: 'Run and manage Facebook ad campaigns',
-    placeholder: 'Paste your Facebook key here',
-    keyUrl: 'https://developers.facebook.com/tools/explorer/',
-    keyUrlLabel: 'Get connected',
-  },
-  {
-    id: 'shopify',
-    name: 'Shopify',
-    description: 'Sync products and orders from Shopify',
-    placeholder: 'Paste your Shopify token here',
-    keyUrl: 'https://admin.shopify.com/store/',
-    keyUrlLabel: 'Get connected',
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok Shop',
-    description: 'Pull products and orders from TikTok Shop',
-    placeholder: 'Paste your TikTok Shop key here',
-    keyUrl: 'https://partner.tiktokshop.com/',
-    keyUrlLabel: 'Get your key',
-  },
-  {
-    id: 'telegram',
-    name: 'Telegram',
-    description: 'Send messages and media via Telegram',
-    placeholder: 'Paste your bot token here',
-    keyUrl: 'https://t.me/BotFather',
-    keyUrlLabel: 'Create a bot',
-  },
-];
-
-interface FacebookFormState {
-  accessToken: string;
-  defaultAdAccountId: string;
-  defaultPageId: string;
-}
-
-const EMPTY_FB_FORM: FacebookFormState = {
-  accessToken: '',
-  defaultAdAccountId: '',
-  defaultPageId: '',
-};
+import { ServiceCard, type ServiceCardProps } from '@/components/api/ServiceCard';
 
 interface FacebookSummary {
   adAccountCount: number;
   pageCount: number;
+  /** Epoch ms; surfaced as a warning pill when within 5 days. */
+  expiresAt?: number;
+}
+
+function formatFbSummary(s: FacebookSummary): string {
+  const base = `${s.adAccountCount} ad account${s.adAccountCount === 1 ? '' : 's'} · ${s.pageCount} Page${s.pageCount === 1 ? '' : 's'}`;
+  if (!s.expiresAt) return base;
+  const remainingMs = s.expiresAt - Date.now();
+  if (remainingMs < 5 * 24 * 60 * 60 * 1000 && remainingMs > 0) {
+    const days = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+    return `${base} · ⚠︎ expires in ${days}d`;
+  }
+  return base;
+}
+
+interface TelegramSummary {
+  username?: string;
+  id?: number;
+}
+
+interface ShopifySummary {
+  shopName?: string;
+  currency?: string;
+}
+
+interface GoogleAdsSummary {
+  customerCount: number;
+}
+
+interface TikTokSummary {
+  shopName?: string;
+}
+
+interface ShopeeSummary {
+  shopId?: number;
+}
+
+interface AmazonSummary {
+  sellerId?: string;
 }
 
 export default function ApisPage() {
   const [savedKeys, setSavedKeys] = useState<Record<string, ApiKeyEntry>>({});
-  const [inputs, setInputs] = useState<Record<string, string>>({});
   const [savingService, setSavingService] = useState<string | null>(null);
-  const [fbForm, setFbForm] = useState<FacebookFormState>(EMPTY_FB_FORM);
+
+  // Per-platform live summaries (counts, identities) shown beneath the masked key.
   const [fbSummary, setFbSummary] = useState<FacebookSummary | null>(null);
+  const [telegramSummary, setTelegramSummary] = useState<TelegramSummary | null>(null);
+  const [shopifySummary, setShopifySummary] = useState<ShopifySummary | null>(null);
+  const [googleSummary, setGoogleSummary] = useState<GoogleAdsSummary | null>(null);
+  const [tiktokSummary, setTiktokSummary] = useState<TikTokSummary | null>(null);
+  const [shopeeSummary, setShopeeSummary] = useState<ShopeeSummary | null>(null);
+  const [amazonSummary, setAmazonSummary] = useState<AmazonSummary | null>(null);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -114,10 +70,10 @@ export default function ApisPage() {
   }, []);
 
   useEffect(() => {
-    fetchKeys();
+    void fetchKeys();
   }, [fetchKeys]);
 
-  // Refresh the FB summary line whenever the saved key changes.
+  // Refresh per-platform summaries when their saved-state changes.
   useEffect(() => {
     let cancelled = false;
     if (!savedKeys.facebook) {
@@ -126,12 +82,31 @@ export default function ApisPage() {
     }
     void (async () => {
       try {
-        const [accounts, pages] = await Promise.all([
+        const [accounts, pages, status] = await Promise.all([
           window.api.facebookAds.listAdAccounts(),
           window.api.facebookAds.listPages(),
+          window.api.facebookAds.status(),
         ]);
         if (!cancelled) {
-          setFbSummary({ adAccountCount: accounts.length, pageCount: pages.length });
+          setFbSummary({
+            adAccountCount: accounts.length,
+            pageCount: pages.length,
+            expiresAt: status.expiresAt,
+          });
+          // Warn 5 days out per plan phase 5.5.
+          if (
+            status.expiresAt &&
+            status.expiresAt - Date.now() < 5 * 24 * 60 * 60 * 1000 &&
+            status.expiresAt > Date.now()
+          ) {
+            const days = Math.max(
+              0,
+              Math.ceil((status.expiresAt - Date.now()) / (24 * 60 * 60 * 1000)),
+            );
+            toast.warning(
+              `Facebook token expires in ${days} day${days === 1 ? '' : 's'}. Reconnect to refresh.`,
+            );
+          }
         }
       } catch {
         if (!cancelled) setFbSummary(null);
@@ -142,14 +117,106 @@ export default function ApisPage() {
     };
   }, [savedKeys.facebook]);
 
-  const handleSave = async (serviceId: string) => {
-    const key = inputs[serviceId]?.trim();
-    if (!key) return;
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.telegram || !window.api.telegram) return;
+    void (async () => {
+      try {
+        const status = await window.api.telegram!.status();
+        if (!cancelled) setTelegramSummary(status.identity ?? null);
+      } catch {
+        if (!cancelled) setTelegramSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.telegram]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.shopify || !window.api.shopify) return;
+    void (async () => {
+      try {
+        const status = await window.api.shopify!.status();
+        if (!cancelled) setShopifySummary(status.shop ?? null);
+      } catch {
+        if (!cancelled) setShopifySummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.shopify]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys['google-ads'] || !window.api.googleAds) return;
+    void (async () => {
+      try {
+        const status = await window.api.googleAds!.status();
+        if (!cancelled) setGoogleSummary({ customerCount: status.customerIds?.length ?? 0 });
+      } catch {
+        if (!cancelled) setGoogleSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys['google-ads']]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.tiktok || !window.api.tiktokShop) return;
+    void (async () => {
+      try {
+        const status = await window.api.tiktokShop!.status();
+        if (!cancelled) setTiktokSummary({ shopName: status.shopName });
+      } catch {
+        if (!cancelled) setTiktokSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.tiktok]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.shopee || !window.api.shopee) return;
+    void (async () => {
+      try {
+        const status = await window.api.shopee!.status();
+        if (!cancelled) setShopeeSummary({ shopId: status.shopId });
+      } catch {
+        if (!cancelled) setShopeeSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.shopee]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys.amazon || !window.api.amazon) return;
+    void (async () => {
+      try {
+        const status = await window.api.amazon!.status();
+        if (!cancelled) setAmazonSummary({ sellerId: status.sellingPartnerId });
+      } catch {
+        if (!cancelled) setAmazonSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys.amazon]);
+
+  const saveSimpleToken = async (serviceId: string, value: string) => {
     setSavingService(serviceId);
     try {
-      await window.api.apiKeys.set(serviceId, key);
-      setInputs((prev) => ({ ...prev, [serviceId]: '' }));
+      await window.api.apiKeys.set(serviceId, value);
       await fetchKeys();
       toast.success('API key saved.');
     } catch {
@@ -159,39 +226,299 @@ export default function ApisPage() {
     }
   };
 
-  const handleSaveFacebook = async () => {
-    const accessToken = fbForm.accessToken.trim();
-    if (!accessToken) return;
-    setSavingService('facebook');
-    try {
-      const result = await window.api.facebookAds.saveCredentials({
-        accessToken,
-        defaultAdAccountId: fbForm.defaultAdAccountId.trim() || undefined,
-        defaultPageId: fbForm.defaultPageId.trim() || undefined,
-      });
-      setFbForm(EMPTY_FB_FORM);
-      await fetchKeys();
-      setFbSummary({ adAccountCount: result.adAccountCount, pageCount: result.pageCount });
-      toast.success(
-        `Connected — ${result.adAccountCount} ad account${result.adAccountCount === 1 ? '' : 's'} · ${result.pageCount} Page${result.pageCount === 1 ? '' : 's'}`,
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Facebook: ${msg}`);
-    } finally {
-      setSavingService(null);
-    }
-  };
-
   const handleDelete = async (serviceId: string) => {
     try {
       await window.api.apiKeys.delete(serviceId);
+      // Clear the per-platform summary so a stale identity doesn't linger
+      // until the user reconnects.
+      if (serviceId === 'facebook') setFbSummary(null);
+      else if (serviceId === 'telegram') setTelegramSummary(null);
+      else if (serviceId === 'shopify') setShopifySummary(null);
+      else if (serviceId === 'google-ads') setGoogleSummary(null);
+      else if (serviceId === 'tiktok') setTiktokSummary(null);
+      else if (serviceId === 'shopee') setShopeeSummary(null);
+      else if (serviceId === 'amazon') setAmazonSummary(null);
       await fetchKeys();
       toast.success('API key removed.');
     } catch {
       toast.error("Couldn't remove your API key. Please try again.");
     }
   };
+
+  // ---- Per-platform handlers ----
+
+  const handleSaveTelegram = async (values: Record<string, string>) => {
+    if (!window.api.telegram) {
+      toast.error('Telegram integration not available.');
+      return;
+    }
+    setSavingService('telegram');
+    try {
+      const result = await window.api.telegram.saveToken(values.botToken!.trim());
+      await fetchKeys();
+      setTelegramSummary({ username: result.username, id: result.id });
+      toast.success(`Connected — @${result.username}`);
+    } catch (err) {
+      toast.error(`Telegram: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  const handleSaveShopify = async (values: Record<string, string>) => {
+    if (!window.api.shopify) {
+      toast.error('Shopify integration not available.');
+      return;
+    }
+    setSavingService('shopify');
+    try {
+      const result = await window.api.shopify.saveCredentials({
+        shopDomain: values.shopDomain!.trim(),
+        accessToken: values.accessToken!.trim(),
+      });
+      await fetchKeys();
+      setShopifySummary({ shopName: result.shopName, currency: result.currency });
+      toast.success(`Connected — ${result.shopName}`);
+    } catch (err) {
+      toast.error(`Shopify: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  const handleSaveFacebook = async (values: Record<string, string>) => {
+    setSavingService('facebook');
+    try {
+      const result = await window.api.facebookAds.saveCredentials({
+        accessToken: values.accessToken!.trim(),
+        defaultAdAccountId: values.defaultAdAccountId?.trim() || undefined,
+        defaultPageId: values.defaultPageId?.trim() || undefined,
+      });
+      await fetchKeys();
+      setFbSummary({ adAccountCount: result.adAccountCount, pageCount: result.pageCount });
+      toast.success(
+        `Connected — ${result.adAccountCount} ad account${result.adAccountCount === 1 ? '' : 's'} · ${result.pageCount} Page${result.pageCount === 1 ? '' : 's'}`,
+      );
+    } catch (err) {
+      toast.error(`Facebook: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  const handleConnectOAuth = async (serviceId: 'google-ads' | 'tiktok' | 'shopee' | 'amazon') => {
+    const apis = {
+      'google-ads': window.api.googleAds,
+      tiktok: window.api.tiktokShop,
+      shopee: window.api.shopee,
+      amazon: window.api.amazon,
+    } as const;
+    const target = apis[serviceId];
+    if (!target) {
+      toast.error('Integration not available.');
+      return;
+    }
+    setSavingService(serviceId);
+    try {
+      await target.beginOAuth();
+      await fetchKeys();
+      toast.success('Connected.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Connection failed.');
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  // ---- Card configs ----
+
+  const cards: ServiceCardProps[] = [
+    {
+      variant: 'simpleToken',
+      name: 'fal.ai',
+      description: 'Powers AI image generation',
+      keyUrl: 'https://fal.ai/dashboard/keys',
+      keyUrlLabel: 'Get your key',
+      placeholder: 'Paste your fal.ai key here',
+      saved: !!savedKeys.fal,
+      maskedKey: savedKeys.fal?.maskedKey,
+      saving: savingService === 'fal',
+      onSave: (v) => saveSimpleToken('fal', v),
+      onDelete: () => handleDelete('fal'),
+    },
+    {
+      variant: 'oauth',
+      name: 'Shopee',
+      description: 'Pull products from your Shopee store',
+      keyUrl: 'https://open.shopee.com/',
+      keyUrlLabel: 'Connect',
+      saved: !!savedKeys.shopee,
+      maskedKey: savedKeys.shopee?.maskedKey,
+      savedSummary: shopeeSummary?.shopId ? `Shop ${shopeeSummary.shopId}` : null,
+      saving: savingService === 'shopee',
+      onConnect: () => handleConnectOAuth('shopee'),
+      onDelete: () => handleDelete('shopee'),
+      buttonLabel: 'Connect Shopee',
+    },
+    {
+      variant: 'oauth',
+      name: 'Google Ads',
+      description: 'Run and manage Google ad campaigns',
+      keyUrl: 'https://ads.google.com/aw/apicenter',
+      keyUrlLabel: 'Setup guide',
+      saved: !!savedKeys['google-ads'],
+      maskedKey: savedKeys['google-ads']?.maskedKey,
+      savedSummary: googleSummary
+        ? `${googleSummary.customerCount} customer${googleSummary.customerCount === 1 ? '' : 's'}`
+        : null,
+      saving: savingService === 'google-ads',
+      onConnect: () => handleConnectOAuth('google-ads'),
+      onDelete: () => handleDelete('google-ads'),
+      buttonLabel: 'Connect Google Ads',
+    },
+    {
+      variant: 'oauth',
+      name: 'Amazon',
+      description: 'Pull products from your Amazon listings',
+      keyUrl: 'https://developer-docs.amazon.com/sp-api/',
+      keyUrlLabel: 'Setup guide',
+      saved: !!savedKeys.amazon,
+      maskedKey: savedKeys.amazon?.maskedKey,
+      savedSummary: amazonSummary?.sellerId ? `Seller ${amazonSummary.sellerId}` : null,
+      saving: savingService === 'amazon',
+      onConnect: () => handleConnectOAuth('amazon'),
+      onDelete: () => handleDelete('amazon'),
+      buttonLabel: 'Connect Amazon',
+    },
+    {
+      variant: 'multiField',
+      name: 'Facebook Ads',
+      description: 'Run and manage Facebook ad campaigns',
+      keyUrl: 'https://developers.facebook.com/tools/explorer/',
+      keyUrlLabel: 'Get a token',
+      saved: !!savedKeys.facebook,
+      maskedKey: savedKeys.facebook?.maskedKey,
+      savedSummary: fbSummary ? formatFbSummary(fbSummary) : null,
+      saving: savingService === 'facebook',
+      buttonLabel: 'Connect',
+      footnote:
+        "Leave both blank and we'll pick the first ad account and Page on your Facebook account. You can switch any time.",
+      fields: [
+        {
+          key: 'accessToken',
+          label: 'Access token',
+          placeholder: 'Paste your Facebook access token',
+          required: true,
+          type: 'password',
+        },
+        {
+          key: 'defaultAdAccountId',
+          label: 'Default ad account',
+          placeholder: "Default ad account ID (we'll auto-pick if blank)",
+          required: false,
+          type: 'text',
+        },
+        {
+          key: 'defaultPageId',
+          label: 'Default Page',
+          placeholder: 'Default Facebook Page ID (optional)',
+          required: false,
+          type: 'text',
+        },
+      ],
+      onSave: handleSaveFacebook,
+      onDelete: () => handleDelete('facebook'),
+      oauthButton: {
+        label: 'Connect with Facebook',
+        onConnect: async () => {
+          setSavingService('facebook');
+          try {
+            const result = await window.api.facebookAds.beginOAuth();
+            await fetchKeys();
+            setFbSummary({
+              adAccountCount: result.adAccountCount,
+              pageCount: result.pageCount,
+            });
+            toast.success('Connected via Facebook.');
+          } catch (err) {
+            toast.error(`Facebook: ${err instanceof Error ? err.message : 'Connection failed'}`);
+          } finally {
+            setSavingService(null);
+          }
+        },
+      },
+    },
+    {
+      variant: 'multiField',
+      name: 'Shopify',
+      description: 'Sync products and orders from Shopify',
+      keyUrl: 'https://admin.shopify.com/',
+      keyUrlLabel: 'Custom-app guide',
+      saved: !!savedKeys.shopify,
+      maskedKey: savedKeys.shopify?.maskedKey,
+      savedSummary: shopifySummary?.shopName
+        ? `${shopifySummary.shopName}${shopifySummary.currency ? ` · ${shopifySummary.currency}` : ''}`
+        : null,
+      saving: savingService === 'shopify',
+      buttonLabel: 'Connect',
+      footnote: 'Create a Custom App on your store admin and paste the Admin API access token.',
+      fields: [
+        {
+          key: 'shopDomain',
+          label: 'Shop domain',
+          placeholder: 'mystore.myshopify.com',
+          required: true,
+          type: 'text',
+        },
+        {
+          key: 'accessToken',
+          label: 'Admin API access token',
+          placeholder: 'shpat_… (Admin API access token)',
+          required: true,
+          type: 'password',
+        },
+      ],
+      onSave: handleSaveShopify,
+      onDelete: () => handleDelete('shopify'),
+    },
+    {
+      variant: 'oauth',
+      name: 'TikTok Shop',
+      description: 'Pull products and orders from TikTok Shop',
+      keyUrl: 'https://partner.tiktokshop.com/',
+      keyUrlLabel: 'Setup guide',
+      saved: !!savedKeys.tiktok,
+      maskedKey: savedKeys.tiktok?.maskedKey,
+      savedSummary: tiktokSummary?.shopName ?? null,
+      saving: savingService === 'tiktok',
+      onConnect: () => handleConnectOAuth('tiktok'),
+      onDelete: () => handleDelete('tiktok'),
+      buttonLabel: 'Connect TikTok Shop',
+    },
+    {
+      variant: 'multiField',
+      name: 'Telegram',
+      description: 'Send messages and media via Telegram',
+      keyUrl: 'https://t.me/BotFather',
+      keyUrlLabel: 'Create a bot',
+      saved: !!savedKeys.telegram,
+      maskedKey: savedKeys.telegram?.maskedKey,
+      savedSummary: telegramSummary?.username ? `@${telegramSummary.username}` : null,
+      saving: savingService === 'telegram',
+      buttonLabel: 'Connect',
+      fields: [
+        {
+          key: 'botToken',
+          label: 'Bot token',
+          placeholder: 'Paste your bot token from @BotFather',
+          required: true,
+          type: 'password',
+        },
+      ],
+      onSave: handleSaveTelegram,
+      onDelete: () => handleDelete('telegram'),
+    },
+  ];
 
   return (
     <main className="flex-1 overflow-y-auto">
@@ -210,133 +537,9 @@ export default function ApisPage() {
         </section>
 
         <div className="grid grid-cols-2 gap-4">
-          {services.map((service) => {
-            const saved = savedKeys[service.id];
-            const isSaving = savingService === service.id;
-
-            return (
-              <div
-                key={service.id}
-                className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3
-                        className="text-sm font-semibold text-[var(--base-color-brand--bean)]"
-                        style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                      >
-                        {service.name}
-                      </h3>
-                      <button
-                        onClick={() => window.api.shell.openExternal(service.keyUrl)}
-                        className="cursor-pointer text-xs font-semibold text-[var(--base-color-brand--cinamon)] transition-colors hover:text-[var(--base-color-brand--red)]"
-                      >
-                        {service.keyUrlLabel} &rarr;
-                      </button>
-                    </div>
-                    <p className="text-xs text-[var(--base-color-brand--umber)]">
-                      {service.description}
-                    </p>
-                  </div>
-                  {saved && (
-                    <button
-                      onClick={() => handleDelete(service.id)}
-                      className="grid h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
-                      title="Remove"
-                    >
-                      <DeleteIcon className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {saved && service.id === 'facebook' ? (
-                  <div className="mt-3 flex flex-col gap-1">
-                    <div className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4 py-2">
-                      <code className="text-xs text-[var(--base-color-brand--umber)]">
-                        {saved.maskedKey}
-                      </code>
-                    </div>
-                    {fbSummary && (
-                      <span className="px-1 text-[10px] text-[var(--base-color-brand--umber)]">
-                        {fbSummary.adAccountCount} ad account
-                        {fbSummary.adAccountCount === 1 ? '' : 's'} · {fbSummary.pageCount} Page
-                        {fbSummary.pageCount === 1 ? '' : 's'}
-                      </span>
-                    )}
-                  </div>
-                ) : saved ? (
-                  <div className="mt-3 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4 py-2">
-                    <code className="text-xs text-[var(--base-color-brand--umber)]">
-                      {saved.maskedKey}
-                    </code>
-                  </div>
-                ) : service.id === 'facebook' ? (
-                  <div className="mt-3 flex flex-col gap-2">
-                    <input
-                      type="password"
-                      value={fbForm.accessToken}
-                      onChange={(e) =>
-                        setFbForm((prev) => ({ ...prev, accessToken: e.target.value }))
-                      }
-                      placeholder={service.placeholder}
-                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      value={fbForm.defaultAdAccountId}
-                      onChange={(e) =>
-                        setFbForm((prev) => ({ ...prev, defaultAdAccountId: e.target.value }))
-                      }
-                      placeholder="Default ad account ID (we'll auto-pick if blank)"
-                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      value={fbForm.defaultPageId}
-                      onChange={(e) =>
-                        setFbForm((prev) => ({ ...prev, defaultPageId: e.target.value }))
-                      }
-                      placeholder="Default Facebook Page ID (optional)"
-                      className="min-w-0 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
-                    />
-                    <p className="px-1 text-[10px] leading-tight text-[var(--base-color-brand--umber)]">
-                      Leave both blank and we&apos;ll pick the first ad account and Page on your
-                      Facebook account. You can switch any time.
-                    </p>
-                    <button
-                      onClick={handleSaveFacebook}
-                      disabled={!fbForm.accessToken.trim() || isSaving}
-                      className="self-end rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
-                      style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                    >
-                      {isSaving ? 'Connecting…' : 'Connect'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      type="password"
-                      value={inputs[service.id] || ''}
-                      onChange={(e) =>
-                        setInputs((prev) => ({ ...prev, [service.id]: e.target.value }))
-                      }
-                      placeholder={service.placeholder}
-                      className="min-w-0 flex-1 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-2 text-xs text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleSave(service.id)}
-                      disabled={!inputs[service.id]?.trim() || isSaving}
-                      className="shrink-0 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-4 py-2 text-xs font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] transition-colors hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
-                      style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                    >
-                      {isSaving ? '...' : 'Save'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {cards.map((card) => (
+            <ServiceCard key={card.name} {...card} />
+          ))}
         </div>
       </div>
     </main>

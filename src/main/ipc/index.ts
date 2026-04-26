@@ -7,6 +7,12 @@ import { registerEntityHandlers } from './entities';
 import { registerAdReferenceHandlers } from './adReferences';
 import { registerApiKeyHandlers } from './apiKeys';
 import { registerFacebookAdsHandlers } from './facebookAds';
+import { registerTelegramHandlers } from './telegram';
+import { registerShopifyHandlers } from './shopify';
+import { registerGoogleAdsHandlers } from './googleAds';
+import { registerTiktokShopHandlers } from './tiktokShop';
+import { registerShopeeHandlers } from './shopee';
+import { registerAmazonHandlers } from './amazon';
 import { registerUpdaterHandlers } from './updater';
 import { secureHandle } from './validateSender';
 
@@ -23,6 +29,8 @@ const ALLOWED_EXTERNAL_HOSTS = new Set<string>([
   'developer-docs.amazon.com',
   'developers.facebook.com',
   'admin.shopify.com',
+  'shopify.dev',
+  'partner.tiktokshop.com',
   't.me',
 ]);
 
@@ -50,6 +58,12 @@ export function registerIpcHandlers(): void {
   registerAdReferenceHandlers();
   registerApiKeyHandlers();
   registerFacebookAdsHandlers();
+  registerTelegramHandlers();
+  registerShopifyHandlers();
+  registerGoogleAdsHandlers();
+  registerTiktokShopHandlers();
+  registerShopeeHandlers();
+  registerAmazonHandlers();
   registerUpdaterHandlers();
 
   // Renderer errors (from React 19 root-level callbacks) funnel here so they

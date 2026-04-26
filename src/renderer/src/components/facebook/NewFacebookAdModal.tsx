@@ -26,11 +26,13 @@ const STEPS = [
 
 type StepId = (typeof STEPS)[number]['id'];
 
+// OUTCOME_SALES / OUTCOME_LEADS / OUTCOME_APP_PROMOTION require
+// `promoted_object` (Pixel + custom event, page id, app id) on the ad set,
+// which we don't yet collect in the wizard. Restricted to objectives that
+// work without `promoted_object` until that's wired — see plan phase 5.4.
 const OBJECTIVE_OPTIONS: { value: FbObjective; label: string }[] = [
   { value: 'OUTCOME_TRAFFIC', label: 'Traffic' },
   { value: 'OUTCOME_AWARENESS', label: 'Awareness' },
-  { value: 'OUTCOME_SALES', label: 'Sales' },
-  { value: 'OUTCOME_ENGAGEMENT', label: 'Engagement' },
 ];
 
 const CTA_OPTIONS: { value: FbCtaType; label: string }[] = [

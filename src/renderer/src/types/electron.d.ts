@@ -86,6 +86,10 @@ export interface FbStatusResult {
   connected: boolean;
   defaultAdAccountId?: string;
   defaultPageId?: string;
+  /** Epoch ms when the long-lived token expires (60d window). Absent if
+   *  we couldn't exchange (no FACEBOOK_APP_ID/_SECRET configured) or the
+   *  user pasted a non-exchangeable token. */
+  expiresAt?: number;
 }
 
 export interface FbCreateAdInput {
@@ -206,11 +210,110 @@ export interface ElectronAPI {
       defaultAdAccountId?: string;
       defaultPageId?: string;
     }) => Promise<FbSaveCredentialsResult>;
+    beginOAuth: () => Promise<FbSaveCredentialsResult>;
     listAdAccounts: () => Promise<FbAdAccount[]>;
     listPages: () => Promise<FbPage[]>;
     listCampaigns: (adAccountId?: string) => Promise<FbCampaign[]>;
     listAdSets: (adAccountId?: string, campaignId?: string) => Promise<FbAdSet[]>;
     createAd: (request: FbCreateAdInput) => Promise<FbCreateAdResult>;
+  };
+  telegram?: {
+    status: () => Promise<{ connected: boolean; identity?: { id: number; username?: string } }>;
+    saveToken: (botToken: string) => Promise<{ id: number; username: string }>;
+    sendMessage: (chatId: string | number, text: string) => Promise<{ messageId: number }>;
+  };
+  shopify?: {
+    status: () => Promise<{
+      connected: boolean;
+      shopDomain?: string;
+      shop?: { shopName: string; currency: string };
+    }>;
+    saveCredentials: (input: { shopDomain: string; accessToken: string }) => Promise<{
+      shopName: string;
+      currency: string;
+    }>;
+    listProducts: (
+      limit?: number,
+    ) => Promise<
+      Array<{ id: string; title: string; status: string; vendor?: string; image?: string }>
+    >;
+    listOrders: (
+      limit?: number,
+    ) => Promise<
+      Array<{ id: string; name: string; total: string; currency: string; createdAt: string }>
+    >;
+  };
+  googleAds?: {
+    status: () => Promise<{
+      connected: boolean;
+      loginCustomerId?: string;
+      defaultCustomerId?: string;
+      customerIds?: string[];
+    }>;
+    beginOAuth: () => Promise<{ customerIds: string[] }>;
+    listCampaigns: (customerId?: string) => Promise<
+      Array<{
+        id: string;
+        name: string;
+        status: string;
+        type: string;
+        dailyBudget: number;
+        spent: number;
+        ctr: number;
+        cpc: number;
+        conversions: number;
+        convRate: number;
+        cpa: number;
+        impressionShare: number;
+        budgetResourceName?: string;
+      }>
+    >;
+    pauseCampaign: (campaignId: string, customerId?: string) => Promise<{ success: boolean }>;
+    resumeCampaign: (campaignId: string, customerId?: string) => Promise<{ success: boolean }>;
+    updateBudget: (
+      budgetId: string,
+      amountMicros: number,
+      customerId?: string,
+    ) => Promise<{ success: boolean }>;
+    listAudienceInsights: (customerId?: string) => Promise<
+      Array<{
+        title: string;
+        metric: string;
+        segments: Array<{ label: string; value: string; share: number }>;
+      }>
+    >;
+  };
+  tiktokShop?: {
+    status: () => Promise<{ connected: boolean; shopId?: string; shopName?: string }>;
+    beginOAuth: () => Promise<{ shopId: string; shopName?: string }>;
+    listProducts: () => Promise<
+      Array<{ id: string; title: string; status: string; price?: string; image?: string }>
+    >;
+    listOrders: () => Promise<
+      Array<{ id: string; status: string; total?: string; createdAt: string }>
+    >;
+  };
+  shopee?: {
+    status: () => Promise<{ connected: boolean; shopId?: number }>;
+    beginOAuth: () => Promise<{ shopId: number }>;
+    listProducts: () => Promise<
+      Array<{ id: number; name: string; price?: number; stock?: number; image?: string }>
+    >;
+    listOrders: () => Promise<
+      Array<{ id: string; status: string; total?: string; createdAt: string }>
+    >;
+  };
+  amazon?: {
+    status: () => Promise<{
+      connected: boolean;
+      sellingPartnerId?: string;
+      marketplaceIds?: string[];
+    }>;
+    beginOAuth: () => Promise<{ sellingPartnerId: string }>;
+    listOrders: () => Promise<
+      Array<{ id: string; status: string; total?: string; purchasedAt: string }>
+    >;
+    listCatalogItems: () => Promise<Array<{ asin: string; title?: string; brand?: string }>>;
   };
   adReferences: {
     list: () => Promise<CustomAdReferenceData[]>;

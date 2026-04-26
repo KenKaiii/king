@@ -9,6 +9,7 @@ import {
   type ShopProduct,
 } from '@/lib/mock/tiktokShop';
 import type { PageType } from '@/App';
+import { useDemoMode } from '@/hooks/useDemoMode';
 
 function RefreshIcon() {
   return (
@@ -183,27 +184,77 @@ interface TiktokShopPageProps {
 }
 
 export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
-  const [products] = useState<ShopProduct[]>(mockProducts);
+  const [products, setProducts] = useState<ShopProduct[]>(mockProducts);
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [demoMode] = useDemoMode();
+  const [lastSynced, setLastSynced] = useState<Date>(() => new Date());
+
+  const refreshFromApi = async () => {
+    if (!window.api.tiktokShop) return;
+    const list = await window.api.tiktokShop.listProducts();
+    if (list.length === 0) return;
+    // Real API returns id/title/status/image; metrics (orders/revenue/views/
+    // convRate/rating) require separate analytics endpoints — zero them out
+    // until those are wired so users see real product names + statuses without
+    // misleading mock metrics.
+    const mapped: ShopProduct[] = list.map((p) => ({
+      id: p.id,
+      name: p.title,
+      status: p.status === 'ACTIVATE' || p.status === 'ACTIVE' ? 'active' : 'paused',
+      health: 'good',
+      category: 'home',
+      price: p.price ? Number(p.price) : 0,
+      orders: 0,
+      revenue: 0,
+      views: 0,
+      convRate: 0,
+      rating: 0,
+    }));
+    setProducts(mapped);
+    setLastSynced(new Date());
+  };
 
   useEffect(() => {
+    // Demo mode: skip API; the page already initialises with `mockProducts`.
+    if (demoMode) {
+      setConnected(true);
+      return;
+    }
     let cancelled = false;
-    const check = async () => {
+    void (async () => {
       try {
-        const keys = await window.api.apiKeys.list();
-        if (!cancelled) setConnected(Boolean(keys.tiktok));
+        const status = await window.api.tiktokShop?.status();
+        const isConnected = !!status?.connected;
+        if (!cancelled) setConnected(isConnected);
+        if (isConnected) {
+          try {
+            await refreshFromApi();
+          } catch (err) {
+            toast.error(
+              `TikTok Shop: ${err instanceof Error ? err.message : 'Failed to load products'}`,
+            );
+          }
+        }
       } catch {
         if (!cancelled) setConnected(false);
       }
-    };
-    void check();
+    })();
     return () => {
       cancelled = true;
     };
-  }, []);
-  const [lastSynced] = useState(() => new Date());
+  }, [demoMode]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    if (window.api.tiktokShop && connected) {
+      try {
+        await refreshFromApi();
+        toast.success('Data refreshed');
+        return;
+      } catch (err) {
+        toast.error(`TikTok Shop: ${err instanceof Error ? err.message : 'Failed to refresh'}`);
+        return;
+      }
+    }
     toast.success('Data refreshed');
   };
 

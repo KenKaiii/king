@@ -1,5 +1,6 @@
 import log from 'electron-log/main';
 import type { FacebookCredentials } from './facebookCredentials';
+import { beginOAuth } from './oauthBroker';
 
 /**
  * Thin typed wrappers around the Meta Marketing API (Graph API v23.0).
@@ -11,7 +12,11 @@ import type { FacebookCredentials } from './facebookCredentials';
  * different ad accounts without races.
  */
 
-const GRAPH_VERSION = 'v23.0';
+// Bumped from v23.0 → v25.0. Field shapes (`ads_insights`, `ad_image`,
+// `object_story_spec`, `adcreatives`, `campaigns`) are unchanged across the
+// v23 → v25 range per the Marketing API changelogs. Verify against
+// https://developers.facebook.com/docs/graph-api/changelog before bumping.
+const GRAPH_VERSION = 'v25.0';
 const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
 
 // ------ Public types -----------------------------------------------------
@@ -243,6 +248,85 @@ async function paginateAll<T>(
     next = page.paging?.next;
   }
   return out;
+}
+
+// ------ OAuth flow ------------------------------------------------------
+
+/**
+ * Browser-based OAuth flow using the loopback broker. Requires a registered
+ * Meta app with `http://127.0.0.1/*` whitelisted on Login Settings.
+ *
+ * Returns the short-lived user token; caller should immediately exchange it
+ * via `exchangeForLongLivedToken` for the 60-day token before persisting.
+ */
+export async function beginFacebookOAuth(): Promise<{ accessToken: string }> {
+  const appId = process.env.FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+  if (!appId || !appSecret) {
+    throw new FacebookApiError(
+      'Facebook OAuth not configured. Set FACEBOOK_APP_ID / FACEBOOK_APP_SECRET, or paste a token from Graph API Explorer.',
+    );
+  }
+
+  const flow = await beginOAuth({
+    service: 'facebook',
+    scopes: ['ads_management', 'pages_show_list', 'pages_read_engagement', 'business_management'],
+    pkce: false,
+    buildAuthUrl: ({ redirectUri, state, scopes }) => {
+      const params = new URLSearchParams({
+        client_id: appId,
+        redirect_uri: redirectUri,
+        state,
+        scope: scopes.join(','),
+        response_type: 'code',
+      });
+      return `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${params.toString()}`;
+    },
+  });
+
+  const cb = await flow.callback;
+  // Exchange the auth code for a (short-lived) user access token.
+  const exchangeUrl = new URL(`${GRAPH_BASE}/oauth/access_token`);
+  exchangeUrl.searchParams.set('client_id', appId);
+  exchangeUrl.searchParams.set('client_secret', appSecret);
+  exchangeUrl.searchParams.set('redirect_uri', flow.redirectUri);
+  exchangeUrl.searchParams.set('code', cb.code);
+  const res = await fetch(exchangeUrl.toString(), { method: 'GET' });
+  const body = await parseJsonOrThrow<{ access_token: string }>(res);
+  return { accessToken: body.access_token };
+}
+
+// ------ Long-lived token exchange ---------------------------------------
+
+/**
+ * Exchange a short-lived (1–2h) user access token for a long-lived (60d) one.
+ * https://developers.facebook.com/docs/facebook-login/guides/access-tokens/get-long-lived
+ *
+ * Requires a registered Meta app. App id / secret are env-driven so dev builds
+ * can ship without a rebuild; absent values cause this function to no-op and
+ * return the original token (we keep validation working on a Graph Explorer
+ * paste-in flow).
+ */
+export async function exchangeForLongLivedToken(
+  shortLivedToken: string,
+): Promise<{ accessToken: string; expiresAt?: number }> {
+  const appId = process.env.FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+  if (!appId || !appSecret) {
+    return { accessToken: shortLivedToken };
+  }
+  const url = new URL(`${GRAPH_BASE}/oauth/access_token`);
+  url.searchParams.set('grant_type', 'fb_exchange_token');
+  url.searchParams.set('client_id', appId);
+  url.searchParams.set('client_secret', appSecret);
+  url.searchParams.set('fb_exchange_token', shortLivedToken);
+  const res = await fetch(url.toString(), { method: 'GET' });
+  const body = await parseJsonOrThrow<{ access_token: string; expires_in?: number }>(res);
+  return {
+    accessToken: body.access_token,
+    expiresAt:
+      typeof body.expires_in === 'number' ? Date.now() + body.expires_in * 1000 : undefined,
+  };
 }
 
 // ------ Account-level lookups -------------------------------------------
