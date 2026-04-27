@@ -62,7 +62,7 @@ export default memo(function SelectDropdown({
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="hide-scrollbar absolute bottom-full left-0 z-50 mb-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg">
+        <div className="hide-scrollbar absolute top-full left-0 z-50 mt-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg">
           {options.map((option) => {
             if (option.disabled) {
               return (

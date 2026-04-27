@@ -313,9 +313,9 @@ function healthFromMetrics(c: { ctr: number; cpa: number; conversions: number })
 }
 
 export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [audienceInsights, setAudienceInsights] =
-    useState<typeof mockAudienceInsights>(mockAudienceInsights);
+  // Empty by default. Demo mode hydrates from mocks; real mode fetches via IPC.
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [audienceInsights, setAudienceInsights] = useState<typeof mockAudienceInsights>([]);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [demoMode] = useDemoMode();
   const [lastSynced, setLastSynced] = useState<Date>(() => new Date());
@@ -353,12 +353,16 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   }, []);
 
   useEffect(() => {
-    // Demo mode: skip real API entirely; the page already initialises with
-    // `mockCampaigns` + `mockAudienceInsights` which look great for screenshots.
+    // Demo mode: skip real API entirely; hydrate from mock fixtures.
     if (demoMode) {
+      setCampaigns(mockCampaigns);
+      setAudienceInsights(mockAudienceInsights);
       setConnected(true);
       return;
     }
+    // Real mode: clear any prior demo-mode mocks before probing.
+    setCampaigns([]);
+    setAudienceInsights([]);
     let cancelled = false;
     const check = async () => {
       try {
@@ -548,38 +552,46 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
           <KpiCard label="Active" value={String(activeCampaigns.length)} sub="campaigns" />
         </section>
 
-        {/* Audience Insights */}
-        <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
-            Audience Insights
-          </h3>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {audienceInsights.map((insight) => (
-              <InsightCard
-                key={insight.title}
-                title={insight.title}
-                metric={insight.metric}
-                segments={insight.segments}
-              />
-            ))}
-          </div>
-        </section>
+        {/* Audience Insights — hide when no data (real API may return none). */}
+        {audienceInsights.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
+              Audience Insights
+            </h3>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {audienceInsights.map((insight) => (
+                <InsightCard
+                  key={insight.title}
+                  title={insight.title}
+                  metric={insight.metric}
+                  segments={insight.segments}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Campaign Cards */}
         <section className="flex flex-col gap-4">
           <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Campaigns
           </h3>
-          <div className="flex flex-col gap-3">
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                onToggleStatus={handleToggleStatus}
-                onBudgetSave={handleBudgetSave}
-              />
-            ))}
-          </div>
+          {campaigns.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]/50 p-8 text-center text-sm text-[var(--base-color-brand--umber)]">
+              No campaigns found in this Google Ads account.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onToggleStatus={handleToggleStatus}
+                  onBudgetSave={handleBudgetSave}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

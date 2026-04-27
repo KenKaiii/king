@@ -287,16 +287,20 @@ interface ShopeeAdsPageProps {
 }
 
 export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  // Empty by default. Demo mode hydrates from mocks; real mode currently has
+  // no Shopee Ads API wired (only Shopee Open Platform for products/orders),
+  // so the campaign list stays empty until that surface is implemented.
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [demoMode] = useDemoMode();
 
   useEffect(() => {
-    // Demo mode: skip API; the page already initialises with `mockCampaigns`.
     if (demoMode) {
+      setCampaigns(mockCampaigns);
       setConnected(true);
       return;
     }
+    setCampaigns([]);
     let cancelled = false;
     const check = async () => {
       try {
@@ -460,16 +464,23 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
           <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Campaigns
           </h3>
-          <div className="flex flex-col gap-3">
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                onToggleStatus={handleToggleStatus}
-                onBudgetSave={handleBudgetSave}
-              />
-            ))}
-          </div>
+          {campaigns.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]/50 p-8 text-center text-sm text-[var(--base-color-brand--umber)]">
+              Shopee Ads campaign metrics aren’t available yet — the Shopee Open Platform connection
+              covers products and orders, but the Ads API surface isn’t wired into King yet.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onToggleStatus={handleToggleStatus}
+                  onBudgetSave={handleBudgetSave}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

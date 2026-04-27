@@ -184,7 +184,8 @@ interface TiktokShopPageProps {
 }
 
 export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
-  const [products, setProducts] = useState<ShopProduct[]>(mockProducts);
+  // Empty by default. Demo mode hydrates from mocks; real mode fetches via IPC.
+  const [products, setProducts] = useState<ShopProduct[]>([]);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [demoMode] = useDemoMode();
   const [lastSynced, setLastSynced] = useState<Date>(() => new Date());
@@ -192,7 +193,6 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
   const refreshFromApi = async () => {
     if (!window.api.tiktokShop) return;
     const list = await window.api.tiktokShop.listProducts();
-    if (list.length === 0) return;
     // Real API returns id/title/status/image; metrics (orders/revenue/views/
     // convRate/rating) require separate analytics endpoints — zero them out
     // until those are wired so users see real product names + statuses without
@@ -215,11 +215,12 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
   };
 
   useEffect(() => {
-    // Demo mode: skip API; the page already initialises with `mockProducts`.
     if (demoMode) {
+      setProducts(mockProducts);
       setConnected(true);
       return;
     }
+    setProducts([]);
     let cancelled = false;
     void (async () => {
       try {
@@ -367,11 +368,17 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
           <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Products
           </h3>
-          <div className="flex flex-col gap-3">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {products.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]/50 p-8 text-center text-sm text-[var(--base-color-brand--umber)]">
+              No products found in this TikTok Shop.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

@@ -8,11 +8,12 @@ import { useDemoMode } from '@/hooks/useDemoMode';
 import type { FbAdAccount } from '@/types/electron';
 import {
   mockCampaigns,
-  audienceInsights,
+  audienceInsights as mockAudienceInsights,
   getHealthColor,
   getStatusStyle,
   getMetricColor,
   type Campaign,
+  type CampaignObjective,
 } from '@/lib/mock/facebookAds';
 import type { PageType } from '@/App';
 
@@ -284,8 +285,28 @@ interface FacebookAdsPageProps {
   onNavigate: (page: PageType) => void;
 }
 
+function mapFbObjective(o: string): CampaignObjective {
+  switch (o) {
+    case 'OUTCOME_AWARENESS':
+      return 'awareness';
+    case 'OUTCOME_TRAFFIC':
+      return 'traffic';
+    case 'OUTCOME_ENGAGEMENT':
+      return 'engagement';
+    case 'OUTCOME_SALES':
+    case 'OUTCOME_LEADS':
+    case 'OUTCOME_APP_PROMOTION':
+    default:
+      return 'conversions';
+  }
+}
+
 export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  // Empty by default. Demo mode hydrates from mocks; real mode fetches via IPC.
+  // Never render mock fixtures when demoMode is off — that would mislead users
+  // into thinking their connected account had data it doesn't.
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [audienceInsights, setAudienceInsights] = useState<typeof mockAudienceInsights>([]);
   // null = still probing on first paint; flips to true/false once IPC returns.
   // We start in 'probing' rather than optimistically `true` because the page
   // would otherwise show mock data + an empty account switcher to a user who
@@ -299,13 +320,18 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
 
   const [demoMode] = useDemoMode();
 
-  // Probe connection state + load ad accounts. Skip entirely in demo mode
-  // (we render the existing mock fixtures + force `connected` true below).
+  // Probe connection state + load ad accounts + fetch real campaigns.
+  // In demo mode, hydrate from mock fixtures and force `connected` true.
   useEffect(() => {
     if (demoMode) {
+      setCampaigns(mockCampaigns);
+      setAudienceInsights(mockAudienceInsights);
       setConnected(true);
       return;
     }
+    // Real mode: clear any prior demo-mode mocks before probing.
+    setCampaigns([]);
+    setAudienceInsights([]);
     let cancelled = false;
     void (async () => {
       try {
@@ -316,8 +342,41 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
           const accs = await window.api.facebookAds.listAdAccounts();
           if (cancelled) return;
           setAdAccounts(accs);
-          if (!selectedAdAccountId && accs[0]) {
-            setSelectedAdAccountId(status.defaultAdAccountId ?? accs[0].id);
+          const accountId =
+            selectedAdAccountId ?? status.defaultAdAccountId ?? accs[0]?.id ?? undefined;
+          if (!selectedAdAccountId && accountId) {
+            setSelectedAdAccountId(accountId);
+          }
+          if (accountId) {
+            try {
+              const rows = await window.api.facebookAds.listCampaigns(accountId);
+              if (cancelled) return;
+              // Real Graph API returns campaign metadata only — metrics
+              // (spend/CTR/CPC/conversions/ROAS) require a separate ads_insights
+              // query that isn't wired yet. Zero them out so users see real
+              // names + statuses without misleading numbers.
+              setCampaigns(
+                rows.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  status: c.status === 'ACTIVE' ? 'active' : 'paused',
+                  health: 'good',
+                  objective: mapFbObjective(c.objective),
+                  dailyBudget: 0,
+                  spent: 0,
+                  ctr: 0,
+                  cpc: 0,
+                  conversions: 0,
+                  roas: 0,
+                })),
+              );
+            } catch (err) {
+              if (!cancelled) {
+                toast.error(
+                  `Facebook Ads: ${err instanceof Error ? err.message : 'Failed to load campaigns'}`,
+                );
+              }
+            }
           }
         }
       } catch {
@@ -489,38 +548,47 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
           <KpiCard label="Active" value={String(activeCampaigns.length)} sub="campaigns" />
         </section>
 
-        {/* Audience Insights */}
-        <section className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
-            Audience Insights
-          </h3>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {audienceInsights.map((insight) => (
-              <InsightCard
-                key={insight.title}
-                title={insight.title}
-                metric={insight.metric}
-                segments={insight.segments}
-              />
-            ))}
-          </div>
-        </section>
+        {/* Audience Insights — only when we actually have data (demo mode
+            today; real ads_insights API not wired yet). */}
+        {audienceInsights.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
+              Audience Insights
+            </h3>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {audienceInsights.map((insight) => (
+                <InsightCard
+                  key={insight.title}
+                  title={insight.title}
+                  metric={insight.metric}
+                  segments={insight.segments}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Campaign Cards */}
         <section className="flex flex-col gap-4">
           <h3 className="text-lg font-bold tracking-wide text-[var(--base-color-brand--bean)]">
             Campaigns
           </h3>
-          <div className="flex flex-col gap-3">
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                onToggleStatus={handleToggleStatus}
-                onBudgetSave={handleBudgetSave}
-              />
-            ))}
-          </div>
+          {campaigns.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]/50 p-8 text-center text-sm text-[var(--base-color-brand--umber)]">
+              No campaigns found in this ad account. Use “New Ad” to launch your first one.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onToggleStatus={handleToggleStatus}
+                  onBudgetSave={handleBudgetSave}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </div>
       <NewFacebookAdModal
