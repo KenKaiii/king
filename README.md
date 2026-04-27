@@ -139,7 +139,14 @@ Stack: Electron + React 19 + Tailwind v4 + fal.ai
 
 ## License
 
-MIT
+**[GNU Affero General Public License v3.0 or later](LICENSE)** (AGPL-3.0-or-later).
+
+In plain English: you can use it, modify it, fork it, and run it. If you
+distribute a modified version — including running it as a hosted service
+you let other people use — you must publish your changes under AGPL too.
+No closed-source forks, no "take the code, slap a logo on it, sell it as
+your own" without giving back. See `LICENSE` and `NOTICE` for the full
+legal text.
 
 ---
 
