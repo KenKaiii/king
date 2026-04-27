@@ -24,6 +24,32 @@ function formatSpeed(bytesPerSecond?: number): string {
   return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
 }
 
+/**
+ * Convert HTML release-notes (as returned by electron-updater's GitHub
+ * provider) into plain text suitable for `whitespace-pre-wrap` rendering.
+ *
+ * Strategy: replace block-breaking tags with newlines, drop everything else,
+ * then decode the most common HTML entities. Renders any sanitised input
+ * losslessly enough for short release notes; pathological markup degrades
+ * gracefully to readable text. Zero XSS surface — we never inject HTML.
+ */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li)>/gi, '\n\n')
+    .replace(/<li[^>]*>/gi, '\u2022 ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [status, setStatus] = useState<UpdaterStatus>({
     stage: 'idle',
@@ -179,12 +205,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           )}
 
-          {/* Release notes (available / downloaded) */}
+          {/* Release notes (available / downloaded). electron-updater's
+              GitHub provider returns the release body as HTML (paragraphs,
+              line breaks, entity-encoded angle brackets). We strip it to
+              plain text rather than risk dangerouslySetInnerHTML — zero XSS
+              surface even if a release author somewhere injects markup. */}
           {(isAvailable || isDownloaded) && status.releaseNotes && (
             <div className="mt-3 max-h-32 overflow-auto rounded-xl bg-[var(--base-color-brand--shell)] p-3 text-xs text-[var(--base-color-brand--bean)]">
               <p className="font-semibold">What’s new</p>
               <div className="mt-1 whitespace-pre-wrap text-[var(--base-color-brand--umber)]">
-                {status.releaseNotes}
+                {htmlToPlainText(status.releaseNotes)}
               </div>
             </div>
           )}
