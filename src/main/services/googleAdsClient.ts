@@ -26,10 +26,17 @@ import {
  *                                  still requires it on the token-exchange step.
  *   GOOGLE_ADS_DEVELOPER_TOKEN  — from Google Ads API Center under your MCC.
  *
- * Endpoint version `v23` — bump quarterly per https://developers.google.com/google-ads/api/docs/release-notes.
+ * Endpoint version `v24` — latest stable as of April 2026. Google switched
+ * to a monthly release cadence in 2026 (4 major versions/year + monthly
+ * minors). Major versions still get ≥ 12 months of support, so pinning to
+ * the latest major (e.g. `v24`, `v25`, ...) and bumping each major release
+ * is safe; minor releases (`v24.1`, `v24.2`, ...) share the same endpoint
+ * URL and only require client-code updates if you adopt new fields.
+ * Verify against https://developers.google.com/google-ads/api/docs/release-notes
+ * before bumping.
  */
 
-const API_VERSION = 'v23';
+const API_VERSION = 'v24';
 const API_BASE = `https://googleads.googleapis.com/${API_VERSION}`;
 const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const OAUTH_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';

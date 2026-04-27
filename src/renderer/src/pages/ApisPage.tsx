@@ -452,7 +452,8 @@ export default function ApisPage() {
       variant: 'multiField',
       name: 'Shopify',
       description: 'Sync products and orders from Shopify',
-      keyUrl: 'https://admin.shopify.com/',
+      keyUrl:
+        'https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/generate-app-access-tokens-admin',
       keyUrlLabel: 'Custom-app guide',
       saved: !!savedKeys.shopify,
       maskedKey: savedKeys.shopify?.maskedKey,
@@ -461,7 +462,8 @@ export default function ApisPage() {
         : null,
       saving: savingService === 'shopify',
       buttonLabel: 'Connect',
-      footnote: 'Create a Custom App on your store admin and paste the Admin API access token.',
+      footnote:
+        'Create a custom app in the Shopify Dev Dashboard (legacy in-admin custom apps were removed Jan 1, 2026), install it on your store, then paste the Admin API access token below.',
       fields: [
         {
           key: 'shopDomain',
@@ -473,7 +475,7 @@ export default function ApisPage() {
         {
           key: 'accessToken',
           label: 'Admin API access token',
-          placeholder: 'shpat_… (Admin API access token)',
+          placeholder: 'shpat_… or shpua_… (Admin API access token)',
           required: true,
           type: 'password',
         },
