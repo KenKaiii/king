@@ -1,6 +1,6 @@
 {
   "name": "king",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "King — the desktop command center for e-commerce creative. Generate scroll-stopping product shots, manage products, characters, and prompts, and run Shopify, Amazon, Shopee, Facebook Ads, Google Ads, and TikTok Shop from one native Mac + Windows app.",
   "main": "./out/main/index.js",
   "author": {
