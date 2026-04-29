@@ -9,6 +9,7 @@ import {
 import { pickVariant, type AdReference } from '@/lib/adReferences';
 import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
+import { cleanIpcError } from '@/lib/ipcError';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results';
@@ -249,6 +250,7 @@ async function generateSingleSlot(
     }));
   };
 
+  const modelVariant = useModelStore.getState().selectedModel;
   try {
     const result = await window.api.generate.image({
       prompt: inputs.prompt,
@@ -256,7 +258,7 @@ async function generateSingleSlot(
       resolution: CREATE_ADS_RESOLUTION,
       outputFormat: CREATE_ADS_OUTPUT_FORMAT,
       imageUrls: inputs.imageUrls,
-      modelVariant: useModelStore.getState().selectedModel,
+      modelVariant,
     });
 
     const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
@@ -269,6 +271,7 @@ async function generateSingleSlot(
       url: firstUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
+      model: modelVariant,
     });
 
     // Push into the global gallery store so the Image page picks it up
@@ -277,7 +280,7 @@ async function generateSingleSlot(
 
     updateSlot({ status: 'success', image: saved });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Couldn't generate this one.";
+    const message = cleanIpcError(err, "Couldn't generate this one.");
     updateSlot({ status: 'error', error: message });
   }
 }

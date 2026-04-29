@@ -61,7 +61,7 @@ const MISSING_KEY_MESSAGE =
 const INVALID_KEY_MESSAGE =
   "Your fal.ai key didn't work. Double-check it on the APIs page and save a fresh one if needed.";
 const OUT_OF_CREDITS_MESSAGE =
-  'Your fal.ai account is locked — usually because the balance ran out. If you just topped up, give it a minute to sync and try again. Otherwise top up at fal.ai/dashboard/billing, or check that your API key belongs to the account you topped up.';
+  'Your fal.ai credits have run out. Top up at fal.ai/dashboard/billing and try again. If you just topped up, give it a minute to sync.';
 const SAFETY_BLOCK_MESSAGE =
   'Google blocked this one as a safety precaution. The filter is probabilistic — hitting Try again often works, especially on face-swap and character workflows.';
 const VALIDATION_MESSAGE =

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { ApiKeyEntry } from '@/types/electron';
 import { ServiceCard, type ServiceCardProps } from '@/components/api/ServiceCard';
+import { cleanIpcError } from '@/lib/ipcError';
 
 interface FacebookSummary {
   adAccountCount: number;
@@ -259,7 +260,7 @@ export default function ApisPage() {
       setTelegramSummary({ username: result.username, id: result.id });
       toast.success(`Connected — @${result.username}`);
     } catch (err) {
-      toast.error(`Telegram: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Telegram: ${cleanIpcError(err, 'Unknown error')}`);
     } finally {
       setSavingService(null);
     }
@@ -280,7 +281,7 @@ export default function ApisPage() {
       setShopifySummary({ shopName: result.shopName, currency: result.currency });
       toast.success(`Connected — ${result.shopName}`);
     } catch (err) {
-      toast.error(`Shopify: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Shopify: ${cleanIpcError(err, 'Unknown error')}`);
     } finally {
       setSavingService(null);
     }
@@ -300,7 +301,7 @@ export default function ApisPage() {
         `Connected — ${result.adAccountCount} ad account${result.adAccountCount === 1 ? '' : 's'} · ${result.pageCount} Page${result.pageCount === 1 ? '' : 's'}`,
       );
     } catch (err) {
-      toast.error(`Facebook: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Facebook: ${cleanIpcError(err, 'Unknown error')}`);
     } finally {
       setSavingService(null);
     }
@@ -324,7 +325,7 @@ export default function ApisPage() {
       await fetchKeys();
       toast.success('Connected.');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Connection failed.');
+      toast.error(cleanIpcError(err, 'Connection failed.'));
     } finally {
       setSavingService(null);
     }
@@ -441,7 +442,7 @@ export default function ApisPage() {
             });
             toast.success('Connected via Facebook.');
           } catch (err) {
-            toast.error(`Facebook: ${err instanceof Error ? err.message : 'Connection failed'}`);
+            toast.error(`Facebook: ${cleanIpcError(err, 'Connection failed')}`);
           } finally {
             setSavingService(null);
           }

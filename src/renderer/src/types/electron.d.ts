@@ -1,3 +1,5 @@
+export type ImageModelId = 'nano_banana_pro' | 'gpt_image_2';
+
 export interface GeneratedImageData {
   id: string;
   url: string;
@@ -6,6 +8,8 @@ export interface GeneratedImageData {
   aspectRatio: string;
   createdAt: string;
   filename: string;
+  /** Which fal model produced this image. Absent on legacy records. */
+  model?: ImageModelId;
 }
 
 export interface EntityData {
@@ -165,6 +169,7 @@ export interface ElectronAPI {
       url: string;
       prompt: string;
       aspectRatio: string;
+      model?: ImageModelId;
     }) => Promise<GeneratedImageData>;
     delete: (id: string) => Promise<{ success: boolean }>;
   };

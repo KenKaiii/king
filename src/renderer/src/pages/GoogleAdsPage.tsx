@@ -13,6 +13,7 @@ import {
 } from '@/lib/mock/googleAds';
 import type { PageType } from '@/App';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { cleanIpcError } from '@/lib/ipcError';
 
 function RefreshIcon() {
   return (
@@ -376,9 +377,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
             const insights = await window.api.googleAds?.listAudienceInsights();
             if (insights && insights.length > 0 && !cancelled) setAudienceInsights(insights);
           } catch (err) {
-            toast.error(
-              `Google Ads: ${err instanceof Error ? err.message : 'Failed to load campaigns'}`,
-            );
+            toast.error(`Google Ads: ${cleanIpcError(err, 'Failed to load campaigns')}`);
           }
         }
       } catch {
@@ -408,9 +407,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
           setCampaigns((prev) =>
             prev.map((c) => (c.id === id ? { ...c, status: current.status } : c)),
           );
-          toast.error(
-            `Google Ads: ${err instanceof Error ? err.message : 'Failed to update campaign'}`,
-          );
+          toast.error(`Google Ads: ${cleanIpcError(err, 'Failed to update campaign')}`);
         }
       } else {
         toast.success(`${current.name} ${nextStatus === 'active' ? 'resumed' : 'paused'}`);
@@ -433,9 +430,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
           setCampaigns((prev) =>
             prev.map((c) => (c.id === id ? { ...c, dailyBudget: previous } : c)),
           );
-          toast.error(
-            `Google Ads: ${err instanceof Error ? err.message : 'Failed to update budget'}`,
-          );
+          toast.error(`Google Ads: ${cleanIpcError(err, 'Failed to update budget')}`);
         }
       } else {
         toast.success(`Budget updated to $${newBudget}/day`);
@@ -453,7 +448,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
       await refreshFromApi();
       toast.success('Data refreshed');
     } catch (err) {
-      toast.error(`Google Ads: ${err instanceof Error ? err.message : 'Failed to refresh'}`);
+      toast.error(`Google Ads: ${cleanIpcError(err, 'Failed to refresh')}`);
     }
   };
 

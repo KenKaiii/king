@@ -4,8 +4,12 @@ import type { IpcRendererEvent } from 'electron';
 const api = {
   images: {
     list: (cursor?: string, limit?: number) => ipcRenderer.invoke('images:list', cursor, limit),
-    save: (data: { url: string; prompt: string; aspectRatio: string }) =>
-      ipcRenderer.invoke('images:save', data),
+    save: (data: {
+      url: string;
+      prompt: string;
+      aspectRatio: string;
+      model?: 'nano_banana_pro' | 'gpt_image_2';
+    }) => ipcRenderer.invoke('images:save', data),
     delete: (id: string) => ipcRenderer.invoke('images:delete', id),
   },
   generate: {

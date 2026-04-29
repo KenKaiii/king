@@ -1,6 +1,9 @@
 import { getImagesJsonPath } from './paths';
 import { readJson, writeJsonAtomic, withJsonLock } from './atomicJson';
 
+/** Mirror of `ImageModel` in `src/renderer/src/stores/modelStore.ts`. */
+export type ImageModel = 'nano_banana_pro' | 'gpt_image_2';
+
 export interface StoredImage {
   id: string;
   url: string;
@@ -9,6 +12,12 @@ export interface StoredImage {
   aspectRatio: string;
   createdAt: string;
   filename: string;
+  /**
+   * Which fal model produced this image. Optional because records saved
+   * before this field was introduced won't have it; the renderer falls
+   * back to a sensible default for legacy entries.
+   */
+  model?: ImageModel;
 }
 
 interface ImageStore {

@@ -9,6 +9,7 @@ import {
 import { detectSoftRefusal } from '@/lib/imageHash';
 import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
+import { cleanIpcError } from '@/lib/ipcError';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type CloneStepId = 'source' | 'character' | 'tweaks' | 'format' | 'results';
@@ -224,6 +225,7 @@ async function generateSingleSlot(
       url: outputUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
+      model: modelVariant,
     });
 
     // Push into the global gallery store so the Image page picks it up
@@ -232,7 +234,7 @@ async function generateSingleSlot(
 
     updateSlot({ status: 'success', image: saved });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Couldn't generate this one.";
+    const message = cleanIpcError(err, "Couldn't generate this one.");
     updateSlot({ status: 'error', error: message });
   }
 }

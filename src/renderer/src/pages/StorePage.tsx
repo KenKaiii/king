@@ -4,6 +4,7 @@ import { RefreshIcon } from '@/components/icons';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import type { PageType } from '@/App';
 import { shopifyDemo, shopeeDemo, tiktokDemo, amazonDemo } from '@/lib/mock/storeData';
+import { cleanIpcError } from '@/lib/ipcError';
 
 /**
  * Demo mode is controlled globally via the `useDemoMode` hook (master toggle
@@ -419,7 +420,7 @@ export default function StorePage({ onNavigate }: StorePageProps) {
         ...s,
         connected: true,
         loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load Shopify data',
+        error: cleanIpcError(err, 'Failed to load Shopify data'),
       }));
     }
   }, []);
@@ -464,7 +465,7 @@ export default function StorePage({ onNavigate }: StorePageProps) {
         ...s,
         connected: true,
         loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load Shopee data',
+        error: cleanIpcError(err, 'Failed to load Shopee data'),
       }));
     }
   }, []);
@@ -509,7 +510,7 @@ export default function StorePage({ onNavigate }: StorePageProps) {
         ...s,
         connected: true,
         loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load TikTok Shop data',
+        error: cleanIpcError(err, 'Failed to load TikTok Shop data'),
       }));
     }
   }, []);
@@ -552,7 +553,7 @@ export default function StorePage({ onNavigate }: StorePageProps) {
         ...s,
         connected: true,
         loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load Amazon data',
+        error: cleanIpcError(err, 'Failed to load Amazon data'),
       }));
     }
   }, []);

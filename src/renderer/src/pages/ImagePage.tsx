@@ -12,6 +12,7 @@ import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useImages } from '@/hooks';
 import { useGenerationStore } from '@/stores/generationStore';
 import { useModelStore } from '@/stores/modelStore';
+import { cleanIpcError } from '@/lib/ipcError';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
@@ -159,6 +160,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
               url,
               prompt: data.prompt,
               aspectRatio: data.aspectRatio,
+              model: selectedModel,
             });
 
             addImage(savedImage);
@@ -167,9 +169,7 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
           removeImageGeneration(generationId);
         } catch (err) {
-          toast.error(
-            err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-          );
+          toast.error(cleanIpcError(err, 'Something went wrong. Please try again.'));
           removeImageGeneration(generationId);
         }
       }

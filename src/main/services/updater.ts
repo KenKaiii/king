@@ -44,6 +44,41 @@ let latestStatus: UpdaterStatus = {
   currentVersion: app.getVersion(),
 };
 
+/**
+ * electron-updater throws a wall of text whenever GitHub returns 404 for
+ * `latest-mac.yml` / `latest.yml` / `latest-linux.yml` — which happens
+ * routinely while a release is being uploaded (the tag exists but the
+ * update manifest hasn't been attached yet) and also when releases are
+ * draft-only. The full HttpError dump is useless to end users; map the
+ * common cases to a single friendly sentence and keep the original in
+ * the log file for debugging.
+ */
+function friendlyUpdaterError(raw: string): string {
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes('latest-mac.yml') ||
+    lower.includes('latest.yml') ||
+    lower.includes('latest-linux.yml') ||
+    lower.includes('cannot find') ||
+    lower.includes('404')
+  ) {
+    return "A new release is being prepared right now. Check back in a few minutes \u2014 the update file isn't published yet.";
+  }
+  if (
+    lower.includes('enotfound') ||
+    lower.includes('econnrefused') ||
+    lower.includes('etimedout') ||
+    lower.includes('network') ||
+    lower.includes('getaddrinfo')
+  ) {
+    return "Couldn't reach the update server. Check your internet connection and try again.";
+  }
+  if (lower.includes('signature') || lower.includes('not signed')) {
+    return 'The downloaded update failed its signature check. Try again, or download manually from the GitHub releases page.';
+  }
+  return "Couldn't check for updates right now. Try again in a moment.";
+}
+
 function broadcast(status: UpdaterStatus): void {
   latestStatus = status;
   for (const win of BrowserWindow.getAllWindows()) {
@@ -109,10 +144,12 @@ export function initUpdater(): void {
   });
 
   autoUpdater.on('error', (err) => {
+    const raw = err?.message ?? String(err);
+    log.warn('[updater] error event:', raw);
     broadcast({
       stage: 'error',
       currentVersion: app.getVersion(),
-      error: err?.message ?? String(err),
+      error: friendlyUpdaterError(raw),
     });
   });
 }
@@ -133,10 +170,12 @@ export async function checkForUpdates(): Promise<UpdaterStatus> {
   try {
     await autoUpdater.checkForUpdates();
   } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    log.warn('[updater] checkForUpdates threw:', raw);
     broadcast({
       stage: 'error',
       currentVersion: app.getVersion(),
-      error: err instanceof Error ? err.message : String(err),
+      error: friendlyUpdaterError(raw),
     });
   }
   return latestStatus;
@@ -147,10 +186,12 @@ export async function downloadUpdate(): Promise<void> {
   try {
     await autoUpdater.downloadUpdate();
   } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    log.warn('[updater] downloadUpdate threw:', raw);
     broadcast({
       stage: 'error',
       currentVersion: app.getVersion(),
-      error: err instanceof Error ? err.message : String(err),
+      error: friendlyUpdaterError(raw),
     });
   }
 }

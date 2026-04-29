@@ -1,3 +1,5 @@
+import type { ImageModelId } from '@/types/electron';
+
 export interface GeneratedImage {
   id: string;
   url: string;
@@ -5,4 +7,6 @@ export interface GeneratedImage {
   prompt: string;
   aspectRatio: string;
   createdAt: string;
+  /** Absent on legacy records — detail panel falls back to Nano Banana Pro. */
+  model?: ImageModelId;
 }

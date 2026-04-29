@@ -5,6 +5,7 @@ import SelectDropdown from '@/components/ui/SelectDropdown';
 import NewFacebookAdModal from '@/components/facebook/NewFacebookAdModal';
 import { useFacebookAccountStore } from '@/stores/facebookAccountStore';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { cleanIpcError } from '@/lib/ipcError';
 import type { FbAdAccount } from '@/types/electron';
 import {
   mockCampaigns,
@@ -372,9 +373,7 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
               );
             } catch (err) {
               if (!cancelled) {
-                toast.error(
-                  `Facebook Ads: ${err instanceof Error ? err.message : 'Failed to load campaigns'}`,
-                );
+                toast.error(`Facebook Ads: ${cleanIpcError(err, 'Failed to load campaigns')}`);
               }
             }
           }

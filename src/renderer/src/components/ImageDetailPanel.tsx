@@ -1,5 +1,14 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import type { ImageModelId } from '@/types/electron';
+
+// Display labels for the fal models we support. Kept in sync with the
+// option labels in `ImagePromptForm` and `SettingsModal` so the detail
+// panel reads exactly the same name the user picked when generating.
+const MODEL_LABELS: Record<ImageModelId, string> = {
+  nano_banana_pro: 'Nano Banana Pro',
+  gpt_image_2: 'GPT Image 2',
+};
 
 interface ImageDetailPanelProps {
   image: {
@@ -8,6 +17,8 @@ interface ImageDetailPanelProps {
     prompt: string;
     aspectRatio: string;
     createdAt: string;
+    /** Absent on legacy records — falls back to Nano Banana Pro. */
+    model?: ImageModelId;
   };
   onClose: () => void;
   onDelete: (id: string) => void;
@@ -221,8 +232,12 @@ export default function ImageDetailPanel({
                   Copy
                 </button>
               </div>
-              <div className="px-4 pb-4">
-                <p className="text-sm break-words text-[var(--text-color--text-primary)]">
+              {/* Long prompts get their own scroll container so the
+                  Information / Additional sections below stay visible.
+                  Cap the height at ~9 lines (~180px) — anything longer
+                  scrolls inside this box instead of pushing the panel. */}
+              <div className="hide-scrollbar max-h-[180px] overflow-y-auto px-4 pb-4">
+                <p className="text-sm break-words whitespace-pre-wrap text-[var(--text-color--text-primary)]">
                   {image.prompt}
                 </p>
               </div>
@@ -242,7 +257,7 @@ export default function ImageDetailPanel({
                 <div className="grid grid-cols-[1fr_auto] px-4 py-3.5">
                   <p className="text-sm text-[var(--base-color-brand--umber)]">Model</p>
                   <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
-                    Nano Banana Pro
+                    {MODEL_LABELS[image.model ?? 'nano_banana_pro']}
                   </p>
                 </div>
               </div>

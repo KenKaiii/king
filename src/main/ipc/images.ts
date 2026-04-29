@@ -1,5 +1,11 @@
 import { randomUUID } from 'crypto';
-import { listImages, addImage, deleteImage, getImage } from '../services/imageStore';
+import {
+  listImages,
+  addImage,
+  deleteImage,
+  getImage,
+  type ImageModel,
+} from '../services/imageStore';
 import { downloadAndSaveImage, deleteImageFile } from '../services/fileManager';
 import { secureHandle } from './validateSender';
 
@@ -10,7 +16,10 @@ export function registerImageHandlers(): void {
 
   secureHandle(
     'images:save',
-    async (_event, data: { url: string; prompt: string; aspectRatio: string }) => {
+    async (
+      _event,
+      data: { url: string; prompt: string; aspectRatio: string; model?: ImageModel },
+    ) => {
       const { filename, localUrl } = await downloadAndSaveImage(data.url);
       const image = await addImage({
         id: randomUUID(),
@@ -19,6 +28,7 @@ export function registerImageHandlers(): void {
         aspectRatio: data.aspectRatio,
         createdAt: new Date().toISOString(),
         filename,
+        model: data.model,
       });
       return image;
     },

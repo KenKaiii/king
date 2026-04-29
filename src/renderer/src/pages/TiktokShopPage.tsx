@@ -10,6 +10,7 @@ import {
 } from '@/lib/mock/tiktokShop';
 import type { PageType } from '@/App';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { cleanIpcError } from '@/lib/ipcError';
 
 function RefreshIcon() {
   return (
@@ -231,9 +232,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
           try {
             await refreshFromApi();
           } catch (err) {
-            toast.error(
-              `TikTok Shop: ${err instanceof Error ? err.message : 'Failed to load products'}`,
-            );
+            toast.error(`TikTok Shop: ${cleanIpcError(err, 'Failed to load products')}`);
           }
         }
       } catch {
@@ -252,7 +251,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
         toast.success('Data refreshed');
         return;
       } catch (err) {
-        toast.error(`TikTok Shop: ${err instanceof Error ? err.message : 'Failed to refresh'}`);
+        toast.error(`TikTok Shop: ${cleanIpcError(err, 'Failed to refresh')}`);
         return;
       }
     }

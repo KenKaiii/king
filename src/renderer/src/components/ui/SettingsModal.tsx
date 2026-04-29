@@ -25,29 +25,72 @@ function formatSpeed(bytesPerSecond?: number): string {
 }
 
 /**
- * Convert HTML release-notes (as returned by electron-updater's GitHub
- * provider) into plain text suitable for `whitespace-pre-wrap` rendering.
+ * Sanitise release-notes HTML returned by electron-updater's GitHub
+ * provider so it can be rendered as actual formatted markup (paragraphs,
+ * lists, links, bold) instead of literal `<p>` text.
  *
- * Strategy: replace block-breaking tags with newlines, drop everything else,
- * then decode the most common HTML entities. Renders any sanitised input
- * losslessly enough for short release notes; pathological markup degrades
- * gracefully to readable text. Zero XSS surface — we never inject HTML.
+ * Strategy: allowlist a small set of safe block + inline tags, strip
+ * everything else (including all attributes except `href` on `<a>`),
+ * and force every link to open externally. Defends against XSS by
+ * never letting `<script>`, `<iframe>`, event handlers, or `javascript:`
+ * URLs through. Anything not on the allowlist is removed but its inner
+ * text is kept, so unknown markup still reads as plain prose.
  */
-function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li)>/gi, '\n\n')
-    .replace(/<li[^>]*>/gi, '\u2022 ')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/gi, "'")
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+const ALLOWED_TAGS = new Set([
+  'p',
+  'br',
+  'strong',
+  'b',
+  'em',
+  'i',
+  'code',
+  'pre',
+  'ul',
+  'ol',
+  'li',
+  'a',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'blockquote',
+]);
+
+function sanitizeReleaseNotes(html: string): string {
+  // DOMParser is available in Electron's renderer (Chromium). Parsing
+  // through it gives us a real DOM tree instead of regex-mangling tags.
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  const walk = (node: Node): void => {
+    // Iterate over a snapshot of childNodes since we mutate during walk.
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as Element;
+        const tag = el.tagName.toLowerCase();
+        if (!ALLOWED_TAGS.has(tag)) {
+          // Replace the disallowed element with its children (keep text).
+          while (el.firstChild) el.parentNode?.insertBefore(el.firstChild, el);
+          el.remove();
+          continue;
+        }
+        // Strip every attribute, then re-add only safe ones.
+        const attrs = Array.from(el.attributes);
+        for (const attr of attrs) el.removeAttribute(attr.name);
+        if (tag === 'a') {
+          const href = attrs.find((a) => a.name.toLowerCase() === 'href')?.value ?? '';
+          if (/^https?:\/\//i.test(href)) {
+            el.setAttribute('href', href);
+            el.setAttribute('target', '_blank');
+            el.setAttribute('rel', 'noopener noreferrer');
+          }
+        }
+        walk(el);
+      }
+    }
+  };
+
+  walk(doc.body);
+  return doc.body.innerHTML;
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
@@ -213,9 +256,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {(isAvailable || isDownloaded) && status.releaseNotes && (
             <div className="mt-3 max-h-32 overflow-auto rounded-xl bg-[var(--base-color-brand--shell)] p-3 text-xs text-[var(--base-color-brand--bean)]">
               <p className="font-semibold">What’s new</p>
-              <div className="mt-1 whitespace-pre-wrap text-[var(--base-color-brand--umber)]">
-                {htmlToPlainText(status.releaseNotes)}
-              </div>
+              {/* Sanitised HTML — only an allowlist of safe tags survives,
+                  every attribute except `href` on `<a>` is stripped, so
+                  there is no XSS surface even if a release author injects
+                  markup. Renders paragraphs / lists / bold / links as
+                  formatted markup instead of literal `<p>` text. */}
+              <div
+                className="release-notes mt-1 text-[var(--base-color-brand--umber)]"
+                dangerouslySetInnerHTML={{ __html: sanitizeReleaseNotes(status.releaseNotes) }}
+              />
             </div>
           )}
 

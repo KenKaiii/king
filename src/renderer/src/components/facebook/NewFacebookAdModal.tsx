@@ -12,6 +12,7 @@ import type {
   FbCtaType,
   FbCreateAdResult,
 } from '@/types/electron';
+import { cleanIpcError } from '@/lib/ipcError';
 
 const MAX_BYTES = 15 * 1024 * 1024;
 
@@ -131,7 +132,7 @@ export default function NewFacebookAdModal({
         setAdAccountId(initialAccount);
         setPageId(initialPage);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to load Facebook accounts';
+        const msg = cleanIpcError(err, 'Failed to load Facebook accounts');
         toast.error(msg);
       } finally {
         if (!cancelled) setAccountsLoading(false);
@@ -319,7 +320,7 @@ export default function NewFacebookAdModal({
       setStep('result');
       onCreated?.(r);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to create ad');
+      setErrorMessage(cleanIpcError(err, 'Failed to create ad'));
       setStep('result');
     } finally {
       setSubmitting(false);
