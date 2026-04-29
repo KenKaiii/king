@@ -10,6 +10,14 @@ interface SelectDropdownProps {
   placeholder?: string;
   fullWidth?: boolean;
   size?: 'md' | 'sm';
+  /**
+   * Where the option panel opens relative to the trigger button.
+   *  - `'down'` (default): drops below.
+   *  - `'up'`: pops above — use for triggers anchored near the bottom
+   *    of the viewport (e.g. the chat-input controls on the Image page)
+   *    so the menu doesn't get clipped by the window edge.
+   */
+  direction?: 'down' | 'up';
 }
 
 export default memo(function SelectDropdown({
@@ -21,6 +29,7 @@ export default memo(function SelectDropdown({
   placeholder = 'Select',
   fullWidth = false,
   size = 'md',
+  direction = 'down',
 }: SelectDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,7 +71,11 @@ export default memo(function SelectDropdown({
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="hide-scrollbar absolute top-full left-0 z-50 mt-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg">
+        <div
+          className={`hide-scrollbar absolute left-0 z-50 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg ${
+            direction === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
+        >
           {options.map((option) => {
             if (option.disabled) {
               return (

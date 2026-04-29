@@ -382,12 +382,14 @@ export default function ImagePromptForm({
               value={selectedModel}
               onChange={(v) => setSelectedModel(v as ImageModel)}
               icon={<SparkleIcon />}
+              direction="up"
             />
 
             <SelectDropdown
               options={entityOptions}
               value={selectedEntity}
               onChange={handleEntityChange}
+              direction="up"
             />
 
             {/* Image count selector */}
@@ -420,6 +422,7 @@ export default function ImagePromptForm({
               onChange={setAspectRatio}
               icon={aspectRatioIcons[aspectRatio] || <AutoIcon />}
               showIcons
+              direction="up"
             />
 
             <SelectDropdown
@@ -427,6 +430,7 @@ export default function ImagePromptForm({
               value={resolution}
               onChange={setResolution}
               icon={<ResolutionIcon />}
+              direction="up"
             />
 
             <SelectDropdown
@@ -434,6 +438,7 @@ export default function ImagePromptForm({
               value={outputFormat}
               onChange={setOutputFormat}
               icon={<FormatIcon />}
+              direction="up"
             />
           </div>
         </div>
