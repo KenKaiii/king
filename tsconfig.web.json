@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
     "noEmit": true,
     "types": ["vite/client"],
     "paths": {

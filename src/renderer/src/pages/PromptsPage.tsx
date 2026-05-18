@@ -233,7 +233,7 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
             </div>
           </div>
           <div
-            className="-mx-1 flex gap-1 overflow-x-auto rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 flex [scrollbar-width:none] gap-1 overflow-x-auto rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-1 [&::-webkit-scrollbar]:hidden"
             role="tablist"
             aria-label="Prompt categories"
           >

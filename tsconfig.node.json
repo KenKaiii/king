@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
     "noEmit": true
   },
   "include": ["src/main/**/*.ts", "src/preload/**/*.ts", "electron.vite.config.ts"]
