@@ -12,12 +12,15 @@
   <a href="https://github.com/KenKaiii/king/releases/latest"><img src="https://img.shields.io/github/v/release/KenKaiii/king?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
   <a href="https://youtube.com/@kenkaidoesai"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
-  <a href="https://skool.com/kenkai"><img src="https://img.shields.io/badge/Skool-Community-7C3AED?style=for-the-badge" alt="Skool"></a>
+  <a href="https://www.skool.com/raid"><img src="https://img.shields.io/badge/Skool-Free%20community-7C3AED?style=for-the-badge" alt="Free Skool community"></a>
 </p>
 
 **King** is where e-commerce sellers generate product shots, run their stores, and manage their ads — all in one desktop app.
 
 160+ proven prompts. Reusable products and characters. Shopify, Amazon, Shopee connections. Facebook Ads, Google Ads, TikTok Shop dashboards. One app. Your whole creative stack.
+
+> [!TIP]
+> **Want to build your own apps with AI?** A free 7-day build challenge and 20+ step-by-step projects are in my free community: **[skool.com/raid](https://www.skool.com/raid)**
 
 ---
 
@@ -133,7 +136,7 @@ Stack: Electron + React 19 + Tailwind v4 + fal.ai
 ## Community
 
 - [YouTube @kenkaidoesai](https://youtube.com/@kenkaidoesai) — tutorials and demos
-- [Skool community](https://skool.com/kenkai) — come hang out
+- [Free Skool community](https://www.skool.com/raid): a 7-day build challenge and 20+ step-by-step projects
 
 ---
 
